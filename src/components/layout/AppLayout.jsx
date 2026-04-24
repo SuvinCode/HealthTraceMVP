@@ -5,7 +5,7 @@ import {
   LogOut, Bell, Search, Menu, X, FileText
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/client';
+import { apiClient } from '@/api/client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +24,7 @@ const doctorLinks = [
 ];
 
 export default function AppLayout() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isDoctor = user?.role === 'doctor';
@@ -32,7 +32,7 @@ export default function AppLayout() {
 
   const { data: pendingRequests } = useQuery({
     queryKey: ['pending-requests', user?.email],
-    queryFn: () => base44.entities.ConnectionRequest.filter({ 
+    queryFn: () => apiClient.entities.ConnectionRequest.filter({ 
       doctor_email: user?.email, 
       status: 'pending' 
     }),
@@ -49,7 +49,7 @@ export default function AppLayout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to={isDoctor ? '/doctor-dashboard' : '/health-form'} className="flex items-center gap-2.5">
             <img
-              src="https://media.base44.com/images/public/69eb4fd0bd4aca3cf39ebab5/b9e3946f3_image.png"
+              src="/favicon.svg"
               alt="HealthTrace logo"
               className="w-10 h-10 object-contain"
             />
@@ -102,7 +102,7 @@ export default function AppLayout() {
               variant="ghost"
               size="icon"
               className="text-muted-foreground hover:text-foreground"
-              onClick={() => base44.auth.logout()}
+              onClick={() => logout()}
             >
               <LogOut className="w-4 h-4" />
             </Button>

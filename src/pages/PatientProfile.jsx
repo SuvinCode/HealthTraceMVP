@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { base44 } from '@/api/client';
+import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,32 +33,32 @@ export default function PatientProfile() {
   // Queries
   const { data: patients } = useQuery({
     queryKey: ['patient-user', patientEmail],
-    queryFn: () => base44.entities.User.filter({ email: patientEmail }),
+    queryFn: () => apiClient.entities.User.filter({ email: patientEmail }),
     initialData: [],
   });
   const patient = patients?.[0];
 
   const { data: submissions } = useQuery({
     queryKey: ['patient-submissions', patientEmail],
-    queryFn: () => base44.entities.HealthFormSubmission.filter({ patient_email: patientEmail, doctor_email: user?.email }),
+    queryFn: () => apiClient.entities.HealthFormSubmission.filter({ patient_email: patientEmail, doctor_email: user?.email }),
     initialData: [],
   });
 
   const { data: tasks } = useQuery({
     queryKey: ['patient-tasks', patientEmail],
-    queryFn: () => base44.entities.MedicationTask.filter({ patient_email: patientEmail, doctor_email: user?.email }),
+    queryFn: () => apiClient.entities.MedicationTask.filter({ patient_email: patientEmail, doctor_email: user?.email }),
     initialData: [],
   });
 
   const { data: appointments } = useQuery({
     queryKey: ['patient-appointments', patientEmail],
-    queryFn: () => base44.entities.Appointment.filter({ patient_email: patientEmail, doctor_email: user?.email }),
+    queryFn: () => apiClient.entities.Appointment.filter({ patient_email: patientEmail, doctor_email: user?.email }),
     initialData: [],
   });
 
   // Mutations
   const addMed = useMutation({
-    mutationFn: (data) => base44.entities.MedicationTask.create({
+    mutationFn: (data) => apiClient.entities.MedicationTask.create({
       ...data,
       patient_email: patientEmail,
       patient_name: patient?.full_name || '',
@@ -74,7 +74,7 @@ export default function PatientProfile() {
   });
 
   const createForm = useMutation({
-    mutationFn: (data) => base44.entities.HealthForm.create({
+    mutationFn: (data) => apiClient.entities.HealthForm.create({
       ...data,
       doctor_email: user.email,
       patient_email: patientEmail,

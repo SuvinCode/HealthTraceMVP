@@ -1,4 +1,4 @@
-import { base44 } from '@/api/client';
+import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,12 +14,12 @@ export default function ConnectionRequests() {
 
   const { data: requests, isLoading } = useQuery({
     queryKey: ['connection-requests', user?.email],
-    queryFn: () => base44.entities.ConnectionRequest.filter({ doctor_email: user?.email }),
+    queryFn: () => apiClient.entities.ConnectionRequest.filter({ doctor_email: user?.email }),
     initialData: [],
   });
 
   const updateRequest = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.ConnectionRequest.update(id, { status }),
+    mutationFn: ({ id, status }) => apiClient.entities.ConnectionRequest.update(id, { status }),
     onSuccess: (_, { status }) => {
       queryClient.invalidateQueries({ queryKey: ['connection-requests'] });
       queryClient.invalidateQueries({ queryKey: ['pending-requests'] });

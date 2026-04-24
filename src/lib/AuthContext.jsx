@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { base44 } from '@/api/client';
+import { apiClient } from '@/api/client';
 
 const AuthContext = createContext();
 
@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
     try {
       setIsLoadingAuth(true);
-      const currentUser = await base44.auth.me();
+      const currentUser = await apiClient.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
     } catch (error) {
@@ -46,17 +46,37 @@ export const AuthProvider = ({ children }) => {
   const logout = (shouldRedirect = true) => {
     setUser(null);
     setIsAuthenticated(false);
-    
+
+    // Always clear local auth state/token first.
+    apiClient.auth.logout();
+
     if (shouldRedirect) {
-      base44.auth.logout(window.location.href);
+      apiClient.auth.redirectToLogin(window.location.href);
       return;
     }
-
-    base44.auth.logout();
   };
 
   const navigateToLogin = () => {
-    base44.auth.redirectToLogin(window.location.href);
+    // We already updated apiClient.auth.redirectToLogin to point to /login in the frontend
+    apiClient.auth.redirectToLogin(window.location.href);
+  };
+
+  const login = async (credentials) => {
+    try {
+      await apiClient.auth.login(credentials);
+      await checkUserAuth();
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const register = async (data) => {
+    try {
+      await apiClient.auth.register(data);
+      await checkUserAuth();
+    } catch (error) {
+      throw error;
+    }
   };
 
   return (
@@ -69,6 +89,8 @@ export const AuthProvider = ({ children }) => {
       appPublicSettings,
       authChecked,
       logout,
+      login,
+      register,
       navigateToLogin,
       checkUserAuth,
       checkAppState

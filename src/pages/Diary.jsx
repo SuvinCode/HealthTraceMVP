@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { base44 } from '@/api/client';
+import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,7 +25,7 @@ export default function Diary() {
 
   const { data: tasks } = useQuery({
     queryKey: ['medication-tasks', user?.email],
-    queryFn: () => base44.entities.MedicationTask.filter({ patient_email: user?.email }),
+    queryFn: () => apiClient.entities.MedicationTask.filter({ patient_email: user?.email }),
     initialData: [],
   });
 
@@ -34,7 +34,7 @@ export default function Diary() {
       const completed = task.completed_dates || [];
       const isCompleted = completed.includes(dateStr);
       const newDates = isCompleted ? completed.filter(d => d !== dateStr) : [...completed, dateStr];
-      await base44.entities.MedicationTask.update(task.id, { completed_dates: newDates });
+      await apiClient.entities.MedicationTask.update(task.id, { completed_dates: newDates });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['medication-tasks'] }),
   });

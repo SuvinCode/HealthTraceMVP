@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { base44 } from '@/api/client';
+import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
@@ -18,18 +18,18 @@ export default function FindDoctor() {
 
   const { data: doctors, isLoading } = useQuery({
     queryKey: ['doctors'],
-    queryFn: () => base44.entities.User.filter({ role: 'doctor', onboarding_complete: true }),
+    queryFn: () => apiClient.entities.User.filter({ role: 'doctor', onboarding_complete: true }),
     initialData: [],
   });
 
   const { data: myRequests } = useQuery({
     queryKey: ['my-requests', user?.email],
-    queryFn: () => base44.entities.ConnectionRequest.filter({ patient_email: user?.email }),
+    queryFn: () => apiClient.entities.ConnectionRequest.filter({ patient_email: user?.email }),
     initialData: [],
   });
 
   const sendRequest = useMutation({
-    mutationFn: (doctor) => base44.entities.ConnectionRequest.create({
+    mutationFn: (doctor) => apiClient.entities.ConnectionRequest.create({
       patient_email: user.email,
       patient_name: user.full_name,
       doctor_email: doctor.email,

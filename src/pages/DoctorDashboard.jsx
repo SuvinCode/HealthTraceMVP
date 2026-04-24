@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { base44 } from '@/api/client';
+import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,18 +19,18 @@ export default function DoctorDashboard() {
 
   const { data: appointments } = useQuery({
     queryKey: ['doctor-all-appointments', user?.email],
-    queryFn: () => base44.entities.Appointment.filter({ doctor_email: user?.email }),
+    queryFn: () => apiClient.entities.Appointment.filter({ doctor_email: user?.email }),
     initialData: [],
   });
 
   const { data: connections } = useQuery({
     queryKey: ['doctor-connections', user?.email],
-    queryFn: () => base44.entities.ConnectionRequest.filter({ doctor_email: user?.email, status: 'accepted' }),
+    queryFn: () => apiClient.entities.ConnectionRequest.filter({ doctor_email: user?.email, status: 'accepted' }),
     initialData: [],
   });
 
   const completeMutation = useMutation({
-    mutationFn: (id) => base44.entities.Appointment.update(id, { status: 'completed' }),
+    mutationFn: (id) => apiClient.entities.Appointment.update(id, { status: 'completed' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['doctor-all-appointments'] });
       toast.success('Appointment marked as done');
@@ -38,7 +38,7 @@ export default function DoctorDashboard() {
   });
 
   const cancelMutation = useMutation({
-    mutationFn: (id) => base44.entities.Appointment.update(id, { status: 'cancelled' }),
+    mutationFn: (id) => apiClient.entities.Appointment.update(id, { status: 'cancelled' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['doctor-all-appointments'] });
       toast.success('Appointment cancelled');

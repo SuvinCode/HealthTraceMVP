@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/client';
+import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -32,13 +32,13 @@ export default function CreateAppointment() {
 
   const { data: connections } = useQuery({
     queryKey: ['my-connections', user?.email],
-    queryFn: () => base44.entities.ConnectionRequest.filter({ patient_email: user?.email, status: 'accepted' }),
+    queryFn: () => apiClient.entities.ConnectionRequest.filter({ patient_email: user?.email, status: 'accepted' }),
     initialData: [],
   });
 
   const { data: existingAppts } = useQuery({
     queryKey: ['doctor-appointments', doctorEmail, date],
-    queryFn: () => base44.entities.Appointment.filter({
+    queryFn: () => apiClient.entities.Appointment.filter({
       doctor_email: doctorEmail,
       date: format(date, 'yyyy-MM-dd'),
       status: 'upcoming',
@@ -59,7 +59,7 @@ export default function CreateAppointment() {
     }
     setSaving(true);
     const conn = connections.find(c => c.doctor_email === doctorEmail);
-    await base44.entities.Appointment.create({
+    await apiClient.entities.Appointment.create({
       title,
       date: format(date, 'yyyy-MM-dd'),
       time_slot: timeSlot,

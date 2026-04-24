@@ -17,6 +17,8 @@ import DoctorDashboard from './pages/DoctorDashboard';
 import PatientLogs from './pages/PatientLogs';
 import PatientProfile from './pages/PatientProfile';
 import ConnectionRequests from './pages/ConnectionRequests';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 const AuthenticatedApp = () => {
   const { user, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -35,9 +37,14 @@ const AuthenticatedApp = () => {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
+      return <Navigate to="/login" replace />;
     }
+  }
+
+  // If not authenticated and no specific error, redirect to login
+  const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/signup';
+  if (!user && !isLoadingAuth && !isAuthPage) {
+    return <Navigate to="/login" replace />;
   }
 
   // Check if user needs onboarding
@@ -55,6 +62,8 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
       <Route path="/find-doctor" element={<FindDoctor />} />
       <Route element={<AppLayout />}>
         <Route path="/" element={<Navigate to={isDoctor ? '/doctor-dashboard' : '/health-form'} replace />} />

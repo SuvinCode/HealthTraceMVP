@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { base44 } from '@/api/client';
+import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,7 @@ export default function PatientLogs() {
 
   const { data: connections, isLoading } = useQuery({
     queryKey: ['doctor-connections', user?.email],
-    queryFn: () => base44.entities.ConnectionRequest.filter({ doctor_email: user?.email, status: 'accepted' }),
+    queryFn: () => apiClient.entities.ConnectionRequest.filter({ doctor_email: user?.email, status: 'accepted' }),
     initialData: [],
   });
 

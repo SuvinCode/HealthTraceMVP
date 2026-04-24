@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/client';
+import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Heart, User, Stethoscope, ArrowRight, Loader2 } from 'lucide-react';
+import { User, Stethoscope, ArrowRight, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Onboarding() {
@@ -35,7 +35,7 @@ export default function Onboarding() {
       data.medical_license = formData.medical_license;
       data.specialisation = formData.specialisation;
     }
-    await base44.auth.updateMe(data);
+    await apiClient.auth.updateMe(data);
     await checkUserAuth();
     navigate(role === 'doctor' ? '/doctor-dashboard' : '/find-doctor');
   };
@@ -48,8 +48,8 @@ export default function Onboarding() {
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4">
-            <Heart className="w-7 h-7 text-primary-foreground" />
+          <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mx-auto mb-4 shadow-md">
+            <img src="/favicon.svg" alt="HealthTrace Logo" className="w-9 h-9" />
           </div>
           <h1 className="font-heading text-2xl font-bold text-foreground">Welcome to HealthTrace</h1>
           <p className="text-muted-foreground mt-1 text-sm">Let's set up your profile</p>

@@ -1,4 +1,5 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
+const LOGIN_PATH = import.meta.env.VITE_LOGIN_PATH || '/login';
 
 function buildUrl(path, query) {
   const url = new URL(`${API_BASE_URL}${path}`);
@@ -13,7 +14,7 @@ function buildUrl(path, query) {
 }
 
 async function http(path, { method = 'GET', body, query } = {}) {
-  const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+  const token = localStorage.getItem('auth_token');
   const response = await fetch(buildUrl(path, query), {
     method,
     headers: {
@@ -60,16 +61,36 @@ export const apiClient = {
     updateMe(payload) {
       return http('/api/auth/me', { method: 'PATCH', body: payload });
     },
+    async login(credentials) {
+      const response = await http('/api/auth/login', { method: 'POST', body: credentials });
+      if (response && response.token) {
+        localStorage.setItem('auth_token', response.token);
+      }
+      return response;
+    },
+    async register(data) {
+      const response = await http('/api/auth/register', { method: 'POST', body: data });
+      if (response && response.token) {
+        localStorage.setItem('auth_token', response.token);
+      }
+      return response;
+    },
+    googleLogin() {
+      window.location.href = buildUrl('/api/auth/google');
+    },
     logout(returnTo) {
       localStorage.removeItem('auth_token');
+      // Clear legacy token key from older app versions.
       localStorage.removeItem('token');
       if (returnTo) {
         window.location.href = returnTo;
       }
     },
     redirectToLogin(returnTo) {
-      const encoded = encodeURIComponent(returnTo || window.location.href);
-      window.location.href = `/login?returnTo=${encoded}`;
+      // In a SPA, we usually navigate to /login via router, 
+      // but if the backend handles login, this stays as is.
+      // We will update App.jsx to handle routing to /login page.
+      window.location.href = `${window.location.origin}/login?returnTo=${encodeURIComponent(returnTo || window.location.href)}`;
     },
   },
   entities: new Proxy(
@@ -81,5 +102,3 @@ export const apiClient = {
     }
   ),
 };
-
-export const base44 = apiClient;

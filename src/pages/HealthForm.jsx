@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { base44 } from '@/api/client';
+import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -24,7 +24,7 @@ export default function HealthForm() {
 
   const { data: connections } = useQuery({
     queryKey: ['my-connections', user?.email],
-    queryFn: () => base44.entities.ConnectionRequest.filter({ patient_email: user?.email, status: 'accepted' }),
+    queryFn: () => apiClient.entities.ConnectionRequest.filter({ patient_email: user?.email, status: 'accepted' }),
     initialData: [],
   });
 
@@ -36,7 +36,7 @@ export default function HealthForm() {
       if (doctorEmails.length === 0) return [];
       const allForms = [];
       for (const email of doctorEmails) {
-        const f = await base44.entities.HealthForm.filter({ doctor_email: email, active: true });
+        const f = await apiClient.entities.HealthForm.filter({ doctor_email: email, active: true });
         allForms.push(...f);
       }
       return allForms.filter(f => !f.patient_email || f.patient_email === user.email);
@@ -47,7 +47,7 @@ export default function HealthForm() {
 
   const { data: submissions } = useQuery({
     queryKey: ['my-submissions', user?.email],
-    queryFn: () => base44.entities.HealthFormSubmission.filter({ patient_email: user?.email }),
+    queryFn: () => apiClient.entities.HealthFormSubmission.filter({ patient_email: user?.email }),
     initialData: [],
   });
 
@@ -58,7 +58,7 @@ export default function HealthForm() {
       question_label: q.label,
       answer: String(answers[q.id] || ''),
     }));
-    await base44.entities.HealthFormSubmission.create({
+    await apiClient.entities.HealthFormSubmission.create({
       form_id: form.id,
       form_title: form.title,
       patient_email: user.email,

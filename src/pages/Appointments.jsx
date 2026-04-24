@@ -1,4 +1,4 @@
-import { base44 } from '@/api/client';
+import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,13 +21,13 @@ export default function Appointments() {
     queryKey: ['appointments', user?.email],
     queryFn: () => {
       const emailField = isDoctor ? 'doctor_email' : 'patient_email';
-      return base44.entities.Appointment.filter({ [emailField]: user?.email });
+      return apiClient.entities.Appointment.filter({ [emailField]: user?.email });
     },
     initialData: [],
   });
 
   const cancelMutation = useMutation({
-    mutationFn: (id) => base44.entities.Appointment.update(id, { status: 'cancelled' }),
+    mutationFn: (id) => apiClient.entities.Appointment.update(id, { status: 'cancelled' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       toast.success('Appointment cancelled');
