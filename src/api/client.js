@@ -44,11 +44,17 @@ function entityApi(entityName) {
     filter(params = {}) {
       return http(basePath, { query: params });
     },
+    get(id) {
+      return http(`${basePath}/${id}`);
+    },
     create(payload) {
       return http(basePath, { method: 'POST', body: payload });
     },
     update(id, payload) {
       return http(`${basePath}/${id}`, { method: 'PATCH', body: payload });
+    },
+    delete(id) {
+      return http(`${basePath}/${id}`, { method: 'DELETE' });
     },
   };
 }

@@ -10,14 +10,15 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { User, FileText, Pill, Calendar, Plus, ArrowLeft, Loader2, Clock, CheckCircle2, Ruler, Weight, Heart } from 'lucide-react';
+import { User, FileText, Pill, Calendar, Plus, ArrowLeft, Loader2, Clock, CheckCircle2, Ruler, Weight, Heart, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
 export default function PatientProfile() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const patientEmail = decodeURIComponent(window.location.pathname.split('/patient/')[1]);
 
@@ -32,7 +33,7 @@ export default function PatientProfile() {
   // Queries
   const { data: patients } = useQuery({
     queryKey: ['patient-user', patientEmail],
-    queryFn: () => apiClient.entities.User.filter({ email: patientEmail }),
+    queryFn: () => apiClient.entities.patients.filter({ email: patientEmail }),
     initialData: [],
   });
   const patient = patients?.[0];
@@ -52,6 +53,12 @@ export default function PatientProfile() {
   const { data: appointments } = useQuery({
     queryKey: ['patient-appointments', patientEmail],
     queryFn: () => apiClient.entities.Appointment.filter({ patient_email: patientEmail, doctor_email: user?.email }),
+    initialData: [],
+  });
+ 
+  const { data: connections } = useQuery({
+    queryKey: ['patient-connections', patientEmail],
+    queryFn: () => apiClient.entities.ConnectionRequest.filter({ patient_email: patientEmail, doctor_email: user?.email }),
     initialData: [],
   });
 
@@ -85,6 +92,21 @@ export default function PatientProfile() {
       setNewForm({ title: '', questions: [] });
       toast.success('Health form created');
     },
+  });
+
+  const disconnectPatient = useMutation({
+    mutationFn: async () => {
+      const conn = connections.find(c => c.status === 'accepted');
+      if (conn) {
+        return apiClient.entities.ConnectionRequest.delete(conn.id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['connection-requests'] });
+      toast.success('Patient disconnected');
+      navigate('/patient-logs');
+    },
+    onError: () => toast.error('Failed to disconnect'),
   });
 
   const addQuestion = () => {
@@ -127,90 +149,105 @@ export default function PatientProfile() {
               )}
             </div>
           </div>
-          <div className="flex gap-2">
-            <Dialog open={medDialog} onOpenChange={setMedDialog}>
-              <DialogTrigger asChild>
-                <Button size="sm"><Pill className="w-4 h-4 mr-1" /> Assign Medication</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Assign Medication</DialogTitle></DialogHeader>
-                <div className="space-y-4 mt-2">
-                  <div><Label>Medication Name</Label><Input value={medForm.medication_name} onChange={e => setMedForm(p => ({ ...p, medication_name: e.target.value }))} className="mt-1" /></div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Type</Label>
-                      <Select value={medForm.type} onValueChange={v => setMedForm(p => ({ ...p, type: v }))}>
-                        <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {['tablet', 'capsule', 'liquid', 'injection', 'topical', 'inhaler', 'other'].map(t => (
-                            <SelectItem key={t} value={t}>{t}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div><Label>Dosage</Label><Input placeholder="e.g. 500mg" value={medForm.dosage} onChange={e => setMedForm(p => ({ ...p, dosage: e.target.value }))} className="mt-1" /></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div><Label>Start Date</Label><Input type="date" value={medForm.start_date} onChange={e => setMedForm(p => ({ ...p, start_date: e.target.value }))} className="mt-1" /></div>
-                    <div><Label>End Date</Label><Input type="date" value={medForm.end_date} onChange={e => setMedForm(p => ({ ...p, end_date: e.target.value }))} className="mt-1" /></div>
-                  </div>
-                  <div>
-                    <Label>Frequency</Label>
-                    <Select value={medForm.frequency} onValueChange={v => setMedForm(p => ({ ...p, frequency: v }))}>
-                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {['once_daily', 'twice_daily', 'three_times_daily', 'weekly', 'as_needed'].map(f => (
-                          <SelectItem key={f} value={f}>{f.replace(/_/g, ' ')}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button onClick={() => addMed.mutate(medForm)} disabled={addMed.isPending || !medForm.medication_name} className="w-full">
-                    {addMed.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Assign
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-            <Dialog open={formDialog} onOpenChange={setFormDialog}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline"><FileText className="w-4 h-4 mr-1" /> Create Form</Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-                <DialogHeader><DialogTitle>Create Health Form</DialogTitle></DialogHeader>
-                <div className="space-y-4 mt-2">
-                  <div><Label>Form Title</Label><Input value={newForm.title} onChange={e => setNewForm(p => ({ ...p, title: e.target.value }))} className="mt-1" /></div>
-                  <div className="border rounded-xl p-3 space-y-3">
-                    <p className="text-sm font-medium">Questions ({newForm.questions.length})</p>
-                    {newForm.questions.map((q, i) => (
-                      <div key={i} className="text-sm bg-muted rounded-lg p-2 flex justify-between">
-                        <span>{q.label} ({q.type})</span>
-                        <button className="text-destructive text-xs" onClick={() => setNewForm(p => ({ ...p, questions: p.questions.filter((_, idx) => idx !== i) }))}>Remove</button>
-                      </div>
-                    ))}
-                    <div className="space-y-2 pt-2 border-t">
-                      <Input placeholder="Question label" value={newQ.label} onChange={e => setNewQ(p => ({ ...p, label: e.target.value }))} />
-                      <div className="flex gap-2">
-                        <Select value={newQ.type} onValueChange={v => setNewQ(p => ({ ...p, type: v }))}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <Dialog open={medDialog} onOpenChange={setMedDialog}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline"><Pill className="w-4 h-4 mr-1" /> Assign Medication</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Assign Medication</DialogTitle></DialogHeader>
+                  <div className="space-y-4 mt-2">
+                    <div><Label>Medication Name</Label><Input value={medForm.medication_name} onChange={e => setMedForm(p => ({ ...p, medication_name: e.target.value }))} className="mt-1" /></div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>Type</Label>
+                        <Select value={medForm.type} onValueChange={v => setMedForm(p => ({ ...p, type: v }))}>
+                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            {['text', 'textarea', 'number', 'select', 'boolean'].map(t => (
+                            {['tablet', 'capsule', 'liquid', 'injection', 'topical', 'inhaler', 'other'].map(t => (
                               <SelectItem key={t} value={t}>{t}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                        <Button variant="outline" size="sm" onClick={addQuestion}><Plus className="w-4 h-4 mr-1" /> Add</Button>
                       </div>
-                      {newQ.type === 'select' && (
-                        <Input placeholder="Options (comma-separated)" value={newQ.options} onChange={e => setNewQ(p => ({ ...p, options: e.target.value }))} />
-                      )}
+                      <div><Label>Dosage</Label><Input placeholder="e.g. 500mg" value={medForm.dosage} onChange={e => setMedForm(p => ({ ...p, dosage: e.target.value }))} className="mt-1" /></div>
                     </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><Label>Start Date</Label><Input type="date" value={medForm.start_date} onChange={e => setMedForm(p => ({ ...p, start_date: e.target.value }))} className="mt-1" /></div>
+                      <div><Label>End Date</Label><Input type="date" value={medForm.end_date} onChange={e => setMedForm(p => ({ ...p, end_date: e.target.value }))} className="mt-1" /></div>
+                    </div>
+                    <div>
+                      <Label>Frequency</Label>
+                      <Select value={medForm.frequency} onValueChange={v => setMedForm(p => ({ ...p, frequency: v }))}>
+                        <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {['once_daily', 'twice_daily', 'three_times_daily', 'weekly', 'as_needed'].map(f => (
+                            <SelectItem key={f} value={f}>{f.replace(/_/g, ' ')}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button onClick={() => addMed.mutate(medForm)} disabled={addMed.isPending || !medForm.medication_name} className="w-full">
+                      {addMed.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Assign
+                    </Button>
                   </div>
-                  <Button onClick={() => createForm.mutate(newForm)} disabled={createForm.isPending || !newForm.title || newForm.questions.length === 0} className="w-full">
-                    {createForm.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Create Form
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+              <Dialog open={formDialog} onOpenChange={setFormDialog}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline"><FileText className="w-4 h-4 mr-1" /> Create Form</Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle>Create Health Form</DialogTitle></DialogHeader>
+                  <div className="space-y-4 mt-2">
+                    <div><Label>Form Title</Label><Input value={newForm.title} onChange={e => setNewForm(p => ({ ...p, title: e.target.value }))} className="mt-1" /></div>
+                    <div className="border rounded-xl p-3 space-y-3">
+                      <p className="text-sm font-medium">Questions ({newForm.questions.length})</p>
+                      {newForm.questions.map((q, i) => (
+                        <div key={i} className="text-sm bg-muted rounded-lg p-2 flex justify-between">
+                          <span>{q.label} ({q.type})</span>
+                          <button className="text-destructive text-xs" onClick={() => setNewForm(p => ({ ...p, questions: p.questions.filter((_, idx) => idx !== i) }))}>Remove</button>
+                        </div>
+                      ))}
+                      <div className="space-y-2 pt-2 border-t">
+                        <Input placeholder="Question label" value={newQ.label} onChange={e => setNewQ(p => ({ ...p, label: e.target.value }))} />
+                        <div className="flex gap-2">
+                          <Select value={newQ.type} onValueChange={v => setNewQ(p => ({ ...p, type: v }))}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {['text', 'textarea', 'number', 'select', 'boolean'].map(t => (
+                                <SelectItem key={t} value={t}>{t}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button variant="outline" size="sm" onClick={addQuestion}><Plus className="w-4 h-4 mr-1" /> Add</Button>
+                        </div>
+                        {newQ.type === 'select' && (
+                          <Input placeholder="Options (comma-separated)" value={newQ.options} onChange={e => setNewQ(p => ({ ...p, options: e.target.value }))} />
+                        )}
+                      </div>
+                    </div>
+                    <Button onClick={() => createForm.mutate(newForm)} disabled={createForm.isPending || !newForm.title || newForm.questions.length === 0} className="w-full">
+                      {createForm.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Create Form
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-destructive border-destructive/20 hover:border-destructive hover:bg-destructive/5"
+              onClick={() => {
+                if (window.confirm('Are you sure you want to disconnect this patient?')) {
+                  disconnectPatient.mutate();
+                }
+              }}
+            >
+              <X className="w-4 h-4 mr-2" /> Disconnect
+            </Button>
           </div>
         </CardContent>
       </Card>

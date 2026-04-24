@@ -122,10 +122,10 @@ export default defineConfig({
             // Handle Entities
             if (type === 'entities') {
               const entityName = rest[0];
-              db.entities[entityName] = db.entities[entityName] || [];
+              const list = db[entityName] || db.entities[entityName] || [];
 
               if (req.method === 'GET') {
-                res.end(JSON.stringify(db.entities[entityName]));
+                res.end(JSON.stringify(list));
                 return;
               }
 
@@ -136,7 +136,14 @@ export default defineConfig({
                   try {
                     const data = JSON.parse(body);
                     data.id = Math.random().toString(36).substr(2, 9);
-                    db.entities[entityName].push(data);
+                    
+                    if (db[entityName] && Array.isArray(db[entityName])) {
+                      db[entityName].push(data);
+                    } else {
+                      db.entities[entityName] = db.entities[entityName] || [];
+                      db.entities[entityName].push(data);
+                    }
+                    
                     saveDb(db);
                     res.end(JSON.stringify(data));
                   } catch (e) {
@@ -144,6 +151,47 @@ export default defineConfig({
                     res.end(JSON.stringify({ message: 'Invalid JSON' }));
                   }
                 });
+                return;
+              }
+
+              if (req.method === 'PATCH') {
+                const id = rest[1];
+                let body = '';
+                req.on('data', chunk => body += chunk);
+                req.on('end', () => {
+                  try {
+                    const data = JSON.parse(body);
+                    const targetList = db[entityName] || db.entities[entityName] || [];
+                    const index = targetList.findIndex(e => e.id == id);
+                    if (index !== -1) {
+                      targetList[index] = { ...targetList[index], ...data };
+                      saveDb(db);
+                      res.end(JSON.stringify(targetList[index]));
+                    } else {
+                      res.statusCode = 404;
+                      res.end(JSON.stringify({ message: 'Not found' }));
+                    }
+                  } catch (e) {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ message: 'Invalid JSON' }));
+                  }
+                });
+                return;
+              }
+
+              if (req.method === 'DELETE') {
+                const id = rest[1];
+                const targetList = db[entityName] || db.entities[entityName] || [];
+                const index = targetList.findIndex(e => e.id == id);
+                if (index !== -1) {
+                  targetList.splice(index, 1);
+                  saveDb(db);
+                  res.statusCode = 204;
+                  res.end();
+                } else {
+                  res.statusCode = 404;
+                  res.end(JSON.stringify({ message: 'Not found' }));
+                }
                 return;
               }
             }

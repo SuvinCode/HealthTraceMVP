@@ -8,7 +8,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 import AppLayout from './components/layout/AppLayout';
 import Onboarding from './pages/Onboarding';
-import FindDoctor from './pages/FindDoctor';
+
 import HealthForm from './pages/HealthForm';
 import Diary from './pages/Diary';
 import Appointments from './pages/Appointments';
@@ -68,7 +68,7 @@ const AuthenticatedApp = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/find-doctor" element={<FindDoctor />} />
+
       <Route element={<AppLayout />}>
         <Route path="/" element={<Navigate to={isDoctor ? '/doctor-dashboard' : '/health-form'} replace />} />
         <Route path="/health-form" element={<HealthForm />} />

@@ -1,4 +1,206 @@
 {
-  "users": [],
-  "entities": {}
+  "users": [
+    {
+      "id": 1,
+      "full_name": "Patient",
+      "email": "patient1@gmail.com",
+      "password": "patient1234",
+      "role": "user",
+      "onboarding_complete": true,
+      "age": 30,
+      "weight": 70,
+      "height": 175
+    },
+    {
+      "id": 2,
+      "full_name": "Doctor",
+      "email": "doctor@gmail.com",
+      "password": "doctor1234",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "age": 30,
+      "medical_license": "12345",
+      "specialisation": "Psychiatry"
+    },
+    {
+      "id": 10,
+      "full_name": "Ryan Gosling",
+      "email": "ryan@example.com",
+      "role": "user"
+    },
+    {
+      "id": 11,
+      "full_name": "Rebecca Black",
+      "email": "rebecca@example.com",
+      "role": "user"
+    },
+    {
+      "id": 12,
+      "full_name": "Robert Downey",
+      "email": "robert@example.com",
+      "role": "user"
+    },
+    {
+      "id": 13,
+      "full_name": "John Doe",
+      "email": "john@example.com",
+      "role": "user"
+    },
+    {
+      "id": 14,
+      "full_name": "Jane Smith",
+      "email": "jane@example.com",
+      "role": "user"
+    },
+    {
+      "id": 15,
+      "full_name": "Alice Cooper",
+      "email": "alice@example.com",
+      "role": "user"
+    },
+    {
+      "id": 16,
+      "full_name": "Bob Marley",
+      "email": "bob@example.com",
+      "role": "user"
+    },
+    {
+      "id": 17,
+      "full_name": "Charlie Chaplin",
+      "email": "charlie@example.com",
+      "role": "user"
+    },
+    {
+      "id": 18,
+      "full_name": "David Bowie",
+      "email": "david@example.com",
+      "role": "user"
+    },
+    {
+      "id": 19,
+      "full_name": "Prince",
+      "email": "prince@example.com",
+      "role": "user"
+    }
+  ],
+  "patients": [
+    {
+      "id": 1,
+      "full_name": "Patient",
+      "email": "patient1@gmail.com",
+      "role": "user"
+    },
+    {
+      "id": 10,
+      "full_name": "Ryan Gosling",
+      "email": "ryan@example.com",
+      "role": "user"
+    },
+    {
+      "id": 11,
+      "full_name": "Rebecca Black",
+      "email": "rebecca@example.com",
+      "role": "user"
+    },
+    {
+      "id": 12,
+      "full_name": "Robert Downey",
+      "email": "robert@example.com",
+      "role": "user"
+    },
+    {
+      "id": 13,
+      "full_name": "John Doe",
+      "email": "john@example.com",
+      "role": "user"
+    },
+    {
+      "id": 14,
+      "full_name": "Jane Smith",
+      "email": "jane@example.com",
+      "role": "user"
+    },
+    {
+      "id": 15,
+      "full_name": "Alice Cooper",
+      "email": "alice@example.com",
+      "role": "user"
+    },
+    {
+      "id": 16,
+      "full_name": "Bob Marley",
+      "email": "bob@example.com",
+      "role": "user"
+    },
+    {
+      "id": 17,
+      "full_name": "Charlie Chaplin",
+      "email": "charlie@example.com",
+      "role": "user"
+    },
+    {
+      "id": 18,
+      "full_name": "David Bowie",
+      "email": "david@example.com",
+      "role": "user"
+    },
+    {
+      "id": 19,
+      "full_name": "Prince",
+      "email": "prince@example.com",
+      "role": "user"
+    }
+  ],
+  "entities": {
+    "ConnectionRequest": [
+      {
+        "doctor_email": "doctor@gmail.com",
+        "doctor_name": "Doctor",
+        "patient_email": "patient1@gmail.com",
+        "patient_name": "Patient",
+        "status": "accepted",
+        "id": "o8135luwu"
+      }
+    ],
+    "MedicationTask": [
+      {
+        "medication_name": "test medication",
+        "type": "tablet",
+        "dosage": "100 mg",
+        "start_date": "2026-04-24",
+        "end_date": "2026-04-30",
+        "frequency": "twice_daily",
+        "patient_email": "patient1@gmail.com",
+        "patient_name": "Patient",
+        "doctor_email": "doctor@gmail.com",
+        "completed_dates": [],
+        "id": "tz4uq59el"
+      }
+    ],
+    "HealthForm": [
+      {
+        "title": "Test",
+        "questions": [
+          {
+            "label": "Test Question",
+            "type": "text",
+            "required": false,
+            "options": [],
+            "id": "q_1777044652986"
+          },
+          {
+            "label": "Test Question 2 (text)",
+            "type": "number",
+            "required": false,
+            "options": [],
+            "id": "q_1777044673363"
+          }
+        ],
+        "doctor_email": "doctor@gmail.com",
+        "patient_email": "patient1@gmail.com",
+        "active": true,
+        "id": "xn8v8ao9r"
+      }
+    ]
+  }
 }

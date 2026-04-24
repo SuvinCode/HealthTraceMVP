@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Calendar, ClipboardList, Plus, Users, LayoutDashboard, 
-  LogOut, Bell, Menu, X, FileText
+  LogOut, Bell, Menu, X, FileText, UserPlus
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/api/client';
@@ -17,6 +17,7 @@ const patientLinks = [
 
 const doctorLinks = [
   { to: '/doctor-dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/connection-requests', icon: UserPlus, label: 'Connect' },
   { to: '/patient-logs', icon: Users, label: 'Patients' },
   { to: '/appointments', icon: ClipboardList, label: 'Appointments' },
 ];
@@ -75,16 +76,7 @@ export default function AppLayout() {
           </nav>
 
           <div className="flex items-center gap-3">
-            {isDoctor && (
-              <Link to="/connection-requests" className="relative">
-                <Bell className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
-                {pendingRequests?.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center font-bold">
-                    {pendingRequests.length}
-                  </span>
-                )}
-              </Link>
-            )}
+
             <div className="hidden md:flex items-center gap-2 pl-3 border-l border-border">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-xs font-semibold text-primary">

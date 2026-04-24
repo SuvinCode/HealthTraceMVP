@@ -38,7 +38,7 @@ export default function Onboarding() {
     }
     await apiClient.auth.updateMe(data);
     await checkUserAuth();
-    navigate(role === 'doctor' ? '/doctor-dashboard' : '/find-doctor');
+    navigate(role === 'doctor' ? '/doctor-dashboard' : '/health-form');
   };
 
   return (
