@@ -80,11 +80,31 @@ export const apiClient = {
     },
     me() {
       const user = localStorage.getItem('user_info');
-      return user ? JSON.parse(user) : null;
+      if (user) return JSON.parse(user);
+      
+      // Fallback for mock auto-login (e.g. from Google redirect)
+      const token = localStorage.getItem('auth_token');
+      if (token && token.includes('@')) {
+        // If the token looks like an email, it's our simplified mock token
+        // In a real app, this would be a JWT that we'd decode or verify
+        const mockUser = {
+          email: token,
+          full_name: token.split('@')[0],
+          role: token === 'doctor@gmail.com' ? 'doctor' : 'user',
+          onboarding_complete: true
+        };
+        localStorage.setItem('user_info', JSON.stringify(mockUser));
+        return mockUser;
+      }
+      return null;
     },
     logout() {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_info');
+    },
+    googleLogin() {
+      // Mock Google login by redirecting with a test token
+      window.location.href = '/login?token=patient@gmail.com';
     },
   },
   entities: new Proxy(
