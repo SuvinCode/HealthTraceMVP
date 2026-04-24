@@ -86,11 +86,15 @@ export const apiClient = {
       const token = localStorage.getItem('auth_token');
       if (token && token.includes('@')) {
         // If the token looks like an email, it's our simplified mock token
-        // In a real app, this would be a JWT that we'd decode or verify
+        // Provide consistent IDs for known demo users from db.json
+        const isDoctor = token === 'doctor@gmail.com';
+        const isPatient = token === 'patient@gmail.com';
+        
         const mockUser = {
+          id: isDoctor ? 2 : (isPatient ? 1 : 999), 
           email: token,
           full_name: token.split('@')[0],
-          role: token === 'doctor@gmail.com' ? 'doctor' : 'user',
+          role: isDoctor ? 'doctor' : 'user',
           onboarding_complete: true
         };
         localStorage.setItem('user_info', JSON.stringify(mockUser));
@@ -105,6 +109,15 @@ export const apiClient = {
     googleLogin() {
       // Mock Google login by redirecting with a test token
       window.location.href = '/login?token=patient@gmail.com';
+    },
+    async updateMe(data) {
+      const userInfo = localStorage.getItem('user_info');
+      if (!userInfo) throw new Error('User not found in session');
+      const user = JSON.parse(userInfo);
+      // We use the same update logic as other entities
+      const updatedUser = await http(`/users/${user.id}`, { method: 'PATCH', body: data });
+      localStorage.setItem('user_info', JSON.stringify(updatedUser));
+      return updatedUser;
     },
   },
   entities: new Proxy(

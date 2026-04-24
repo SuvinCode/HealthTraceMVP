@@ -81,13 +81,24 @@
       "full_name": "Prince",
       "email": "prince@example.com",
       "role": "user"
+    },
+    {
+      "full_name": "Suvin",
+      "email": "suvinbusiness@gmail.com",
+      "password": "suvin7894",
+      "role": "user",
+      "id": 20,
+      "onboarding_complete": true,
+      "age": 40,
+      "weight": 70,
+      "height": 180
     }
   ],
   "patients": [
     {
       "id": 1,
       "full_name": "Patient",
-      "email": "patient1@gmail.com",
+      "email": "patient@gmail.com",
       "role": "user"
     },
     {
@@ -156,7 +167,7 @@
       {
         "doctor_email": "doctor@gmail.com",
         "doctor_name": "Doctor",
-        "patient_email": "patient1@gmail.com",
+        "patient_email": "patient@gmail.com",
         "patient_name": "Patient",
         "status": "accepted",
         "id": "o8135luwu"
@@ -170,7 +181,7 @@
         "start_date": "2026-04-24",
         "end_date": "2026-04-30",
         "frequency": "twice_daily",
-        "patient_email": "patient1@gmail.com",
+        "patient_email": "patient@gmail.com",
         "patient_name": "Patient",
         "doctor_email": "doctor@gmail.com",
         "completed_dates": [],
@@ -201,7 +212,7 @@
           }
         ],
         "doctor_email": "doctor@gmail.com",
-        "patient_email": "patient1@gmail.com",
+        "patient_email": "patient@gmail.com",
         "active": true,
         "id": "xn8v8ao9r"
       }
@@ -211,7 +222,7 @@
         "title": "test appointment",
         "date": "2026-04-25",
         "time_slot": "12:30",
-        "patient_email": "patient1@gmail.com",
+        "patient_email": "patient@gmail.com",
         "patient_name": "Patient",
         "doctor_email": "doctor@gmail.com",
         "doctor_name": "Doctor",
@@ -223,7 +234,7 @@
       {
         "form_id": "xn8v8ao9r",
         "form_title": "Test",
-        "patient_email": "patient1@gmail.com",
+        "patient_email": "patient@gmail.com",
         "patient_name": "Patient",
         "doctor_email": "doctor@gmail.com",
         "answers": [
@@ -244,7 +255,7 @@
       {
         "form_id": "xn8v8ao9r",
         "form_title": "Test",
-        "patient_email": "patient1@gmail.com",
+        "patient_email": "patient@gmail.com",
         "patient_name": "Patient",
         "doctor_email": "doctor@gmail.com",
         "answers": [
