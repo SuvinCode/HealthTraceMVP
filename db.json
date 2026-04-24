@@ -6,6 +6,16 @@
       "password": "test123",
       "role": "user",
       "onboarding_complete": false
+    },
+    {
+      "full_name": "Suvin",
+      "email": "suvinbusiness@gmail.com",
+      "password": "suvin1234",
+      "role": "user",
+      "onboarding_complete": true,
+      "age": 20,
+      "weight": 60,
+      "height": 180
     }
   ],
   "entities": {}
