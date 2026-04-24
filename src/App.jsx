@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-Client'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -22,9 +22,13 @@ import Signup from './pages/Signup';
 
 const AuthenticatedApp = () => {
   const { user, isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
 
-  // Show loading spinner while checking app public settings or auth
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  // Show loading spinner while checking auth, but skip it if we're already on an auth page
+  // or if there's no session at all (to show login/signup immediately)
+  const hasToken = !!localStorage.getItem('auth_token');
+  if (isLoadingPublicSettings || (isLoadingAuth && hasToken && !isAuthPage)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin"></div>
@@ -33,7 +37,6 @@ const AuthenticatedApp = () => {
   }
 
   // Handle authentication errors
-  const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/signup';
   if (authError && !isAuthPage) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
