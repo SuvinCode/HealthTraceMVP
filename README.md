@@ -22,7 +22,12 @@ npm install
 
 ```bash
 python -m venv .venv
+# Windows (PowerShell)
 .venv\Scripts\Activate.ps1
+
+# Linux/macOS
+source .venv/bin/activate
+
 pip install -r backend/requirements.txt
 ```
 
@@ -36,7 +41,7 @@ This runs:
 
 ```bash
 npm start           # Vite frontend
-npm run start:backend  # Flask backend on 127.0.0.1:5001
+npm run start:backend  # Flask backend on 127.0.0.1:5001 (cross-platform .venv path)
 ```
 
 5. Open the local URL shown by Vite in the terminal.
