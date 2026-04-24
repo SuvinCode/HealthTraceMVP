@@ -174,7 +174,11 @@
         "patient_name": "Patient",
         "doctor_email": "doctor@gmail.com",
         "completed_dates": [],
-        "id": "tz4uq59el"
+        "id": "tz4uq59el",
+        "scheduled_times": [
+          "04:30",
+          "14:45"
+        ]
       }
     ],
     "HealthForm": [
@@ -200,6 +204,63 @@
         "patient_email": "patient1@gmail.com",
         "active": true,
         "id": "xn8v8ao9r"
+      }
+    ],
+    "Appointment": [
+      {
+        "title": "test appointment",
+        "date": "2026-04-25",
+        "time_slot": "12:30",
+        "patient_email": "patient1@gmail.com",
+        "patient_name": "Patient",
+        "doctor_email": "doctor@gmail.com",
+        "doctor_name": "Doctor",
+        "status": "upcoming",
+        "id": "4qzm5te7a"
+      }
+    ],
+    "HealthFormSubmission": [
+      {
+        "form_id": "xn8v8ao9r",
+        "form_title": "Test",
+        "patient_email": "patient1@gmail.com",
+        "patient_name": "Patient",
+        "doctor_email": "doctor@gmail.com",
+        "answers": [
+          {
+            "question_id": "q_1777044652986",
+            "question_label": "Test Question",
+            "answer": "Helllo"
+          },
+          {
+            "question_id": "q_1777044673363",
+            "question_label": "Test Question 2 (text)",
+            "answer": "12"
+          }
+        ],
+        "created_date": "2026-04-24T15:43:16.458Z",
+        "id": "kbmjbin38"
+      },
+      {
+        "form_id": "xn8v8ao9r",
+        "form_title": "Test",
+        "patient_email": "patient1@gmail.com",
+        "patient_name": "Patient",
+        "doctor_email": "doctor@gmail.com",
+        "answers": [
+          {
+            "question_id": "q_1777044652986",
+            "question_label": "Test Question",
+            "answer": "Hey"
+          },
+          {
+            "question_id": "q_1777044673363",
+            "question_label": "Test Question 2 (text)",
+            "answer": "2"
+          }
+        ],
+        "created_date": "2026-04-24T15:47:19.315Z",
+        "id": "aox2wl32y"
       }
     ]
   }

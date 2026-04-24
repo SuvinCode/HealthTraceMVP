@@ -66,6 +66,11 @@ export default function Appointments() {
                   {isDoctor ? apt.patient_name : apt.doctor_name}
                 </span>
               </div>
+              {apt.description && (
+                <p className="mt-2 text-sm text-muted-foreground/80 italic line-clamp-2">
+                  "{apt.description}"
+                </p>
+              )}
               {isEmergencyWindow && !isDoctor && (
                 <Alert className="mt-2 py-2">
                   <AlertTriangle className="w-4 h-4" />

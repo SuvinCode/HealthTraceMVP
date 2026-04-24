@@ -28,6 +28,7 @@ export default function CreateAppointment() {
   const [doctorEmail, setDoctorEmail] = useState('');
   const [date, setDate] = useState(null);
   const [timeSlot, setTimeSlot] = useState('');
+  const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
 
   const { data: connections } = useQuery({
@@ -61,6 +62,7 @@ export default function CreateAppointment() {
     const conn = connections.find(c => c.doctor_email === doctorEmail);
     await apiClient.entities.Appointment.create({
       title,
+      description,
       date: format(date, 'yyyy-MM-dd'),
       time_slot: timeSlot,
       patient_email: user.email,
@@ -94,6 +96,16 @@ export default function CreateAppointment() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label>Description (Optional)</Label>
+            <Input 
+              placeholder="Add some details about this appointment..." 
+              value={description} 
+              onChange={e => setDescription(e.target.value)} 
+              className="mt-1.5" 
+            />
           </div>
 
           <div>

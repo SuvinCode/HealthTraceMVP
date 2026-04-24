@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { apiClient } from '@/api/client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import NotificationBell from './NotificationBell';
 
 const patientLinks = [
   { to: '/health-form', icon: FileText, label: 'Health Form' },
@@ -88,6 +89,7 @@ export default function AppLayout() {
                 <span className="text-xs text-muted-foreground capitalize">{user?.role || 'user'}</span>
               </div>
             </div>
+            <NotificationBell />
             <Button
               variant="ghost"
               size="icon"

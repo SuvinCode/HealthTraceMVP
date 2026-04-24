@@ -14,6 +14,7 @@ import { FileText, Send, Loader2, Clock, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 
 export default function HealthForm() {
@@ -21,6 +22,8 @@ export default function HealthForm() {
   const queryClient = useQueryClient();
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  const [editingSub, setEditingSub] = useState(null);
 
   const { data: connections } = useQuery({
     queryKey: ['my-connections', user?.email],
@@ -30,8 +33,14 @@ export default function HealthForm() {
 
   const doctorEmails = connections.map(c => c.doctor_email);
 
+  const { data: submissions } = useQuery({
+    queryKey: ['my-submissions', user?.email],
+    queryFn: () => apiClient.entities.HealthFormSubmission.filter({ patient_email: user?.email }),
+    initialData: [],
+  });
+
   const { data: forms, isLoading } = useQuery({
-    queryKey: ['health-forms', doctorEmails],
+    queryKey: ['health-forms', doctorEmails, submissions],
     queryFn: async () => {
       if (doctorEmails.length === 0) return [];
       const allForms = [];
@@ -39,37 +48,54 @@ export default function HealthForm() {
         const f = await apiClient.entities.HealthForm.filter({ doctor_email: email, active: true });
         allForms.push(...f);
       }
-      return allForms.filter(f => !f.patient_email || f.patient_email === user.email);
+      const existingSubIds = submissions.map(s => s.form_id);
+      return allForms.filter(f => (!f.patient_email || f.patient_email === user.email) && !existingSubIds.includes(f.id));
     },
     enabled: doctorEmails.length > 0,
     initialData: [],
   });
 
-  const { data: submissions } = useQuery({
-    queryKey: ['my-submissions', user?.email],
-    queryFn: () => apiClient.entities.HealthFormSubmission.filter({ patient_email: user?.email }),
-    initialData: [],
-  });
-
-  const handleSubmit = async (form) => {
+  const handleSubmit = async (form, isEdit = false, subId = null) => {
     setSubmitting(true);
     const formAnswers = form.questions.map(q => ({
       question_id: q.id,
       question_label: q.label,
       answer: String(answers[q.id] || ''),
     }));
-    await apiClient.entities.HealthFormSubmission.create({
-      form_id: form.id,
-      form_title: form.title,
-      patient_email: user.email,
-      patient_name: user.full_name,
-      doctor_email: form.doctor_email,
-      answers: formAnswers,
-    });
+
+    if (isEdit && subId) {
+      await apiClient.entities.HealthFormSubmission.update(subId, {
+        answers: formAnswers,
+        updated_date: new Date().toISOString(),
+      });
+      toast.success('Submission updated!');
+      setEditingSub(null);
+    } else {
+      await apiClient.entities.HealthFormSubmission.create({
+        form_id: form.id,
+        form_title: form.title,
+        patient_email: user.email,
+        patient_name: user.full_name,
+        doctor_email: form.doctor_email,
+        answers: formAnswers,
+        created_date: new Date().toISOString(),
+      });
+      toast.success('Form submitted successfully!');
+    }
+
     setAnswers({});
     queryClient.invalidateQueries({ queryKey: ['my-submissions'] });
-    toast.success('Form submitted successfully!');
+    queryClient.invalidateQueries({ queryKey: ['health-forms'] });
     setSubmitting(false);
+  };
+
+  const openEdit = (sub) => {
+    const initialAnswers = {};
+    sub.answers.forEach(a => {
+      initialAnswers[a.question_id] = a.answer;
+    });
+    setAnswers(initialAnswers);
+    setEditingSub(sub);
   };
 
   const renderQuestion = (q) => {
@@ -113,7 +139,7 @@ export default function HealthForm() {
           {forms.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground">
               <FileText className="w-12 h-12 mx-auto mb-3 opacity-40" />
-              <p>No forms available yet. Your doctor will add forms for you to fill out.</p>
+              <p>No new forms available. Check history to edit past submissions.</p>
             </div>
           ) : (
             forms.map((form, i) => (
@@ -148,22 +174,23 @@ export default function HealthForm() {
             <div className="text-center py-16 text-muted-foreground">No submissions yet</div>
           ) : (
             [...submissions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).map(sub => (
-              <Card key={sub.id} className="opacity-90">
+              <Card key={sub.id} className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => openEdit(sub)}>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <CheckCircle2 className="w-4 h-4 text-primary" />
                     <span className="font-medium">{sub.form_title}</span>
                     <Badge variant="secondary" className="ml-auto text-xs">
-                      {format(new Date(sub.created_date), 'MMM d, yyyy h:mm a')}
+                      {sub.created_date ? format(new Date(sub.created_date), 'MMM d, yyyy h:mm a') : 'Recently submitted'}
                     </Badge>
                   </div>
                   <div className="space-y-1.5">
-                    {sub.answers?.map((a, i) => (
-                      <div key={i} className="text-sm">
+                    {sub.answers?.slice(0, 2).map((a, i) => (
+                      <div key={i} className="text-sm truncate">
                         <span className="text-muted-foreground">{a.question_label}: </span>
                         <span className="text-foreground font-medium">{a.answer || '—'}</span>
                       </div>
                     ))}
+                    {sub.answers?.length > 2 && <p className="text-[10px] text-muted-foreground italic">Click to see {sub.answers.length - 2} more...</p>}
                   </div>
                 </CardContent>
               </Card>
@@ -171,6 +198,39 @@ export default function HealthForm() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Edit Submission Dialog */}
+      <Dialog open={!!editingSub} onOpenChange={(open) => !open && setEditingSub(null)}>
+        <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Submission: {editingSub?.form_title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 mt-4">
+            {editingSub && (
+              // Note: We need the original form definition to get the question types
+              // For simplicity in this mock, we assume the sub answers are enough or we fetch form
+              // Since we don't have the full form objects for history without extra queries,
+              // we'll use a simplified list in the edit dialog or just the questions from the answers.
+              editingSub.answers.map((a, i) => (
+                <div key={i} className="space-y-2">
+                  <Label>{a.question_label}</Label>
+                  <Input 
+                    value={answers[a.question_id] || ''} 
+                    onChange={e => setAnswers(p => ({ ...p, [a.question_id]: e.target.value }))} 
+                  />
+                </div>
+              ))
+            )}
+            <div className="flex gap-2">
+              <Button onClick={() => handleSubmit({ id: editingSub.form_id, questions: editingSub.answers.map(a => ({ id: a.question_id, label: a.question_label })) }, true, editingSub.id)} disabled={submitting} className="flex-1">
+                {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                Save Changes
+              </Button>
+              <Button variant="ghost" onClick={() => setEditingSub(null)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

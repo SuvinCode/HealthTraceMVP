@@ -105,9 +105,16 @@ function AppointmentBlock({ apt, onComplete, onCancel }) {
         <p className={`font-medium truncate ${apt.status === 'completed' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
           {apt.title}
         </p>
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <User className="w-3 h-3" /> {apt.patient_name}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <User className="w-3 h-3" /> {apt.patient_name}
+          </p>
+          {apt.description && (
+            <p className="text-xs text-muted-foreground/60 italic truncate max-w-[150px]">
+              - {apt.description}
+            </p>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-1 shrink-0">
         {apt.status === 'upcoming' && (
