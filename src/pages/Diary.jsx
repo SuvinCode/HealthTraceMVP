@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronLeft, ChevronRight, Pill, Calendar as CalIcon, Clock, FileText, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pill, Calendar as CalIcon, Clock, FileText, CheckCircle2, Pencil } from 'lucide-react';
 import { 
   format, isSameDay, isWithinInterval, parseISO, addMonths, subMonths, 
   startOfMonth, endOfMonth, eachDayOfInterval, getDay, startOfDay, addDays, 
@@ -37,13 +37,29 @@ export default function Diary() {
   // Data Fetching
   const { data: medications } = useQuery({
     queryKey: ['medication-tasks', user?.email],
-    queryFn: () => apiClient.entities.MedicationTask.filter({ patient_email: user?.email }),
+    queryFn: async () => {
+      const allTasks = await apiClient.entities.MedicationTask.filter();
+      return allTasks.filter((task) => {
+        const byEmail = task.patient_email === user?.email;
+        const byName = task.patient_name === user?.full_name;
+        return byEmail || byName;
+      });
+    },
+    enabled: !!user?.email,
     initialData: [],
   });
 
   const { data: appointments } = useQuery({
     queryKey: ['my-appointments', user?.email],
-    queryFn: () => apiClient.entities.Appointment.filter({ patient_email: user?.email }),
+    queryFn: async () => {
+      const allAppointments = await apiClient.entities.Appointment.filter();
+      return allAppointments.filter((appointment) => {
+        const byEmail = appointment.patient_email === user?.email;
+        const byName = appointment.patient_name === user?.full_name;
+        return byEmail || byName;
+      });
+    },
+    enabled: !!user?.email,
     initialData: [],
   });
 
@@ -227,15 +243,20 @@ export default function Diary() {
             <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Upcoming</h3>
             <div className="space-y-3">
               {timelineEvents.slice(0, 3).map(e => (
-                <div key={e.id} className="flex gap-3 items-start px-1 group cursor-pointer">
+                <div key={e.id} className="flex gap-3 items-center px-1 group">
                   <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${
                     e.type === 'medication' ? 'bg-blue-500' : 
                     e.type === 'appointment' ? 'bg-emerald-500' : 'bg-amber-500'
                   }`} />
-                  <div>
+                  <div className="flex-1">
                     <p className="text-[11px] font-semibold leading-none mb-1 group-hover:text-primary transition-colors">{e.title}</p>
                     <p className="text-[10px] text-muted-foreground">{e.time}</p>
                   </div>
+                  {e.title !== 'test appointment' && (
+                    <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => openManualEdit(e)}>
+                      <Pencil className="w-3 h-3" />
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -297,7 +318,6 @@ export default function Diary() {
                         dragElastic={0}
                         dragMomentum={false}
                         onDragEnd={(e, info) => handleDragEnd(e, info, event)}
-                        onClick={() => openManualEdit(event)}
                         whileDrag={{ zIndex: 50, scale: 1.02, boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)' }}
                         className={`absolute left-1 right-2 p-2 rounded-lg border shadow-sm pointer-events-auto cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md hover:brightness-95 group overflow-hidden ${TYPE_COLORS[event.type]}`}
                         style={{ 

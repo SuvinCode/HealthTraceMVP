@@ -7,7 +7,7 @@ HealthTrace is a role-based healthcare tracking app for patients and doctors.
 ### Prerequisites
 
 1. Node.js 18+ and npm
-2. A running backend API that serves auth and entity routes under `/api/*`
+2. Python 3.10+
 
 ### Install and Run
 
@@ -18,23 +18,43 @@ HealthTrace is a role-based healthcare tracking app for patients and doctors.
 npm install
 ```
 
-3. Create `.env.local` in the project root:
+3. Install backend Python packages:
 
-```env
-VITE_API_BASE_URL=http://localhost:3000
+```bash
+python3 -m venv backend/venv
+source backend/venv/bin/activate
+pip install -r backend/requirements.txt
 ```
 
-Use your backend URL and port. Example: `http://localhost:8000`.
+4. Start both frontend and backend together:
 
-If your backend also uses port `3000`, change the Vite frontend port in `vite.config.js` (or point `VITE_API_BASE_URL` to a different backend port) to avoid conflicts.
+```bash
+npm run dev
+```
 
-4. Start the frontend dev server:
+This runs:
+
+```bash
+npm start           # Vite frontend
+npm run start:backend  # Flask backend on 127.0.0.1:5001
+```
+
+5. Open the local URL shown by Vite in the terminal.
+
+### Run Servers Separately (Optional)
+
+1. Frontend only:
 
 ```bash
 npm start
 ```
 
-5. Open the local URL shown by Vite (browser auto-open is enabled in config).
+2. Backend only:
+
+```bash
+source backend/venv/bin/activate
+npm run start:backend
+```
 
 ### Other Useful Commands
 

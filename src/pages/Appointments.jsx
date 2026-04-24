@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Clock, User, Stethoscope, X, AlertTriangle, Phone } from 'lucide-react';
-import { format, differenceInHours, isPast, parseISO } from 'date-fns';
+import { format, differenceInHours, isPast, parse } from 'date-fns';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -19,10 +19,20 @@ export default function Appointments() {
 
   const { data: appointments, isLoading } = useQuery({
     queryKey: ['appointments', user?.email],
-    queryFn: () => {
-      const emailField = isDoctor ? 'doctor_email' : 'patient_email';
-      return apiClient.entities.Appointment.filter({ [emailField]: user?.email });
+    queryFn: async () => {
+      const allAppointments = await apiClient.entities.Appointment.filter();
+      return allAppointments.filter((appointment) => {
+        if (isDoctor) {
+          const byEmail = appointment.doctor_email === user?.email;
+          const byName = appointment.doctor_name === user?.full_name;
+          return byEmail || byName;
+        }
+        const byEmail = appointment.patient_email === user?.email;
+        const byName = appointment.patient_name === user?.full_name;
+        return byEmail || byName;
+      });
     },
+    enabled: !!user?.email,
     initialData: [],
   });
 
@@ -35,18 +45,21 @@ export default function Appointments() {
   });
 
   const now = new Date();
-  const upcoming = appointments.filter(a => a.status === 'upcoming' && !isPast(parseISO(a.date)));
-  const past = appointments.filter(a => a.status === 'completed' || (a.status === 'upcoming' && isPast(parseISO(a.date))));
+
+  const getAppointmentDate = (apt) => parse(`${apt.date} ${apt.time_slot}`, 'yyyy-MM-dd HH:mm', new Date());
+
+  const upcoming = appointments.filter(a => a.status === 'upcoming' && !isPast(getAppointmentDate(a)));
+  const past = appointments.filter(a => a.status === 'completed' || (a.status === 'upcoming' && isPast(getAppointmentDate(a))));
   const cancelled = appointments.filter(a => a.status === 'cancelled');
 
   const canModify = (apt) => {
-    const aptDate = parseISO(apt.date);
+    const aptDate = getAppointmentDate(apt);
     return differenceInHours(aptDate, now) > 24;
   };
 
   const AppointmentCard = ({ apt, showActions = true }) => {
     const editable = canModify(apt);
-    const aptDate = parseISO(apt.date);
+    const aptDate = getAppointmentDate(apt);
     const isEmergencyWindow = !editable && apt.status === 'upcoming' && !isPast(aptDate);
 
     return (

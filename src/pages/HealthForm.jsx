@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Send, Loader2, Clock, CheckCircle2 } from 'lucide-react';
+import { FileText, Send, Loader2, Clock, CheckCircle2, Stethoscope, Mail } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,17 +27,49 @@ export default function HealthForm() {
 
   const { data: connections } = useQuery({
     queryKey: ['my-connections', user?.email],
-    queryFn: () => apiClient.entities.ConnectionRequest.filter({ patient_email: user?.email, status: 'accepted' }),
+    queryFn: async () => {
+      const allConnections = await apiClient.entities.ConnectionRequest.filter();
+      return allConnections.filter((connection) => {
+        const status = String(connection.status || '').toLowerCase();
+        const byEmail = connection.patient_email === user?.email;
+        const byName = connection.patient_name === user?.full_name;
+        return status === 'accepted' && (byEmail || byName);
+      });
+    },
+    enabled: !!user?.email,
     initialData: [],
   });
 
-  const doctorEmails = connections.map(c => c.doctor_email);
+  const connectedDoctors = useMemo(() => {
+    const uniqueDoctors = new Map();
+    connections.forEach((connection) => {
+      if (!connection.doctor_email) return;
+      if (!uniqueDoctors.has(connection.doctor_email)) {
+        uniqueDoctors.set(connection.doctor_email, {
+          email: connection.doctor_email,
+          name: connection.doctor_name || connection.doctor_email,
+        });
+      }
+    });
+    return Array.from(uniqueDoctors.values());
+  }, [connections]);
+
+  const doctorEmails = connectedDoctors.map(d => d.email);
 
   const { data: submissions } = useQuery({
     queryKey: ['my-submissions', user?.email],
-    queryFn: () => apiClient.entities.HealthFormSubmission.filter({ patient_email: user?.email }),
+    queryFn: async () => {
+      const allSubmissions = await apiClient.entities.HealthFormSubmission.filter();
+      return allSubmissions.filter((submission) => {
+        const byEmail = submission.patient_email === user?.email;
+        const byName = submission.patient_name === user?.full_name;
+        return byEmail || byName;
+      });
+    },
+    enabled: !!user?.email,
     initialData: [],
   });
+
 
   const { data: forms, isLoading } = useQuery({
     queryKey: ['health-forms', doctorEmails, submissions],
@@ -129,7 +161,10 @@ export default function HealthForm() {
   return (
     <div>
       <h1 className="font-heading text-2xl font-bold text-foreground mb-6">Health Forms</h1>
-      <Tabs defaultValue="forms">
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div>
+          <Tabs defaultValue="forms">
         <TabsList>
           <TabsTrigger value="forms"><FileText className="w-4 h-4 mr-1.5" /> Active Forms</TabsTrigger>
           <TabsTrigger value="history"><Clock className="w-4 h-4 mr-1.5" /> Submission History</TabsTrigger>
@@ -198,6 +233,38 @@ export default function HealthForm() {
           )}
         </TabsContent>
       </Tabs>
+        </div>
+
+        <aside className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Stethoscope className="w-4 h-4 text-primary" />
+                Doctors Connected To
+              </CardTitle>
+              <CardDescription>
+                Doctors currently linked to your account
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {connectedDoctors.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No connected doctors yet.</p>
+              ) : (
+                connectedDoctors.map((doctor) => (
+                  <div key={doctor.email} className="rounded-lg border p-3 bg-card/50">
+                    <p className="text-sm font-semibold text-foreground">{doctor.name}</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+                      <Mail className="w-3 h-3" />
+                      {doctor.email}
+                    </p>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
+        </aside>
+      </div>
 
       {/* Edit Submission Dialog */}
       <Dialog open={!!editingSub} onOpenChange={(open) => !open && setEditingSub(null)}>

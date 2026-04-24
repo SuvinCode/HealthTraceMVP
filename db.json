@@ -3,7 +3,7 @@
     {
       "id": 1,
       "full_name": "Patient",
-      "email": "patient1@gmail.com",
+      "email": "patient@gmail.com",
       "password": "patient1234",
       "role": "user",
       "onboarding_complete": true,
@@ -176,7 +176,7 @@
         "completed_dates": [],
         "id": "tz4uq59el",
         "scheduled_times": [
-          "04:30",
+          "04:00",
           "14:45"
         ]
       }

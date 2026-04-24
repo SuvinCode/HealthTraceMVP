@@ -1,5 +1,4 @@
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
-const LOGIN_PATH = import.meta.env.VITE_LOGIN_PATH || '/login';
+const API_BASE_URL = 'http://127.0.0.1:5001';
 
 function buildUrl(path, query) {
   const url = new URL(`${API_BASE_URL}${path}`);
@@ -39,7 +38,7 @@ async function http(path, { method = 'GET', body, query } = {}) {
 }
 
 function entityApi(entityName) {
-  const basePath = `/api/entities/${entityName}`;
+  const basePath = `/${entityName}`;
   return {
     filter(params = {}) {
       return http(basePath, { query: params });
@@ -61,49 +60,46 @@ function entityApi(entityName) {
 
 export const apiClient = {
   auth: {
-    me() {
-      return http('/api/auth/me');
-    },
-    updateMe(payload) {
-      return http('/api/auth/me', { method: 'PATCH', body: payload });
-    },
     async login(credentials) {
-      const response = await http('/api/auth/login', { method: 'POST', body: credentials });
-      if (response && response.token) {
-        localStorage.setItem('auth_token', response.token);
-      }
-      return response;
+      const user = await http('/login', { method: 'POST', body: credentials });
+      const token = btoa(`${user.email}:${user.password}`); // Simple mock token
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('user_info', JSON.stringify(user));
+      return { token, user };
     },
     async register(data) {
-      const response = await http('/api/auth/register', { method: 'POST', body: data });
-      if (response && response.token) {
-        localStorage.setItem('auth_token', response.token);
+      const existing = await http('/users', { query: { email: data.email } });
+      if (existing.length > 0) {
+        throw new Error('User already exists');
       }
-      return response;
+      const newUser = await http('/users', { method: 'POST', body: data });
+      const token = btoa(`${newUser.email}:${newUser.password}`);
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('user_info', JSON.stringify(newUser));
+      return { token, user: newUser };
     },
-    googleLogin() {
-      window.location.href = buildUrl('/api/auth/google');
+    me() {
+      const user = localStorage.getItem('user_info');
+      return user ? JSON.parse(user) : null;
     },
-    logout(returnTo) {
+    logout() {
       localStorage.removeItem('auth_token');
-      // Clear legacy token key from older app versions.
-      localStorage.removeItem('token');
-      if (returnTo) {
-        window.location.href = returnTo;
-      }
-    },
-    redirectToLogin(returnTo) {
-      // In a SPA, we usually navigate to /login via router, 
-      // but if the backend handles login, this stays as is.
-      // We will update App.jsx to handle routing to /login page.
-      window.location.href = `${window.location.origin}/login?returnTo=${encodeURIComponent(returnTo || window.location.href)}`;
+      localStorage.removeItem('user_info');
     },
   },
   entities: new Proxy(
     {},
     {
       get(_target, prop) {
-        return entityApi(String(prop));
+        // Handle nested entities from db.json
+        const entityMap = {
+          ConnectionRequest: 'ConnectionRequest',
+          MedicationTask: 'MedicationTask',
+          HealthForm: 'HealthForm',
+          Appointment: 'Appointment',
+          HealthFormSubmission: 'HealthFormSubmission'
+        };
+        return entityApi(entityMap[prop] || prop);
       },
     }
   ),

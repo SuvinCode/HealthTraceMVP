@@ -40,18 +40,16 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
     try {
       setIsLoadingAuth(true);
-      const currentUser = await apiClient.auth.me();
+      const currentUser = apiClient.auth.me();
       setUser(currentUser);
-      setIsAuthenticated(true);
+      setIsAuthenticated(!!currentUser);
     } catch (error) {
       setUser(null);
       setIsAuthenticated(false);
-      if (error.status === 401 || error.status === 403) {
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
-      }
+      setAuthError({
+        type: 'auth_error',
+        message: 'An error occurred during authentication'
+      });
     } finally {
       setIsLoadingAuth(false);
       setAuthChecked(true);
@@ -59,21 +57,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = (shouldRedirect = true) => {
+    apiClient.auth.logout();
     setUser(null);
     setIsAuthenticated(false);
-
-    // Always clear local auth state/token first.
-    apiClient.auth.logout();
-
     if (shouldRedirect) {
-      apiClient.auth.redirectToLogin(window.location.href);
-      return;
+      window.location.href = '/login';
     }
   };
 
   const navigateToLogin = () => {
-    // We already updated apiClient.auth.redirectToLogin to point to /login in the frontend
-    apiClient.auth.redirectToLogin(window.location.href);
+    window.location.href = '/login';
   };
 
   const login = async (credentials) => {
