@@ -1,0 +1,26 @@
+{
+  "users": [
+    {
+      "email": "user@example.com",
+      "password": "password",
+      "full_name": "Default User",
+      "role": "user",
+      "onboarding_complete": false
+    },
+    {
+      "full_name": "Test 123",
+      "email": "test@gmail.com",
+      "password": "test123",
+      "role": "user",
+      "onboarding_complete": false
+    },
+    {
+      "full_name": "test123",
+      "email": "test123@gmail.com",
+      "password": "test123",
+      "role": "user",
+      "onboarding_complete": false
+    }
+  ],
+  "entities": {}
+}

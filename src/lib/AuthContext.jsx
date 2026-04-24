@@ -13,8 +13,23 @@ export const AuthProvider = ({ children }) => {
   const [appPublicSettings, setAppPublicSettings] = useState(null);
 
   useEffect(() => {
+    handleUrlToken();
     checkUserAuth();
   }, []);
+
+  const handleUrlToken = () => {
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    
+    const token = params.get('token') || hashParams.get('access_token');
+    
+    if (token) {
+      localStorage.setItem('auth_token', token);
+      // Clean up URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  };
 
   const checkAppState = async () => {
     return checkUserAuth();
@@ -79,6 +94,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleLogin = () => {
+    apiClient.auth.googleLogin();
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -91,6 +110,7 @@ export const AuthProvider = ({ children }) => {
       logout,
       login,
       register,
+      googleLogin,
       navigateToLogin,
       checkUserAuth,
       checkAppState

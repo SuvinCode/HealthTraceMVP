@@ -1,14 +1,12 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { 
-  Heart, Calendar, ClipboardList, Plus, Users, LayoutDashboard, 
-  LogOut, Bell, Search, Menu, X, FileText
+import { Calendar, ClipboardList, Plus, Users, LayoutDashboard, 
+  LogOut, Bell, Menu, X, FileText
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/api/client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 const patientLinks = [
   { to: '/health-form', icon: FileText, label: 'Health Form' },

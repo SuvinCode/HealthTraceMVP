@@ -5,13 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Mail, Lock, ArrowRight, Loader2, Chrome } from 'lucide-react';
+import { Mail, Lock, Loader2, Chrome } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { apiClient } from '@/api/client';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -113,7 +112,7 @@ export default function Login() {
                 type="button" 
                 variant="outline" 
                 className="w-full h-11 border-slate-200 hover:bg-slate-50 transition-colors"
-                onClick={() => apiClient.auth.googleLogin()}
+                onClick={() => googleLogin()}
               >
                 <Chrome className="w-4 h-4 mr-2" />
                 Google

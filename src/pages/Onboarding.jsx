@@ -13,8 +13,9 @@ import { motion } from 'framer-motion';
 export default function Onboarding() {
   const { user, checkUserAuth } = useAuth();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [role, setRole] = useState('user');
+  // If role was already selected during signup (and it's not the default 'user'), skip to step 2
+  const [step, setStep] = useState(user?.role && user.role !== 'user' ? 2 : 1);
+  const [role, setRole] = useState(user?.role || 'user');
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     age: '', weight: '', height: '',

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ChevronLeft, ChevronRight, Pill, Calendar as CalIcon } from 'lucide-react';
-import { format, addDays, startOfWeek, isSameDay, isWithinInterval, parseISO, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from 'date-fns';
+import { format, isSameDay, isWithinInterval, parseISO, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from 'date-fns';
 
 const FREQ_LABELS = {
   once_daily: 'Once daily',

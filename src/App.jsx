@@ -21,7 +21,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 
 const AuthenticatedApp = () => {
-  const { user, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { user, isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -33,7 +33,8 @@ const AuthenticatedApp = () => {
   }
 
   // Handle authentication errors
-  if (authError) {
+  const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/signup';
+  if (authError && !isAuthPage) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
@@ -42,7 +43,6 @@ const AuthenticatedApp = () => {
   }
 
   // If not authenticated and no specific error, redirect to login
-  const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/signup';
   if (!user && !isLoadingAuth && !isAuthPage) {
     return <Navigate to="/login" replace />;
   }
@@ -64,6 +64,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/find-doctor" element={<FindDoctor />} />
       <Route element={<AppLayout />}>
         <Route path="/" element={<Navigate to={isDoctor ? '/doctor-dashboard' : '/health-form'} replace />} />

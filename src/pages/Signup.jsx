@@ -8,10 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Mail, Lock, User, UserCircle, Stethoscope, Loader2, Chrome } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { apiClient } from '@/api/client';
 
 export default function Signup() {
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState('user'); // default to patient
@@ -27,7 +26,7 @@ export default function Signup() {
     try {
       await register({ ...formData, role });
       toast.success('Account created successfully!');
-      navigate('/');
+      navigate('/onboarding');
     } catch (error) {
       toast.error(error.message || 'Failed to create account');
     } finally {
@@ -151,7 +150,7 @@ export default function Signup() {
                 type="button" 
                 variant="outline" 
                 className="w-full h-11 border-slate-200 hover:bg-slate-50 transition-colors"
-                onClick={() => apiClient.auth.googleLogin()}
+                onClick={() => googleLogin()}
               >
                 <Chrome className="w-4 h-4 mr-2" />
                 Google
