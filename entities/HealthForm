@@ -1,0 +1,59 @@
+{
+  "name": "HealthForm",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Form title"
+    },
+    "doctor_email": {
+      "type": "string"
+    },
+    "patient_email": {
+      "type": "string",
+      "description": "Specific patient or empty for all connected patients"
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "number",
+              "select",
+              "textarea",
+              "boolean"
+            ]
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "title",
+    "doctor_email",
+    "questions"
+  ]
+}

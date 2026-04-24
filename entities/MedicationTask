@@ -1,0 +1,68 @@
+{
+  "name": "MedicationTask",
+  "type": "object",
+  "properties": {
+    "medication_name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "tablet",
+        "capsule",
+        "liquid",
+        "injection",
+        "topical",
+        "inhaler",
+        "other"
+      ],
+      "default": "tablet"
+    },
+    "dosage": {
+      "type": "string",
+      "description": "e.g. 500mg"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "frequency": {
+      "type": "string",
+      "enum": [
+        "once_daily",
+        "twice_daily",
+        "three_times_daily",
+        "weekly",
+        "as_needed"
+      ],
+      "default": "once_daily"
+    },
+    "patient_email": {
+      "type": "string"
+    },
+    "patient_name": {
+      "type": "string"
+    },
+    "doctor_email": {
+      "type": "string"
+    },
+    "completed_dates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of date strings when task was completed"
+    }
+  },
+  "required": [
+    "medication_name",
+    "patient_email",
+    "doctor_email",
+    "start_date",
+    "end_date"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "ConnectionRequest",
+  "type": "object",
+  "properties": {
+    "patient_email": {
+      "type": "string",
+      "description": "Email of the patient sending the request"
+    },
+    "patient_name": {
+      "type": "string",
+      "description": "Name of the patient"
+    },
+    "doctor_email": {
+      "type": "string",
+      "description": "Email of the doctor receiving the request"
+    },
+    "doctor_name": {
+      "type": "string",
+      "description": "Name of the doctor"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected"
+      ],
+      "default": "pending"
+    }
+  },
+  "required": [
+    "patient_email",
+    "doctor_email",
+    "status"
+  ]
+}

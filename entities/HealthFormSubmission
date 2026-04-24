@@ -1,0 +1,44 @@
+{
+  "name": "HealthFormSubmission",
+  "type": "object",
+  "properties": {
+    "form_id": {
+      "type": "string"
+    },
+    "form_title": {
+      "type": "string"
+    },
+    "patient_email": {
+      "type": "string"
+    },
+    "patient_name": {
+      "type": "string"
+    },
+    "doctor_email": {
+      "type": "string"
+    },
+    "answers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question_id": {
+            "type": "string"
+          },
+          "question_label": {
+            "type": "string"
+          },
+          "answer": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "form_id",
+    "patient_email",
+    "doctor_email",
+    "answers"
+  ]
+}

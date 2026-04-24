@@ -1,0 +1,50 @@
+{
+  "name": "Appointment",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Appointment name/title"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Appointment date"
+    },
+    "time_slot": {
+      "type": "string",
+      "description": "Time slot (e.g. 09:00)"
+    },
+    "patient_email": {
+      "type": "string"
+    },
+    "patient_name": {
+      "type": "string"
+    },
+    "doctor_email": {
+      "type": "string"
+    },
+    "doctor_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "upcoming",
+        "completed",
+        "cancelled"
+      ],
+      "default": "upcoming"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "date",
+    "time_slot",
+    "patient_email",
+    "doctor_email"
+  ]
+}
