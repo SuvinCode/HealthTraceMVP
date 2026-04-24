@@ -21,8 +21,8 @@ npm install
 3. Install backend Python packages:
 
 ```bash
-python3 -m venv backend/venv
-source backend/venv/bin/activate
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 pip install -r backend/requirements.txt
 ```
 
@@ -52,9 +52,10 @@ npm start
 2. Backend only:
 
 ```bash
-source backend/venv/bin/activate
 npm run start:backend
 ```
+
+This command is cross-platform and auto-uses `.venv` on both Windows and Linux.
 
 ### Other Useful Commands
 
