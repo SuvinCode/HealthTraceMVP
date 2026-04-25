@@ -178,6 +178,15 @@ export default function Landing() {
           >
             See how it works
           </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05, shadow: "0px 10px 30px rgba(30, 45, 78, 0.2)" }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => scrollTo('reviews-section')}
+            style={{ backgroundColor: '#1E2D4E' }}
+            className="text-white px-8 py-4 rounded-xl font-medium text-lg hover:opacity-90 transition-all shadow-lg shadow-slate-900/10"
+          >
+            Leave a review
+          </motion.button>
         </motion.div>
       </section>
       </div>{/* end hero gradient wrapper */}
@@ -320,7 +329,7 @@ export default function Landing() {
       </section>
 
       {/* Reviews Section */}
-      <section className="px-8 py-32 bg-primary/5">
+      <section id="reviews-section" className="px-8 py-32 bg-primary/5">
         <div className="max-w-3xl mx-auto">
           <motion.div
             initial={{ y: 30, opacity: 0 }}

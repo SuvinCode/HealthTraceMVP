@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { User, FileText, Pill, Calendar, Plus, ArrowLeft, Loader2, Clock, CheckCircle2, Ruler, Weight, Heart, X, BookOpen, Sparkles, TrendingUp } from 'lucide-react';
-import { format, parseISO, subDays, isToday, eachDayOfInterval, isFuture, startOfDay, isWithinInterval } from 'date-fns';
+import { format, parseISO, subDays, isToday, startOfDay } from 'date-fns';
 
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
@@ -149,7 +149,14 @@ export default function PatientProfile() {
   
   // Med Edit state
   const [editingMed, setEditingMed] = useState(null);
-  const [editMedTime, setEditMedTime] = useState('');
+  const [editMedForm, setEditMedForm] = useState({
+    medication_name: '', 
+    type: 'tablet', 
+    dosage: '', 
+    start_date: '', 
+    end_date: '', 
+    frequency: 'once_daily'
+  });
 
   
   // Calendar states
@@ -256,29 +263,24 @@ export default function PatientProfile() {
     onError: () => toast.error('Failed to disconnect'),
   });
 
-  const toggleMedication = useMutation({
-    mutationFn: async ({ task, dateStr }) => {
-      const completed = task.completed_dates || [];
-      const isCompleted = completed.includes(dateStr);
-      const newDates = isCompleted ? completed.filter(d => d !== dateStr) : [...completed, dateStr];
-      await apiClient.entities.MedicationTask.update(task.id, { completed_dates: newDates });
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['patient-tasks'] }),
-  });
-
-  const updateTaskTime = useMutation({
-    mutationFn: async ({ task, oldTime, newTime }) => {
-      const existingTimes = task.scheduled_times || (
-        task.frequency === 'twice_daily' ? ['09:00', '21:00'] : 
-        task.frequency === 'three_times_daily' ? ['08:00', '14:00', '20:00'] : ['09:00']
-      );
-      const newTimes = existingTimes.map(t => t === oldTime ? newTime : t);
-      await apiClient.entities.MedicationTask.update(task.id, { scheduled_times: newTimes });
-    },
+  const deleteMedication = useMutation({
+    mutationFn: (id) => apiClient.entities.MedicationTask.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patient-tasks'] });
-      toast.success('Schedule updated');
+      setEditingMed(null);
+      toast.success('Medication removed');
     },
+    onError: () => toast.error('Failed to remove medication'),
+  });
+
+  const updateMedication = useMutation({
+    mutationFn: ({ id, updates }) => apiClient.entities.MedicationTask.update(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient-tasks'] });
+      setEditingMed(null);
+      toast.success('Medication updated');
+    },
+    onError: () => toast.error('Failed to update medication'),
   });
 
   const medStats = useMemo(() => {
@@ -556,10 +558,16 @@ export default function PatientProfile() {
                            selectedDate={selectedDate}
                            appointments={appointments}
                            medications={tasks}
-                           onToggleMed={(m, date) => toggleMedication.mutate({ task: m, dateStr: date })}
                            onEditMed={(m) => {
                              setEditingMed(m);
-                             setEditMedTime(m.time);
+                             setEditMedForm({
+                               medication_name: m.data.medication_name,
+                               type: m.data.type,
+                               dosage: m.data.dosage,
+                               start_date: m.data.start_date,
+                               end_date: m.data.end_date,
+                               frequency: m.data.frequency
+                             });
                            }}
                            onComplete={(id) => {
                              apiClient.entities.Appointment.update(id, { status: 'completed' });
@@ -621,10 +629,16 @@ export default function PatientProfile() {
                       selectedDate={selectedDate}
                       appointments={appointments}
                       medications={tasks}
-                      onToggleMed={(m, date) => toggleMedication.mutate({ task: m, dateStr: date })}
                       onEditMed={(m) => {
                         setEditingMed(m);
-                        setEditMedTime(m.time);
+                        setEditMedForm({
+                          medication_name: m.data.medication_name,
+                          type: m.data.type,
+                          dosage: m.data.dosage,
+                          start_date: m.data.start_date,
+                          end_date: m.data.end_date,
+                          frequency: m.data.frequency
+                        });
                       }}
                       onComplete={(id) => {
                         apiClient.entities.Appointment.update(id, { status: 'completed' });
@@ -716,22 +730,93 @@ export default function PatientProfile() {
       </Tabs>
 
       <Dialog open={!!editingMed} onOpenChange={open => !open && setEditingMed(null)}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
-            <DialogTitle>Update Medication Schedule</DialogTitle>
+            <DialogTitle>Edit Medication</DialogTitle>
           </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <Label>Set Time for "{editingMed?.title}"</Label>
-              <Input type="time" value={editMedTime} onChange={(e) => setEditMedTime(e.target.value)} />
+          <div className="space-y-4 mt-2">
+            <div>
+              <Label>Medication Name</Label>
+              <Input 
+                value={editMedForm.medication_name} 
+                onChange={e => setEditMedForm(p => ({ ...p, medication_name: e.target.value }))} 
+                className="mt-1" 
+              />
             </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setEditingMed(null)}>Cancel</Button>
-            <Button onClick={() => {
-              updateTaskTime.mutate({ task: editingMed.data, oldTime: editingMed.time, newTime: editMedTime });
-              setEditingMed(null);
-            }}>Save Changes</Button>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Type</Label>
+                <Select value={editMedForm.type} onValueChange={v => setEditMedForm(p => ({ ...p, type: v }))}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['tablet', 'capsule', 'liquid', 'injection', 'topical', 'inhaler', 'other'].map(t => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Dosage</Label>
+                <Input 
+                  placeholder="e.g. 500mg" 
+                  value={editMedForm.dosage} 
+                  onChange={e => setEditMedForm(p => ({ ...p, dosage: e.target.value }))} 
+                  className="mt-1" 
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Start Date</Label>
+                <Input 
+                  type="date" 
+                  value={editMedForm.start_date} 
+                  onChange={e => setEditMedForm(p => ({ ...p, start_date: e.target.value }))} 
+                  className="mt-1" 
+                />
+              </div>
+              <div>
+                <Label>End Date</Label>
+                <Input 
+                  type="date" 
+                  value={editMedForm.end_date} 
+                  onChange={e => setEditMedForm(p => ({ ...p, end_date: e.target.value }))} 
+                  className="mt-1" 
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Frequency</Label>
+              <Select value={editMedForm.frequency} onValueChange={v => setEditMedForm(p => ({ ...p, frequency: v }))}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {['once_daily', 'twice_daily', 'three_times_daily', 'weekly', 'as_needed'].map(f => (
+                    <SelectItem key={f} value={f}>{f.replace(/_/g, ' ')}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex flex-col gap-2 pt-4">
+              <Button 
+                onClick={() => updateMedication.mutate({ id: editingMed.data.id, updates: editMedForm })} 
+                disabled={updateMedication.isPending || !editMedForm.medication_name}
+              >
+                {updateMedication.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Update Medication
+              </Button>
+              <Button 
+                variant="outline" 
+                className="text-destructive border-destructive/20 hover:border-destructive hover:bg-destructive/5"
+                onClick={() => {
+                  if (window.confirm('Remove this medication completely?')) {
+                    deleteMedication.mutate(editingMed.data.id);
+                  }
+                }}
+                disabled={deleteMedication.isPending}
+              >
+                {deleteMedication.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <X className="w-4 h-4 mr-2" />} Remove Medication
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
