@@ -5,7 +5,7 @@
   "type": "module",
   "homepage": "https://healthtrace.me",
   "scripts": {
-    "start": "vite",
+    "start": "vite --config vite.config.dev.js",
     "start:backend": ".\\.venv\\Scripts\\python.exe backend/app.py || ./.venv/bin/python backend/app.py",
     "dev": "concurrently \"npm:start\" \"npm:start:backend\"",
     "build": "vite build",
@@ -14,7 +14,7 @@
     "typecheck": "tsc -p ./jsconfig.json",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist --dotfiles --nojekyll"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",
