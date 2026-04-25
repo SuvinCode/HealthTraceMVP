@@ -31,6 +31,7 @@ const TEAM = [
   { 
     name: 'Tanmayi', 
     role: 'CTO',
+    linkedin: 'https://www.linkedin.com/in/tanmayi-mendhe-44ab34278/',
     github: 'https://github.com/Queen-Tanmayi-09'
   },
   { 
