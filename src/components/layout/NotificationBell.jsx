@@ -18,6 +18,8 @@ import { Badge } from '@/components/ui/badge';
 export default function NotificationBell() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [hasOpened, setHasOpened] = useState(false);
+
 
   // 1. Fetch Medications for 30-min alerts
   const { data: medications } = useQuery({
@@ -133,24 +135,38 @@ export default function NotificationBell() {
     return list;
   }, [user, medications, appointments, forms, subs]);
 
+  const showDot = notifications.length > 0 && !hasOpened;
+
+  const handleOpenChange = (v) => {
+    setOpen(v);
+    if (v) setHasOpened(true);
+  };
+
+
   if (user?.role !== 'user') return null;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground">
           <Bell className="w-5 h-5" />
-          {notifications.length > 0 && (
-            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-destructive border-2 border-background rounded-full" />
+          {showDot && (
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive border-2 border-background rounded-full" />
           )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0 overflow-hidden" align="end">
         <div className="p-4 border-b bg-muted/30">
-          <h3 className="font-heading font-bold text-sm">Notifications</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-heading font-bold text-sm">Notifications</h3>
+            {notifications.length > 0 && (
+              <Badge variant="outline" className="text-[10px] h-4 px-1.5">{notifications.length}</Badge>
+            )}
+          </div>
         </div>
-        <div className="h-80 overflow-y-auto custom-scrollbar">
+        <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
           {notifications.length === 0 ? (
+
             <div className="flex flex-col items-center justify-center h-full p-8 text-center">
               <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center mb-3">
                 <Check className="w-5 h-5 text-muted-foreground" />

@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Loader2, Check } from 'lucide-react';
-import { format, isBefore, startOfDay } from 'date-fns';
+import { format, isBefore, startOfDay, isToday } from 'date-fns';
+
 import { toast } from 'sonner';
 
 const TIME_SLOTS = [
@@ -50,8 +51,20 @@ export default function CreateAppointment() {
 
   const availableSlots = useMemo(() => {
     const booked = existingAppts.map(a => a.time_slot);
-    return TIME_SLOTS.filter(s => !booked.includes(s));
-  }, [existingAppts]);
+    const slots = TIME_SLOTS.filter(s => !booked.includes(s));
+
+    if (date && isToday(date)) {
+      const now = new Date();
+      const currentH = now.getHours();
+      const currentM = now.getMinutes();
+      return slots.filter(s => {
+        const [h, m] = s.split(':').map(Number);
+        return h > currentH || (h === currentH && m > currentM);
+      });
+    }
+    return slots;
+  }, [existingAppts, date]);
+
 
   const handleSubmit = async () => {
     if (!title || !doctorEmail || !date || !timeSlot) {

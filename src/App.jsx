@@ -23,6 +23,8 @@ import Notes from './pages/Notes';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 
+import { motion, AnimatePresence } from 'framer-motion';
+
 const AuthenticatedApp = () => {
   const { user, isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
   const location = useLocation();
@@ -34,7 +36,11 @@ const AuthenticatedApp = () => {
   if (isLoadingPublicSettings || (isLoadingAuth && hasToken && !isAuthPage)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin"></div>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin"
+        ></motion.div>
       </div>
     );
   }
@@ -59,36 +65,39 @@ const AuthenticatedApp = () => {
 
   if (needsOnboarding) {
     return (
-      <Routes>
-        <Route path="*" element={<Onboarding />} />
-      </Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="*" element={<Onboarding />} />
+        </Routes>
+      </AnimatePresence>
     );
   }
 
   // Render the main app
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/onboarding" element={<Onboarding />} />
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/onboarding" element={<Onboarding />} />
 
-      <Route path="/" element={user ? <Navigate to={isDoctor ? '/doctor-dashboard' : '/health-form'} replace /> : <Landing />} />
+        <Route path="/" element={user ? <Navigate to={isDoctor ? '/doctor-dashboard' : '/health-form'} replace /> : <Landing />} />
 
-      <Route element={<AppLayout />}>
-
-        <Route path="/health-form" element={<HealthForm />} />
-        <Route path="/myday" element={<MyDay />} />
-        <Route path="/diary" element={<Diary />} />
-        <Route path="/appointments" element={<Appointments />} />
-        <Route path="/create-appointment" element={<CreateAppointment />} />
-        <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-        <Route path="/patient-logs" element={<PatientLogs />} />
-        <Route path="/patient/:patientEmail" element={<PatientProfile />} />
-        <Route path="/connection-requests" element={<ConnectionRequests />} />
-        <Route path="/notes" element={<Notes />} />
+        <Route element={<AppLayout />}>
+          <Route path="/health-form" element={<HealthForm />} />
+          <Route path="/myday" element={<MyDay />} />
+          <Route path="/diary" element={<Diary />} />
+          <Route path="/appointments" element={<Appointments />} />
+          <Route path="/create-appointment" element={<CreateAppointment />} />
+          <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
+          <Route path="/patient-logs" element={<PatientLogs />} />
+          <Route path="/patient/:patientEmail" element={<PatientProfile />} />
+          <Route path="/connection-requests" element={<ConnectionRequests />} />
+          <Route path="/notes" element={<Notes />} />
       </Route>
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </AnimatePresence>
   );
 };
 

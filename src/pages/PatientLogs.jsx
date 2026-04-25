@@ -24,16 +24,20 @@ export default function PatientLogs() {
   );
 
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    >
       <h1 className="font-heading text-2xl font-bold text-foreground mb-6">Patient Logs</h1>
 
       <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors" />
         <Input
           placeholder="Search patients..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="pl-10 h-12"
+          className="pl-10 h-12 rounded-xl focus:ring-primary/20"
         />
       </div>
 
@@ -43,22 +47,22 @@ export default function PatientLogs() {
           <p>{isLoading ? 'Loading...' : 'No connected patients found'}</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {filtered.map((conn, i) => (
             <motion.div key={conn.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
               <Link to={`/patient/${encodeURIComponent(conn.patient_email)}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <Card className="hover:shadow-md hover:border-primary/50 transition-all cursor-pointer group">
                   <CardContent className="p-4 flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0 transition-colors group-hover:bg-primary/20">
                       <span className="text-sm font-bold text-primary">
                         {conn.patient_name?.[0]?.toUpperCase() || 'P'}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground">{conn.patient_name}</p>
+                      <p className="font-semibold text-foreground group-hover:text-primary transition-colors">{conn.patient_name}</p>
                       <p className="text-sm text-muted-foreground truncate">{conn.patient_email}</p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                   </CardContent>
                 </Card>
               </Link>
@@ -66,6 +70,6 @@ export default function PatientLogs() {
           ))}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

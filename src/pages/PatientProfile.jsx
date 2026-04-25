@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,10 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { User, FileText, Pill, Calendar, Plus, ArrowLeft, Loader2, Clock, CheckCircle2, Ruler, Weight, Heart, X, BookOpen, Sparkles, TrendingUp } from 'lucide-react';
-import { format, parseISO, subDays, isToday, eachDayOfInterval, isFuture, startOfDay } from 'date-fns';
+import { format, parseISO, subDays, isToday, eachDayOfInterval, isFuture, startOfDay, isWithinInterval } from 'date-fns';
+
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import MonthCalendar from '@/components/dashboard/MonthCalendar';
+import DayTimeline from '@/components/dashboard/DayTimeline';
+
 
 // ─── Diary helpers ───────────────────────────────────────────────────────────
 const MOODS = [
@@ -142,6 +146,16 @@ export default function PatientProfile() {
   const [newForm, setNewForm] = useState({ title: '', questions: [] });
   const [newQ, setNewQ] = useState({ label: '', type: 'text', required: false, options: '' });
   const [showDiarySummary, setShowDiarySummary] = useState(false);
+  
+  // Med Edit state
+  const [editingMed, setEditingMed] = useState(null);
+  const [editMedTime, setEditMedTime] = useState('');
+
+  
+  // Calendar states
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
 
   // Queries
   const { data: patients } = useQuery({
@@ -169,10 +183,19 @@ export default function PatientProfile() {
     initialData: [],
   });
  
-  const { data: connections } = useQuery({
-    queryKey: ['patient-connections', patientEmail],
-    queryFn: () => apiClient.entities.ConnectionRequest.filter({ patient_email: patientEmail, doctor_email: user?.email }),
+  const { data: connections = [], isLoading: isLoadingConnections } = useQuery({
+    queryKey: ['doctor-connections', user?.email],
+    queryFn: async () => {
+      const all = await apiClient.entities.ConnectionRequest.filter();
+      // Mock API returns all, so we filter by doctor AND patient in JS
+      return all.filter(c => 
+        c.doctor_email === user?.email && 
+        c.patient_email === patientEmail &&
+        c.status === 'accepted'
+      );
+    },
     initialData: [],
+    enabled: !!user?.email && !!patientEmail,
   });
 
   const { data: diaryEntries = [] } = useQuery({
@@ -220,7 +243,7 @@ export default function PatientProfile() {
 
   const disconnectPatient = useMutation({
     mutationFn: async () => {
-      const conn = connections.find(c => c.status === 'accepted');
+      const conn = connections[0]; // Already filtered to this patient
       if (conn) {
         return apiClient.entities.ConnectionRequest.delete(conn.id);
       }
@@ -232,6 +255,61 @@ export default function PatientProfile() {
     },
     onError: () => toast.error('Failed to disconnect'),
   });
+
+  const toggleMedication = useMutation({
+    mutationFn: async ({ task, dateStr }) => {
+      const completed = task.completed_dates || [];
+      const isCompleted = completed.includes(dateStr);
+      const newDates = isCompleted ? completed.filter(d => d !== dateStr) : [...completed, dateStr];
+      await apiClient.entities.MedicationTask.update(task.id, { completed_dates: newDates });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['patient-tasks'] }),
+  });
+
+  const updateTaskTime = useMutation({
+    mutationFn: async ({ task, oldTime, newTime }) => {
+      const existingTimes = task.scheduled_times || (
+        task.frequency === 'twice_daily' ? ['09:00', '21:00'] : 
+        task.frequency === 'three_times_daily' ? ['08:00', '14:00', '20:00'] : ['09:00']
+      );
+      const newTimes = existingTimes.map(t => t === oldTime ? newTime : t);
+      await apiClient.entities.MedicationTask.update(task.id, { scheduled_times: newTimes });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient-tasks'] });
+      toast.success('Schedule updated');
+    },
+  });
+
+  const medStats = useMemo(() => {
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    const isPastDay = startOfDay(selectedDate) < startOfDay(new Date());
+    
+    let completed = 0;
+    let remaining = 0;
+    let missed = 0;
+    
+    tasks.forEach(m => {
+      const start = parseISO(m.start_date);
+      const end = parseISO(m.end_date);
+      const day = startOfDay(selectedDate);
+      
+      if (day >= startOfDay(start) && day <= startOfDay(end)) {
+        const times = m.scheduled_times || (
+          m.frequency === 'twice_daily' ? ['09:00', '21:00'] :
+          m.frequency === 'three_times_daily' ? ['08:00', '14:00', '20:00'] : ['09:00']
+        );
+        times.forEach(() => {
+          const isTaken = m.completed_dates?.includes(dateStr);
+          if (isTaken) completed++;
+          else if (isPastDay) missed++;
+          else remaining++;
+        });
+      }
+    });
+    return { completed, remaining, missed, total: completed + remaining + missed };
+  }, [tasks, selectedDate]);
+
 
   const addQuestion = () => {
     if (!newQ.label) return;
@@ -247,7 +325,11 @@ export default function PatientProfile() {
   };
 
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    >
       <Link to="/patient-logs" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
         <ArrowLeft className="w-4 h-4" /> Back to Patients
       </Link>
@@ -380,7 +462,7 @@ export default function PatientProfile() {
       <Tabs defaultValue="submissions">
         <TabsList>
           <TabsTrigger value="submissions"><FileText className="w-4 h-4 mr-1" /> Forms ({submissions.length})</TabsTrigger>
-          <TabsTrigger value="medications"><Pill className="w-4 h-4 mr-1" /> Medications ({tasks.length})</TabsTrigger>
+          <TabsTrigger value="timeline"><Clock className="w-4 h-4 mr-1" /> Day Timeline</TabsTrigger>
           <TabsTrigger value="appointments"><Calendar className="w-4 h-4 mr-1" /> Appointments ({appointments.length})</TabsTrigger>
           <TabsTrigger value="diary"><BookOpen className="w-4 h-4 mr-1" /> Diary ({diaryEntries.length})</TabsTrigger>
         </TabsList>
@@ -389,121 +471,176 @@ export default function PatientProfile() {
           {submissions.length === 0 ? (
             <p className="text-center py-12 text-muted-foreground">No form submissions yet</p>
           ) : (
-            [...submissions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).map(sub => (
-              <Card key={sub.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="w-4 h-4 text-primary" />
-                    <span className="font-medium">{sub.form_title}</span>
-                    <Badge variant="secondary" className="ml-auto text-xs">{format(new Date(sub.created_date), 'MMM d, yyyy h:mm a')}</Badge>
-                  </div>
-                  {sub.answers?.map((a, i) => (
-                    <div key={i} className="text-sm mt-1">
-                      <span className="text-muted-foreground">{a.question_label}: </span>
-                      <span className="font-medium">{a.answer || '—'}</span>
+            [...submissions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).map((sub, i) => (
+              <motion.div key={sub.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                      <span className="font-medium">{sub.form_title}</span>
+                      <Badge variant="secondary" className="ml-auto text-xs">{format(new Date(sub.created_date), 'MMM d, yyyy h:mm a')}</Badge>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
-
-        <TabsContent value="medications" className="mt-4 space-y-4">
-          {tasks.length === 0 ? (
-            <p className="text-center py-12 text-muted-foreground">No medications assigned yet</p>
-          ) : (
-            tasks.map(task => {
-              const allDays = eachDayOfInterval({
-                start: parseISO(task.start_date),
-                end: parseISO(task.end_date),
-              });
-              const takenSet = new Set(task.completed_dates || []);
-              const takenCount = (task.completed_dates || []).length;
-              const adherencePct = allDays.length > 0 ? Math.round((takenCount / allDays.length) * 100) : 0;
-
-              return (
-                <Card key={task.id}>
-                  <CardContent className="p-4 space-y-4">
-                    {/* Header */}
-                    <div className="flex items-start gap-3">
-                      <Pill className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold">{task.medication_name}</p>
-                        <div className="flex flex-wrap gap-1.5 mt-1">
-                          <Badge variant="secondary" className="text-xs">{task.type}</Badge>
-                          {task.dosage && <Badge variant="outline" className="text-xs">{task.dosage}</Badge>}
-                          <Badge variant="outline" className="text-xs">{task.frequency?.replace(/_/g, ' ')}</Badge>
-                        </div>
+                    {sub.answers?.map((a, i) => (
+                      <div key={i} className="text-sm mt-1">
+                        <span className="text-muted-foreground">{a.question_label}: </span>
+                        <span className="font-medium">{a.answer || '—'}</span>
                       </div>
-                      <div className="text-right text-xs text-muted-foreground shrink-0">
-                        <p>{task.start_date} — {task.end_date}</p>
-                        <p className={`font-semibold mt-0.5 ${adherencePct >= 80 ? 'text-green-600' : adherencePct >= 50 ? 'text-yellow-600' : 'text-red-500'}`}>
-                          {takenCount}/{allDays.length} days · {adherencePct}%
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Adherence timeline */}
-                    <div className="border-t pt-3 space-y-2">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Adherence</p>
-                      <div className="flex flex-wrap gap-1">
-                        {allDays.map(day => {
-                          const dateStr = format(day, 'yyyy-MM-dd');
-                          const taken = takenSet.has(dateStr);
-                          const upcoming = isFuture(startOfDay(day)) && !isToday(day);
-                          return (
-                            <div
-                              key={dateStr}
-                              title={`${format(day, 'EEE MMM d')} — ${taken ? 'Taken' : upcoming ? 'Upcoming' : 'Missed'}`}
-                              className={`w-6 h-6 rounded-sm flex items-center justify-center text-[9px] font-bold select-none ${
-                                taken
-                                  ? 'bg-green-500 text-white'
-                                  : upcoming
-                                  ? 'bg-muted text-muted-foreground/40'
-                                  : 'bg-red-100 text-red-400'
-                              }`}
-                            >
-                              {format(day, 'd')}
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <div className="flex items-center gap-4 text-[10px] text-muted-foreground pt-1">
-                        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-green-500 inline-block" />Taken</span>
-                        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-100 inline-block" />Missed</span>
-                        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-muted inline-block" />Upcoming</span>
-                      </div>
-                    </div>
+                    ))}
                   </CardContent>
                 </Card>
-              );
-            })
+              </motion.div>
+            ))
           )}
         </TabsContent>
 
-        <TabsContent value="appointments" className="mt-4 space-y-3">
-          {appointments.length === 0 ? (
-            <p className="text-center py-12 text-muted-foreground">No appointments yet</p>
-          ) : (
-            [...appointments].sort((a, b) => new Date(b.date) - new Date(a.date)).map(apt => (
-              <Card key={apt.id}>
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex flex-col items-center justify-center shrink-0">
-                    <span className="text-[10px] font-bold text-primary">{format(parseISO(apt.date), 'MMM')}</span>
-                    <span className="text-sm font-bold text-primary leading-none">{format(parseISO(apt.date), 'd')}</span>
+        <TabsContent value="timeline" className="mt-4 space-y-4">
+           {/* Comprehensive Day Timeline */}
+           <Card className="overflow-hidden">
+             <CardContent className="p-0">
+               <div className="flex flex-col lg:flex-row min-h-[600px]">
+                 <div className="lg:w-56 shrink-0 border-b lg:border-b-0 lg:border-r border-border p-4 bg-muted/5">
+                   <MonthCalendar
+                     currentMonth={currentMonth}
+                     setCurrentMonth={setCurrentMonth}
+                     selectedDate={selectedDate}
+                     setSelectedDate={setSelectedDate}
+                     appointments={appointments}
+                   />
+                   <div className="mt-6 pt-4 border-t border-border space-y-4">
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-3">Medication Status</p>
+                        <div className="space-y-2">
+                           <div className="flex items-center justify-between text-xs">
+                             <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500" /> Completed</span>
+                             <span className="font-bold">{medStats.completed}</span>
+                           </div>
+                           <div className="flex items-center justify-between text-xs">
+                             <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-yellow-500" /> Remaining</span>
+                             <span className="font-bold">{medStats.remaining}</span>
+                           </div>
+                           <div className="flex items-center justify-between text-xs">
+                             <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500" /> Missed</span>
+                             <span className="font-bold text-red-500">{medStats.missed}</span>
+                           </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Patient Stats</p>
+                        <div className="space-y-1">
+                           <div className="flex justify-between text-xs">
+                             <span className="text-muted-foreground">Adherence</span> 
+                             <span className="font-bold text-primary">
+                               {medStats.total > 0 ? Math.round((medStats.completed / medStats.total) * 100) : 100}%
+                             </span>
+                           </div>
+                           <div className="flex justify-between text-xs">
+                             <span className="text-muted-foreground">Mood (Avg)</span> 
+                             <span className="font-bold text-primary">
+                               {diaryEntries.length > 0 ? (diaryEntries.reduce((s, e) => s + e.mood_score, 0) / diaryEntries.length).toFixed(1) : '—'}/5
+                             </span>
+                           </div>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => setSelectedDate(new Date())}>Go to Today</Button>
+                   </div>
+
+                 </div>
+                 <div className="flex-1 p-4">
+                    <div className="grid gap-6">
+                       <section>
+                         <h3 className="text-sm font-bold flex items-center gap-2 mb-4">
+                           <Clock className="w-4 h-4 text-primary" /> Daily Schedule
+                         </h3>
+                         <DayTimeline
+                           selectedDate={selectedDate}
+                           appointments={appointments}
+                           medications={tasks}
+                           onToggleMed={(m, date) => toggleMedication.mutate({ task: m, dateStr: date })}
+                           onEditMed={(m) => {
+                             setEditingMed(m);
+                             setEditMedTime(m.time);
+                           }}
+                           onComplete={(id) => {
+                             apiClient.entities.Appointment.update(id, { status: 'completed' });
+                             queryClient.invalidateQueries({ queryKey: ['patient-appointments'] });
+                             toast.success('Appointment completed');
+                           }}
+                           onCancel={(id) => {
+                             apiClient.entities.Appointment.update(id, { status: 'cancelled' });
+                             queryClient.invalidateQueries({ queryKey: ['patient-appointments'] });
+                             toast.success('Appointment removed');
+                           }}
+                         />
+
+                       </section>
+                       
+                       {diaryEntries.find(e => e.date === format(selectedDate, 'yyyy-MM-dd')) && (
+                         <section className="pt-6 border-t border-dashed">
+                            <h3 className="text-sm font-bold flex items-center gap-2 mb-3">
+                              <BookOpen className="w-4 h-4 text-primary" /> Diary Note
+                            </h3>
+                            {diaryEntries.filter(e => e.date === format(selectedDate, 'yyyy-MM-dd')).map(entry => {
+                              const mood = getMood(entry.mood_score);
+                              return (
+                                <div key={entry.id} className={`p-4 rounded-xl border ${mood.border} ${mood.bg}`}>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-xl">{mood.emoji}</span>
+                                    <span className={`text-sm font-bold ${mood.text}`}>{mood.label}</span>
+                                  </div>
+                                  <p className="text-sm text-foreground/80 leading-relaxed">{entry.notes}</p>
+                                </div>
+                              );
+                            })}
+                         </section>
+                       )}
+                    </div>
+                 </div>
+               </div>
+             </CardContent>
+           </Card>
+        </TabsContent>
+
+
+
+        <TabsContent value="appointments" className="mt-4">
+          <Card className="overflow-hidden">
+            <CardContent className="p-0">
+               <div className="flex flex-col lg:flex-row min-h-[500px]">
+                  <div className="lg:w-56 shrink-0 border-b lg:border-b-0 lg:border-r border-border p-4 bg-muted/5">
+                    <MonthCalendar 
+                      currentMonth={currentMonth} 
+                      setCurrentMonth={setCurrentMonth}
+                      selectedDate={selectedDate}
+                      setSelectedDate={setSelectedDate}
+                      appointments={appointments}
+                    />
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{apt.title}</p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> {apt.time_slot}</p>
+                  <div className="flex-1 p-4">
+                    <DayTimeline 
+                      selectedDate={selectedDate}
+                      appointments={appointments}
+                      medications={tasks}
+                      onToggleMed={(m, date) => toggleMedication.mutate({ task: m, dateStr: date })}
+                      onEditMed={(m) => {
+                        setEditingMed(m);
+                        setEditMedTime(m.time);
+                      }}
+                      onComplete={(id) => {
+                        apiClient.entities.Appointment.update(id, { status: 'completed' });
+                        queryClient.invalidateQueries({ queryKey: ['patient-appointments'] });
+                        toast.success('Appointment completed');
+                      }}
+                      onCancel={(id) => {
+                        apiClient.entities.Appointment.update(id, { status: 'cancelled' });
+                        queryClient.invalidateQueries({ queryKey: ['patient-appointments'] });
+                        toast.success('Appointment removed');
+                      }}
+                    />
                   </div>
-                  <Badge variant={apt.status === 'upcoming' ? 'default' : apt.status === 'completed' ? 'secondary' : 'destructive'}>
-                    {apt.status}
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))
-          )}
+               </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="diary" className="mt-4 space-y-4">
@@ -541,27 +678,29 @@ export default function PatientProfile() {
             </div>
           ) : (
             <div className="space-y-3">
-              {diaryEntries.map(entry => {
+              {diaryEntries.map((entry, i) => {
                 const mood = getMood(entry.mood_score);
                 return (
-                  <Card key={entry.id}>
-                    <CardContent className={`p-4 ${mood.bg} border ${mood.border} rounded-xl`}>
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{mood.emoji}</span>
-                        <div>
-                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                            {isToday(parseISO(entry.date)) ? 'Today' : format(parseISO(entry.date), 'EEEE, MMM d')}
-                          </p>
-                          <p className={`text-sm font-bold ${mood.text}`}>{mood.label}</p>
+                  <motion.div key={entry.id} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.03 }}>
+                    <Card>
+                      <CardContent className={`p-4 ${mood.bg} border ${mood.border} rounded-xl`}>
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{mood.emoji}</span>
+                          <div>
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                              {isToday(parseISO(entry.date)) ? 'Today' : format(parseISO(entry.date), 'EEEE, MMM d')}
+                            </p>
+                            <p className={`text-sm font-bold ${mood.text}`}>{mood.label}</p>
+                          </div>
                         </div>
-                      </div>
-                      {entry.notes && (
-                        <p className="mt-3 text-sm text-foreground/70 leading-relaxed border-t border-current/10 pt-3">
-                          {entry.notes}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
+                        {entry.notes && (
+                          <p className="mt-3 text-sm text-foreground/70 leading-relaxed border-t border-current/10 pt-3">
+                            {entry.notes}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
                 );
               })}
             </div>
@@ -575,6 +714,27 @@ export default function PatientProfile() {
           />
         </TabsContent>
       </Tabs>
-    </div>
+
+      <Dialog open={!!editingMed} onOpenChange={open => !open && setEditingMed(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Update Medication Schedule</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label>Set Time for "{editingMed?.title}"</Label>
+              <Input type="time" value={editMedTime} onChange={(e) => setEditMedTime(e.target.value)} />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setEditingMed(null)}>Cancel</Button>
+            <Button onClick={() => {
+              updateTaskTime.mutate({ task: editingMed.data, oldTime: editingMed.time, newTime: editMedTime });
+              setEditingMed(null);
+            }}>Save Changes</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </motion.div>
   );
 }

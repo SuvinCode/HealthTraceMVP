@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     if (shouldRedirect) {
-      window.location.href = '/login';
+      window.location.href = '/';
     }
   };
 

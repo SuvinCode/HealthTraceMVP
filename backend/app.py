@@ -4,6 +4,9 @@ import json
 import os
 import random
 import string
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 CORS(app, origins=[
@@ -163,6 +166,45 @@ def login():
             return jsonify(user)
 
     return jsonify({'error': 'Invalid credentials'}), 401
+
+@app.route('/send-feedback', methods=['POST'])
+def send_feedback():
+    data = request.json
+    name = data.get('name', 'Anonymous')
+    comment = data.get('comment', '')
+    target_email = data.get('target_email', 'suvinbusiness@gmail.com')
+
+    # Environment variables for SMTP
+    # In production (Render), set these in Dashboard -> Environment
+    SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
+    SMTP_PORT = int(os.environ.get('SMTP_PORT', 587))
+    SMTP_USER = os.environ.get('SMTP_USER') # Your email
+    SMTP_PASS = os.environ.get('SMTP_PASS') # Your App Password
+
+    if not SMTP_USER or not SMTP_PASS:
+        # Fallback: Just log it to the console/db if not configured
+        print(f"EMAIL NOT CONFIGURED. Feedack from {name}: {comment}")
+        return jsonify({'message': 'Logged (Email not configured)'}), 200
+
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = SMTP_USER
+        msg['To'] = target_email
+        msg['Subject'] = f"New HealthTrace Review from {name}"
+        
+        body = f"Name: {name}\n\nComment:\n{comment}"
+        msg.attach(MIMEText(body, 'plain'))
+
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASS)
+        server.send_message(msg)
+        server.quit()
+        
+        return jsonify({'message': 'Email sent directly'}), 200
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))

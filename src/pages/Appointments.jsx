@@ -45,7 +45,7 @@ export default function Appointments() {
 
   // Today's appointments (any non-cancelled status)
   const upcoming = appointments
-    .filter(a => a.status !== 'cancelled' && isToday(parseISO(a.date)))
+    .filter(a => a.status === 'upcoming' && isToday(parseISO(a.date)))
     .sort((a, b) => getDateTime(a) - getDateTime(b));
 
   // Tomorrow and beyond, not yet done
@@ -142,7 +142,11 @@ export default function Appointments() {
   );
 
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    >
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl font-bold text-foreground">Appointments</h1>
         {!isDoctor && (
@@ -202,6 +206,6 @@ export default function Appointments() {
           )}
         </TabsContent>
       </Tabs>
-    </div>
+    </motion.div>
   );
 }
