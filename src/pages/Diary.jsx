@@ -476,12 +476,11 @@ Provide exactly 2 very short, clinical, and empathetic sentences. One summarizin
       </div>
 
       {/* Biometrics Display */}
-      {!isDoctor && user?.apple_health_connected && biometrics.some(b => b.date === todayStr) && (
+      {!isDoctor && user?.apple_health_connected && biometrics.length > 0 && (
         <div className="space-y-3">
           <div className="grid grid-cols-3 gap-3">
             {(() => {
-              const todaysBiometrics = biometrics.filter(b => b.date === todayStr);
-              const latest = [...todaysBiometrics].reverse();
+              const latest = [...biometrics].reverse();
               const sleep = latest.find(m => m.metric_name === 'sleep_analysis')?.value;
               const screen = latest.find(m => m.metric_name === 'screen_time')?.value;
               const steps = latest.find(m => m.metric_name === 'step_count')?.value;

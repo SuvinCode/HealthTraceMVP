@@ -333,13 +333,10 @@ def apple_health_webhook():
         if extracted_value is None and 'data' in metric:
             total_qty = 0.0
             for point in metric['data']:
-                date_str = point.get('date', '')
-                # Date format: 'YYYY-MM-DD HH:MM:SS Z', we check if it's from today
-                if date_str.startswith(today_str):
-                    try:
-                        total_qty += float(point.get('qty', 0))
-                    except ValueError:
-                        pass
+                try:
+                    total_qty += float(point.get('qty', 0))
+                except ValueError:
+                    pass
             
             # Format as int if whole, else round
             extracted_value = int(total_qty) if total_qty.is_integer() else round(total_qty, 2)
