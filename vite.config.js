@@ -2,6 +2,8 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import path from 'path'
 
+// Triggers production re-build for env variables
+
 // https://vite.dev/config/
 export default defineConfig({
   base: '/',
