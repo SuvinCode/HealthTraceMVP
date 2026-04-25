@@ -19,6 +19,7 @@ import DoctorDashboard from './pages/DoctorDashboard';
 import PatientLogs from './pages/PatientLogs';
 import PatientProfile from './pages/PatientProfile';
 import ConnectionRequests from './pages/ConnectionRequests';
+import Notes from './pages/Notes';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 
@@ -84,6 +85,7 @@ const AuthenticatedApp = () => {
         <Route path="/patient-logs" element={<PatientLogs />} />
         <Route path="/patient/:patientEmail" element={<PatientProfile />} />
         <Route path="/connection-requests" element={<ConnectionRequests />} />
+        <Route path="/notes" element={<Notes />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { Calendar, ClipboardList, Plus, Users, LayoutDashboard, 
-  LogOut, Bell, Menu, X, FileText, UserPlus, Sun, BookOpen
+import { Calendar, ClipboardList, Plus, Users, LayoutDashboard,
+  LogOut, Bell, Menu, X, FileText, UserPlus, Sun, BookOpen, NotebookPen
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/api/client';
@@ -22,6 +22,7 @@ const doctorLinks = [
   { to: '/connection-requests', icon: UserPlus, label: 'Connect' },
   { to: '/patient-logs', icon: Users, label: 'Patients' },
   { to: '/appointments', icon: ClipboardList, label: 'Appointments' },
+  { to: '/notes', icon: NotebookPen, label: 'Notes' },
 ];
 
 export default function AppLayout() {

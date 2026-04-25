@@ -66,17 +66,14 @@ function DiaryAISummaryDialog({ open, onClose, entries, patientName }) {
         mood: getMood(e.mood_score).label,
         notes: e.notes || '(no notes)',
       }));
-      fetch('https://api.anthropic.com/v1/messages', {
+      fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY || '',
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`,
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1000,
+          model: 'gpt-4o-mini',
           messages: [{
             role: 'user',
             content: `You are a clinical assistant helping a doctor understand a patient's recent wellbeing based on their self-reported diary entries.
@@ -96,7 +93,7 @@ Be concise, clinical, and helpful. Format with clear sections.`,
         }),
       })
         .then(r => r.json())
-        .then(data => setSummary(data.content?.find(b => b.type === 'text')?.text || 'Unable to generate summary.'))
+        .then(data => setSummary(data.choices?.[0]?.message?.content || 'Unable to generate summary.'))
         .catch(() => setSummary('Error generating summary. Please try again.'))
         .finally(() => setLoading(false));
     }

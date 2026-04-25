@@ -130,9 +130,9 @@ export default function Landing() {
             className="text-3xl italic mb-8 text-foreground/80 leading-snug"
             style={{ fontFamily: 'Playfair Display, Georgia, serif' }}
           >
-            "I spent 4 years being told it was anxiety. I showed my doctor 6 weeks of HealthTrace data. I was diagnosed within a month."
+            "Something like this has been needed in the medical space for a long time"
           </blockquote>
-          <cite className="text-sm font-bold not-italic text-muted-foreground">— Sarah, 29, Brisbane</cite>
+          <cite className="text-sm font-bold not-italic text-muted-foreground">— Dr Francis, Gastroentologist</cite>
         </div>
       </section>
 
