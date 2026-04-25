@@ -485,13 +485,13 @@ Provide exactly 2 very short, clinical, and empathetic sentences. One summarizin
             {(() => {
               const latest = [...biometrics].reverse();
               
-              const findMetric = (namePart) => latest.find(m => 
+              const findV = (namePart) => latest.find(m => 
                 m.metric_name?.toLowerCase().replace(/_/g, ' ').includes(namePart.toLowerCase())
               )?.value;
 
-              const sleep = findMetric('sleep');
-              const screen = findMetric('screen');
-              const steps = findMetric('step');
+              const sleep = findV('sleep');
+              const screen = findV('screen');
+              const steps = findV('step');
 
               const sleepColor = !sleep ? 'text-muted-foreground' : sleep >= 7 ? 'text-green-500' : sleep >= 5 ? 'text-yellow-500' : 'text-red-500';
               const screenColor = !screen ? 'text-muted-foreground' : screen <= 4 ? 'text-green-500' : screen <= 8 ? 'text-yellow-500' : 'text-red-500';
@@ -528,12 +528,9 @@ Provide exactly 2 very short, clinical, and empathetic sentences. One summarizin
             {!bioAnalysis ? (
               <Button 
                 onClick={() => {
-                  const latest = [...biometrics.filter(b => b.date === todayStr)].reverse();
-                  analyzeBiometrics(
-                    latest.find(m => m.metric_name === 'sleep_analysis')?.value || 0,
-                    latest.find(m => m.metric_name === 'screen_time')?.value || 0,
-                    latest.find(m => m.metric_name === 'step_count')?.value || 0
-                  );
+                  const latest = [...biometrics].reverse();
+                  const getV = (n) => latest.find(m => m.metric_name?.toLowerCase().replace(/_/g, ' ').includes(n.toLowerCase()))?.value || 0;
+                  analyzeBiometrics(getV('sleep'), getV('screen'), getV('step'));
                 }}
                 disabled={isAnalyzingBio}
                 className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold gap-2 shadow-sm rounded-full"
