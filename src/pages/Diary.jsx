@@ -275,7 +275,9 @@ export default function Diary() {
   const { data: biometrics = [] } = useQuery({
     queryKey: ['biometrics', user?.email],
     queryFn: async () => {
-      return apiClient.entities.biometrics.filter({ patient_email: user?.email?.toLowerCase() });
+      const res = await apiClient.entities.biometrics.filter({ patient_email: user?.email?.toLowerCase() });
+      console.log(`📊 BIOMETRICS API RESPONSE for ${user?.email}:`, res.length, res);
+      return res;
     },
     enabled: !isDoctor && !!user?.email,
     refetchInterval: !isDoctor ? 3000 : false,
@@ -480,7 +482,6 @@ Provide exactly 2 very short, clinical, and empathetic sentences. One summarizin
         <div className="space-y-3">
           <div className="grid grid-cols-3 gap-3">
             {(() => {
-              console.log("📊 BIOMETRICS FETCHED:", biometrics.length, biometrics);
               const latest = [...biometrics].reverse();
               
               const findMetric = (namePart) => latest.find(m => 
