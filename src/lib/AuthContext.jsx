@@ -71,7 +71,9 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     if (shouldRedirect) {
+      // Force a full clean reload to land on the homepage
       window.location.hash = '#/';
+      window.location.reload();
     }
   };
 

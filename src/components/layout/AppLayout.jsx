@@ -55,20 +55,20 @@ export default function AppLayout() {
         className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link to={isDoctor ? '/doctor-dashboard' : '/health-form'} className="flex items-center gap-2.5">
+          <Link to={isDoctor ? '/doctor-dashboard' : '/health-form'} className="flex items-center gap-3">
             <motion.img
               initial={{ scale: 0.8, rotate: -10 }}
               animate={{ scale: 1, rotate: 0 }}
               whileHover={{ scale: 1.1, rotate: 5 }}
               src="/favicon.svg"
               alt="HealthTrace logo"
-              className="w-10 h-10 object-contain"
+              className="w-12 h-12 object-contain"
             />
             <motion.span 
               initial={{ x: -10, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="font-heading font-bold text-lg"
+              className="font-heading font-bold text-xl tracking-tight"
             >
               <span style={{ color: '#CC2222' }}>Health</span><span style={{ color: '#1E2D4E' }}>Trace</span>
             </motion.span>

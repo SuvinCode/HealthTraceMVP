@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { apiClient } from '@/api/client';
+import { Linkedin, Github, Stethoscope, User, Check } from 'lucide-react';
 
 const STATS = [
   { val: '219,000', label: 'Australians live with ME/CFS' },
@@ -16,10 +17,28 @@ const STEPS = [
 ];
 
 const TEAM = [
-  { name: 'Suvin', role: 'Founder & CEO' },
-  { name: 'Alex', role: 'CPO' },
-  { name: 'Tanmayi', role: 'CTO' },
-  { name: 'Ian', role: 'CFO' },
+  { 
+    name: 'Suvin', 
+    role: 'Founder & CEO',
+    linkedin: 'https://www.linkedin.com/in/suvin-chin-90389b157/',
+    github: 'https://github.com/SuvinCode'
+  },
+  { 
+    name: 'Alex', 
+    role: 'CPO',
+    github: 'https://github.com/slpyalex'
+  },
+  { 
+    name: 'Tanmayi', 
+    role: 'CTO',
+    github: 'https://github.com/Queen-Tanmayi-09'
+  },
+  { 
+    name: 'Ian', 
+    role: 'CFO',
+    linkedin: 'https://www.linkedin.com/in/ian-chang-66464225a/',
+    github: 'https://github.com/ianxxc'
+  },
 ];
 
 const containerVariants = {
@@ -94,12 +113,12 @@ export default function Landing() {
         animate={{ y: 0, opacity: 1 }}
         className="flex items-center justify-between px-8 py-5 max-w-7xl mx-auto border-b border-red-100/60"
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <motion.img 
             whileHover={{ rotate: 10, scale: 1.1 }}
-            src="/favicon.svg" alt="HealthTrace logo" className="w-9 h-9 object-contain" 
+            src="/favicon.svg" alt="HealthTrace logo" className="w-14 h-14 object-contain" 
           />
-          <span className="font-heading font-bold text-lg">
+          <span className="font-heading font-bold text-2xl tracking-tight">
             <span style={{ color: '#CC2222' }}>Health</span><span style={{ color: '#1E2D4E' }}>Trace</span>
           </span>
         </div>
@@ -265,6 +284,84 @@ export default function Landing() {
         </motion.div>
       </section>
 
+      {/* Dual Experience Section */}
+      <section className="px-8 py-32 bg-muted/30">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-20"
+          >
+            <h2 className="text-4xl font-heading font-bold mb-4 tracking-tight">The Dual Experience</h2>
+            <p className="text-muted-foreground">Tailored tools for patients and clinicians to work together.</p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Patient Account */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="bg-card p-8 rounded-[32px] border border-border shadow-sm flex flex-col"
+            >
+              <div className="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-6">
+                <User className="w-7 h-7" />
+              </div>
+              <h3 className="text-2xl font-heading font-bold mb-4">Patient Account</h3>
+              <p className="text-muted-foreground mb-8 font-light">Focus on your wellbeing while we handle the data tracking and clinical reporting.</p>
+              
+              <ul className="space-y-4 mt-auto">
+                {[
+                  'Mood & Symptom Diary with one-tap logging',
+                  'Voice Transcription for effortless journaling',
+                  'Dynamic Medication & Appointment Timeline',
+                  'Direct connection to your healthcare team'
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 text-sm text-foreground/80">
+                    <div className="w-5 h-5 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
+                      <Check className="w-3 h-3" />
+                    </div>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+
+            {/* Doctor Account */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              style={{ borderColor: 'rgba(30, 45, 78, 0.1)' }}
+              className="bg-[#1E2D4E] text-white p-8 rounded-[32px] shadow-xl flex flex-col"
+            >
+              <div className="w-14 h-14 bg-white/10 text-white rounded-2xl flex items-center justify-center mb-6">
+                <Stethoscope className="w-7 h-7" />
+              </div>
+              <h3 className="text-2xl font-heading font-bold mb-4">Doctor Account</h3>
+              <p className="text-white/60 mb-8 font-light">Optimise your clinical workflow with data-driven insights and AI-powered summaries.</p>
+              
+              <ul className="space-y-4 mt-auto">
+                {[
+                  'Real-time Clinical Monitoring & trend charts',
+                  'AI-Powered 14-day Wellbeing Summaries',
+                  'Custom Health Form Builder & Distribution',
+                  'Centralised Patient Connection Management'
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 text-sm text-white/80">
+                    <div className="w-5 h-5 bg-white/10 text-white rounded-full flex items-center justify-center shrink-0">
+                      <Check className="w-3 h-3" />
+                    </div>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonial */}
       <motion.section 
         initial={{ opacity: 0 }}
@@ -315,14 +412,27 @@ export default function Landing() {
             <motion.div 
               key={i} 
               variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
-              className="p-6 bg-card rounded-2xl border border-border text-center"
+              whileHover={{ y: -5 }}
+              className="p-6 bg-card rounded-2xl border border-border text-center relative group overflow-hidden"
             >
               <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4 font-heading font-bold text-lg">
                 {member.name[0]}
               </div>
               <div className="font-heading font-bold text-sm">{member.name}</div>
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">{member.role}</div>
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1 mb-4">{member.role}</div>
+              
+              <div className="flex justify-center gap-3 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                {member.linkedin && (
+                  <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                    <Linkedin className="w-4 h-4" />
+                  </a>
+                )}
+                {member.github && (
+                  <a href={member.github} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                    <Github className="w-4 h-4" />
+                  </a>
+                )}
+              </div>
             </motion.div>
           ))}
         </motion.div>
