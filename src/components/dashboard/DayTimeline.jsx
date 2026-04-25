@@ -1,4 +1,4 @@
-import { format, isSameDay, parseISO, startOfDay, isToday } from 'date-fns';
+import { format, isSameDay, parseISO, startOfDay, isToday, parse } from 'date-fns';
 import { User, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,7 +44,7 @@ const DayTimeline = forwardRef(function DayTimeline({
   }));
 
   const dayAppts = appointments
-    .filter(a => isSameDay(new Date(a.date), selectedDate) && a.status === 'upcoming')
+    .filter(a => isSameDay(parseISO(a.date), selectedDate) && a.status !== 'cancelled')
     .sort((a, b) => a.time_slot.localeCompare(b.time_slot));
 
   const dayMeds = [];

@@ -37,39 +37,44 @@ export default function Appointments() {
     },
   });
 
+  const completeMutation = useMutation({
+    mutationFn: (id) => apiClient.entities.Appointment.update(id, { status: 'completed' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      toast.success('Appointment marked complete');
+    },
+  });
+
   const now = new Date();
   const todayStart = startOfDay(now);
 
   const getDateOnly = (apt) => startOfDay(parseISO(apt.date));
   const getDateTime = (apt) => parse(`${apt.date} ${apt.time_slot}`, 'yyyy-MM-dd HH:mm', new Date());
 
-  // Today's appointments (any non-cancelled status)
+  // Today's appointments — keep completed ones here (greyed out) rather than hiding them
   const upcoming = appointments
-    .filter(a => a.status === 'upcoming' && isToday(parseISO(a.date)))
+    .filter(a => a.status !== 'cancelled' && isToday(parseISO(a.date)))
     .sort((a, b) => getDateTime(a) - getDateTime(b));
 
-  // Tomorrow and beyond, not yet done
+  // Future appointments — same: completed ones stay here greyed out
   const later = appointments
-    .filter(a => a.status === 'upcoming' && isAfter(getDateOnly(a), todayStart))
+    .filter(a => a.status !== 'cancelled' && isAfter(getDateOnly(a), todayStart))
     .sort((a, b) => getDateTime(a) - getDateTime(b));
 
-  // Already happened or explicitly marked complete
+  // Past-dated appointments (previous days only)
   const completed = appointments
-    .filter(a =>
-      a.status === 'completed' ||
-      (a.status === 'upcoming' && isBefore(getDateOnly(a), todayStart))
-    )
-    .sort((a, b) => getDateTime(b) - getDateTime(a)); // most recent first
+    .filter(a => a.status !== 'cancelled' && isBefore(getDateOnly(a), todayStart))
+    .sort((a, b) => getDateTime(b) - getDateTime(a));
 
-  const AppointmentCard = ({ apt, showCancel = false }) => {
+  const AppointmentCard = ({ apt, showCancel = false, showComplete = false }) => {
     const aptDateTime = getDateTime(apt);
     const hoursUntil = differenceInHours(aptDateTime, now);
     const isWithin24h = hoursUntil >= 0 && hoursUntil < 24;
-    const isCompleted = apt.status === 'completed';
+    const isCompleted = apt.status === 'completed' || isBefore(aptDateTime, now);
     const isPastDate = isBefore(getDateOnly(apt), todayStart);
 
     return (
-      <Card className={isCompleted || isPastDate ? 'opacity-75' : ''}>
+      <Card className={isCompleted || isPastDate ? 'opacity-60 bg-muted/30' : ''}>
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
             <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 ${
@@ -84,7 +89,9 @@ export default function Appointments() {
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-foreground">{apt.title}</p>
+              <p className={`font-semibold ${isCompleted || isPastDate ? 'text-muted-foreground' : 'text-foreground'}`}>
+                {apt.title}
+              </p>
               <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
                 <span className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" /> {apt.time_slot}
@@ -110,12 +117,23 @@ export default function Appointments() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              {isCompleted ? (
-                <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
-              ) : (
-                <Badge variant={apt.status === 'cancelled' ? 'destructive' : 'default'}>
-                  {apt.status}
+              {isCompleted || isPastDate ? (
+                <Badge variant="secondary" className="gap-1 text-muted-foreground">
+                  <CheckCircle2 className="w-3 h-3" /> Completed
                 </Badge>
+              ) : (
+                <Badge variant="default">{apt.status}</Badge>
+              )}
+              {showComplete && isDoctor && apt.status === 'upcoming' && !isCompleted && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs h-7"
+                  onClick={() => completeMutation.mutate(apt.id)}
+                  disabled={completeMutation.isPending}
+                >
+                  <CheckCircle2 className="w-3 h-3 mr-1" /> Done
+                </Button>
               )}
               {showCancel && apt.status === 'upcoming' && !isWithin24h && !isDoctor && (
                 <Button
@@ -176,7 +194,7 @@ export default function Appointments() {
           ) : (
             upcoming.map((apt, i) => (
               <motion.div key={apt.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                <AppointmentCard apt={apt} showCancel={false} />
+                <AppointmentCard apt={apt} showComplete={true} />
               </motion.div>
             ))
           )}
@@ -188,7 +206,7 @@ export default function Appointments() {
           ) : (
             later.map((apt, i) => (
               <motion.div key={apt.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                <AppointmentCard apt={apt} showCancel={true} />
+                <AppointmentCard apt={apt} showCancel={true} showComplete={true} />
               </motion.div>
             ))
           )}

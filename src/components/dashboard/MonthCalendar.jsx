@@ -1,4 +1,4 @@
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isSameMonth, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isSameMonth, addMonths, subMonths, parseISO } from 'date-fns';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -9,13 +9,13 @@ export default function MonthCalendar({ currentMonth, setCurrentMonth, selectedD
   const startPad = getDay(monthStart);
 
   const getApptCount = (day) =>
-    appointments.filter(a => isSameDay(new Date(a.date), day) && a.status !== 'cancelled').length;
+    appointments.filter(a => isSameDay(parseISO(a.date), day) && a.status !== 'cancelled').length;
 
   const now = new Date();
   const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
   const todayRemaining = appointments
     .filter(a => {
-      if (!isSameDay(new Date(a.date), now)) return false;
+      if (!isSameDay(parseISO(a.date), now)) return false;
       if (a.status === 'cancelled') return false;
       const [h, m] = a.time_slot.split(':').map(Number);
       return h * 60 + m >= currentTimeMinutes;
