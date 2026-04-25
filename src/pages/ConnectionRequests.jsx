@@ -133,7 +133,12 @@ export default function ConnectionRequests() {
   const handled = requests.filter(r => r.status !== 'pending');
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className="max-w-4xl mx-auto"
+    >
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="font-heading text-3xl font-bold text-foreground">Connect with Patients</h1>
@@ -261,6 +266,6 @@ export default function ConnectionRequests() {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

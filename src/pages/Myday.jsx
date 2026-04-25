@@ -117,7 +117,7 @@ export default function MyDay() {
     });
 
     appointments.forEach(a => {
-      if (a.date === dateStr) {
+      if (a.date === dateStr && a.status === 'upcoming') {
         events.push({
           id: `appt-${a.id}`,
           type: 'appointment',
@@ -179,7 +179,12 @@ export default function MyDay() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className="flex flex-col h-[calc(100vh-8rem)]"
+    >
       <Dialog open={!!selectedEventForEdit} onOpenChange={(open) => !open && setSelectedEventForEdit(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -204,7 +209,11 @@ export default function MyDay() {
       <div className="flex flex-1 overflow-hidden bg-background border rounded-2xl shadow-sm">
         {/* Sidebar */}
         <aside className="w-72 border-r bg-card/50 hidden md:flex flex-col p-6 space-y-8 overflow-y-auto">
-          <div>
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
             <div className="flex items-center justify-between mb-4 px-1">
               <h2 className="font-heading font-bold text-sm tracking-tight">{format(currentMonth, 'MMMM yyyy')}</h2>
               <div className="flex gap-1">
@@ -234,13 +243,19 @@ export default function MyDay() {
                 </button>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           <div className="space-y-4">
             <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Upcoming</h3>
             <div className="space-y-3">
-              {timelineEvents.slice(0, 3).map(e => (
-                <div key={e.id} className="flex gap-3 items-center px-1 group">
+              {timelineEvents.slice(0, 3).map((e, i) => (
+                <motion.div 
+                  key={e.id} 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + i * 0.05 }}
+                  className="flex gap-3 items-center px-1 group"
+                >
                   <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${
                     e.type === 'medication' ? 'bg-blue-500' : 
                     e.type === 'appointment' ? 'bg-emerald-500' : 'bg-amber-500'
@@ -252,7 +267,7 @@ export default function MyDay() {
                   <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => openManualEdit(e)}>
                     <Pencil className="w-3 h-3" />
                   </Button>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -349,6 +364,6 @@ export default function MyDay() {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
       `}</style>
-    </div>
+    </motion.div>
   );
 }

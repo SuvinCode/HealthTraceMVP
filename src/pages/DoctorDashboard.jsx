@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react';
+import { format } from 'date-fns';
+
 import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -44,6 +46,31 @@ export default function DoctorDashboard() {
       toast.success('Appointment cancelled');
     },
   });
+  
+  const scrollToEarliest = () => {
+    const now = new Date();
+    const todayStr = format(now, 'yyyy-MM-dd');
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+
+    const upcomingToday = appointments
+      .filter(a => a.date === todayStr && a.status === 'upcoming')
+      .filter(a => {
+        const [h, m] = a.time_slot.split(':').map(Number);
+        return h * 60 + m >= currentTime;
+      })
+      .sort((a, b) => a.time_slot.localeCompare(b.time_slot));
+
+    if (upcomingToday.length > 0) {
+      setSelectedDate(now);
+      setCurrentMonth(now);
+      setTimeout(() => {
+        timelineRef.current?.scrollToTime(upcomingToday[0].time_slot);
+      }, 100);
+    } else {
+      toast.info('No more upcoming appointments for today');
+    }
+  };
+
 
   const totalUpcoming = appointments.filter(a => a.status === 'upcoming').length;
   const totalCompleted = appointments.filter(a => a.status === 'completed').length;
@@ -55,14 +82,21 @@ export default function DoctorDashboard() {
   ];
 
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    >
       <h1 className="font-heading text-2xl font-bold text-foreground mb-6">Dashboard</h1>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         {stats.map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-            <Card>
+            <Card 
+              className={s.label === 'Upcoming' ? 'cursor-pointer hover:shadow-md transition-shadow ring-primary/20 hover:ring-2' : ''}
+              onClick={s.label === 'Upcoming' ? scrollToEarliest : undefined}
+            >
               <CardContent className="p-4 flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl ${s.color} flex items-center justify-center`}>
                   <s.icon className="w-5 h-5" />
@@ -83,7 +117,7 @@ export default function DoctorDashboard() {
           <div className="flex flex-col lg:flex-row min-h-[620px]">
 
             {/* Left: Month mini calendar */}
-            <div className="lg:w-56 shrink-0 border-b lg:border-b-0 lg:border-r border-border p-4">
+            <div className="lg:w-56 shrink-0 border-b lg:border-b-0 lg:border-r border-border p-4 bg-muted/5">
               <MonthCalendar
                 currentMonth={currentMonth}
                 setCurrentMonth={setCurrentMonth}
@@ -100,7 +134,7 @@ export default function DoctorDashboard() {
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full mt-4 text-xs"
+                className="w-full mt-4 text-xs font-bold"
                 onClick={() => { setSelectedDate(new Date()); setCurrentMonth(new Date()); }}
               >
                 Today
@@ -108,7 +142,7 @@ export default function DoctorDashboard() {
             </div>
 
             {/* Right: Day timeline */}
-            <div className="flex-1 p-4 overflow-hidden">
+            <div className="flex-1 p-4 overflow-hidden relative">
               <DayTimeline
                 ref={timelineRef}
                 selectedDate={selectedDate}
@@ -121,6 +155,6 @@ export default function DoctorDashboard() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }

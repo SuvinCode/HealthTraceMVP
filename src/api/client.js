@@ -151,4 +151,7 @@ export const apiClient = {
       },
     }
   ),
+  sendFeedback(data) {
+    return http('/send-feedback', { method: 'POST', body: data });
+  },
 };

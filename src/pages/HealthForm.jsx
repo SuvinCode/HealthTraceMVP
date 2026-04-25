@@ -159,7 +159,11 @@ export default function HealthForm() {
   };
 
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <h1 className="font-heading text-2xl font-bold text-foreground mb-6">Health Forms</h1>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
@@ -208,27 +212,34 @@ export default function HealthForm() {
           {submissions.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground">No submissions yet</div>
           ) : (
-            [...submissions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).map(sub => (
-              <Card key={sub.id} className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => openEdit(sub)}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <CheckCircle2 className="w-4 h-4 text-primary" />
-                    <span className="font-medium">{sub.form_title}</span>
-                    <Badge variant="secondary" className="ml-auto text-xs">
-                      {sub.created_date ? format(new Date(sub.created_date), 'MMM d, yyyy h:mm a') : 'Recently submitted'}
-                    </Badge>
-                  </div>
-                  <div className="space-y-1.5">
-                    {sub.answers?.slice(0, 2).map((a, i) => (
-                      <div key={i} className="text-sm truncate">
-                        <span className="text-muted-foreground">{a.question_label}: </span>
-                        <span className="text-foreground font-medium">{a.answer || '—'}</span>
-                      </div>
-                    ))}
-                    {sub.answers?.length > 2 && <p className="text-[10px] text-muted-foreground italic">Click to see {sub.answers.length - 2} more...</p>}
-                  </div>
-                </CardContent>
-              </Card>
+            [...submissions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).map((sub, i) => (
+              <motion.div
+                key={sub.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.03 }}
+              >
+                <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => openEdit(sub)}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                      <span className="font-medium">{sub.form_title}</span>
+                      <Badge variant="secondary" className="ml-auto text-xs">
+                        {sub.created_date ? format(new Date(sub.created_date), 'MMM d, yyyy h:mm a') : 'Recently submitted'}
+                      </Badge>
+                    </div>
+                    <div className="space-y-1.5">
+                      {sub.answers?.slice(0, 2).map((a, i) => (
+                        <div key={i} className="text-sm truncate">
+                          <span className="text-muted-foreground">{a.question_label}: </span>
+                          <span className="text-foreground font-medium">{a.answer || '—'}</span>
+                        </div>
+                      ))}
+                      {sub.answers?.length > 2 && <p className="text-[10px] text-muted-foreground italic">Click to see {sub.answers.length - 2} more...</p>}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))
           )}
         </TabsContent>
@@ -236,33 +247,38 @@ export default function HealthForm() {
         </div>
 
         <aside className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Stethoscope className="w-4 h-4 text-primary" />
-                Doctors Connected To
-              </CardTitle>
-              <CardDescription>
-                Doctors currently linked to your account
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {connectedDoctors.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No connected doctors yet.</p>
-              ) : (
-                connectedDoctors.map((doctor) => (
-                  <div key={doctor.email} className="rounded-lg border p-3 bg-card/50">
-                    <p className="text-sm font-semibold text-foreground">{doctor.name}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
-                      <Mail className="w-3 h-3" />
-                      {doctor.email}
-                    </p>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Stethoscope className="w-4 h-4 text-primary" />
+                  Doctors Connected To
+                </CardTitle>
+                <CardDescription>
+                  Doctors currently linked to your account
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {connectedDoctors.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No connected doctors yet.</p>
+                ) : (
+                  connectedDoctors.map((doctor) => (
+                    <div key={doctor.email} className="rounded-lg border p-3 bg-card/50">
+                      <p className="text-sm font-semibold text-foreground">{doctor.name}</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+                        <Mail className="w-3 h-3" />
+                        {doctor.email}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
         </aside>
       </div>
 
@@ -274,10 +290,6 @@ export default function HealthForm() {
           </DialogHeader>
           <div className="space-y-6 mt-4">
             {editingSub && (
-              // Note: We need the original form definition to get the question types
-              // For simplicity in this mock, we assume the sub answers are enough or we fetch form
-              // Since we don't have the full form objects for history without extra queries,
-              // we'll use a simplified list in the edit dialog or just the questions from the answers.
               editingSub.answers.map((a, i) => (
                 <div key={i} className="space-y-2">
                   <Label>{a.question_label}</Label>
@@ -298,6 +310,6 @@ export default function HealthForm() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 }

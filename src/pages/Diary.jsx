@@ -149,8 +149,9 @@ function EntryCard({ entry, onEdit }) {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className={`rounded-xl border p-4 ${mood.bg} ${mood.border} group relative`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -306,7 +307,12 @@ export default function Diary() {
   const showInlineForm = mode === 'editing';
 
   return (
-    <div className="max-w-xl mx-auto py-6 px-4 space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className="max-w-xl mx-auto py-6 px-4 space-y-6"
+    >
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold font-heading flex items-center gap-2">
@@ -506,6 +512,6 @@ export default function Diary() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 }
