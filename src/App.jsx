@@ -21,6 +21,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 
 const AuthenticatedApp = () => {
+  return <Onboarding/>;
   const { user, isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
