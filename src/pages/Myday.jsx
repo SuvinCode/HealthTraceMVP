@@ -2,19 +2,18 @@
 // This is the daily schedule/timeline view (medications, appointments).
 // The "Diary" name now belongs to the mood & journal feature.
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronLeft, ChevronRight, Pill, Calendar as CalIcon, Clock, FileText, CheckCircle2, Pencil } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pill, Clock, FileText, Pencil } from 'lucide-react';
 import { 
   format, isSameDay, isWithinInterval, parseISO, addMonths, subMonths, 
-  startOfMonth, endOfMonth, eachDayOfInterval, getDay, startOfDay, addDays, 
-  subDays, isToday, startOfWeek, endOfWeek 
+  startOfMonth, endOfMonth, eachDayOfInterval, getDay, addDays, 
+  subDays, isToday 
 } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -29,7 +28,17 @@ const TYPE_COLORS = {
   medicationDone: 'bg-green-100 border-green-300 text-green-800',
   appointment: 'bg-emerald-100 border-emerald-200 text-emerald-700',
   form: 'bg-amber-100 border-amber-200 text-amber-700',
+  diary: 'bg-violet-100 border-violet-200 text-violet-700',
 };
+
+const MOODS = [
+  { value: 1, emoji: '😞', label: 'Rough', color: '#ef4444' },
+  { value: 2, emoji: '😕', label: 'Low',   color: '#f97316' },
+  { value: 3, emoji: '😐', label: 'Okay',  color: '#eab308' },
+  { value: 4, emoji: '🙂', label: 'Good',  color: '#84cc16' },
+  { value: 5, emoji: '😄', label: 'Great', color: '#22c55e' },
+];
+const getMood = (v) => MOODS.find(m => m.value === v) || MOODS[2];
 
 const getEventColor = (event) => {
   if (event.type === 'medication') {
@@ -70,6 +79,16 @@ export default function MyDay() {
         const byName = appointment.patient_name === user?.full_name;
         return byEmail || byName;
       });
+    },
+    enabled: !!user?.email,
+    initialData: [],
+  });
+
+  const { data: diaryEntries } = useQuery({
+    queryKey: ['my-diary', user?.email],
+    queryFn: async () => {
+      const all = await apiClient.entities.DiaryEntry.filter();
+      return all.filter(e => e.patient_email === user?.email);
     },
     enabled: !!user?.email,
     initialData: [],
@@ -125,6 +144,19 @@ export default function MyDay() {
           time: a.time_slot,
           duration: 60,
           data: a,
+        });
+      }
+    });
+
+    diaryEntries.forEach(e => {
+      if (e.date === dateStr) {
+        events.push({
+          id: `diary-${e.id}`,
+          type: 'diary',
+          title: `Diary: ${getMood(e.mood_score).label}`,
+          time: '08:00',
+          duration: 45,
+          data: e,
         });
       }
     });
@@ -226,22 +258,34 @@ export default function MyDay() {
               </div>
             </div>
             <div className="grid grid-cols-7 gap-y-1 text-center">
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
-                <div key={d} className="text-[10px] font-bold text-muted-foreground/60 uppercase">{d}</div>
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                <div key={`${d}-${i}`} className="text-[10px] font-bold text-muted-foreground/60 uppercase">{d}</div>
               ))}
               {Array.from({ length: startPadding }).map((_, i) => <div key={`pad-${i}`} />)}
-              {calendarDays.map(day => (
-                <button
-                  key={day.toISOString()}
-                  onClick={() => setSelectedDate(day)}
-                  className={`text-xs h-8 w-8 rounded-full flex items-center justify-center transition-all ${
-                    isSameDay(day, selectedDate) ? 'bg-primary text-primary-foreground font-bold' :
-                    isToday(day) ? 'text-primary font-bold' : 'hover:bg-muted text-foreground/80'
-                  }`}
-                >
-                  {format(day, 'd')}
-                </button>
-              ))}
+              {calendarDays.map(day => {
+                const dayStr = format(day, 'yyyy-MM-dd');
+                const hasDiary = diaryEntries.some(e => e.date === dayStr);
+                const mood = hasDiary ? getMood(diaryEntries.find(e => e.date === dayStr).mood_score) : null;
+                
+                return (
+                  <button
+                    key={day.toISOString()}
+                    onClick={() => setSelectedDate(day)}
+                    className={`text-xs h-8 w-8 rounded-full flex flex-col items-center justify-center transition-all relative ${
+                      isSameDay(day, selectedDate) ? 'bg-primary text-primary-foreground font-bold' :
+                      isToday(day) ? 'text-primary font-bold' : 'hover:bg-muted text-foreground/80'
+                    }`}
+                  >
+                    {format(day, 'd')}
+                    {hasDiary && (
+                      <div 
+                        className="absolute bottom-1 w-1 h-1 rounded-full" 
+                        style={{ backgroundColor: mood.color }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </motion.div>
 

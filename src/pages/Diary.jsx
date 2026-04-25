@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format, parseISO, subDays, isToday } from 'date-fns';
+import { format, parseISO, subDays, isToday, eachDayOfInterval, startOfDay } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -24,21 +24,24 @@ const MOODS = [
 const getMood = (value) => MOODS.find(m => m.value === value) || MOODS[2];
 
 // ─── Mini Mood Bar Chart ─────────────────────────────────────────────────────
-function MoodChart({ entries }) {
+function MoodChart({ entries, onDateSelect }) {
   const last7 = Array.from({ length: 7 }, (_, i) => {
     const date = subDays(new Date(), 6 - i);
     const dateStr = format(date, 'yyyy-MM-dd');
     const entry = entries.find(e => e.date === dateStr);
-    return { date, mood: entry?.mood_score ?? null };
+    return { date, dateStr, mood: entry?.mood_score ?? null };
   });
 
   return (
     <div className="flex items-end gap-1.5 h-12">
-      {last7.map(({ date, mood }, i) => {
+      {last7.map(({ date, dateStr, mood }, i) => {
         const m = mood ? getMood(mood) : null;
         return (
           <div key={i} className="flex flex-col items-center gap-1 flex-1">
-            <motion.div
+            <motion.button
+              whileHover={{ scale: 1.1, y: -2 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => onDateSelect?.(dateStr)}
               initial={{ scaleY: 0 }}
               animate={{ scaleY: 1 }}
               transition={{ delay: i * 0.05, duration: 0.4, ease: 'easeOut' }}
@@ -47,7 +50,8 @@ function MoodChart({ entries }) {
                 backgroundColor: m ? m.color : '#e2e8f0',
                 originY: 1,
               }}
-              className="w-full rounded-t-sm"
+              className="w-full rounded-t-sm cursor-pointer"
+              title={mood ? `Mood: ${m.label} on ${format(date, 'MMM d')}` : `No entry for ${format(date, 'MMM d')}`}
             />
             <span className="text-[9px] text-muted-foreground font-medium">
               {format(date, 'EEE')[0]}
@@ -165,10 +169,10 @@ function EntryCard({ entry, onEdit }) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+            className="h-8 w-8 transition-all shrink-0 hover:bg-black/5 rounded-full"
             onClick={() => onEdit(entry)}
           >
-            <Pencil className="w-3.5 h-3.5" />
+            <Pencil className="w-4 h-4 text-muted-foreground" />
           </Button>
         )}
       </div>
@@ -277,20 +281,7 @@ export default function Diary() {
     }
   }, [isDoctor, isLoading, todayEntry, mode]);
 
-  if (isDoctor) {
-    return (
-      <div className="max-w-xl mx-auto py-16 px-4 text-center space-y-4 text-muted-foreground">
-        <BookOpen className="w-10 h-10 mx-auto opacity-30" />
-        <p className="text-sm">Diary entries are available in each patient's profile.</p>
-        <Button asChild variant="outline" className="rounded-full gap-2">
-          <Link to="/patient-logs">
-            <Users className="w-4 h-4" />
-            Go to Patient Logs
-          </Link>
-        </Button>
-      </div>
-    );
-  }
+
 
   // ── Mutation ─────────────────────────────────────────────────────────────
   const saveMutation = useMutation({
@@ -354,9 +345,36 @@ export default function Diary() {
     saveMutation.mutate({ entryId: editingEntry.id, mood: selectedMood, text: notes, date: editingEntry.date });
   };
 
-  const avgMood = entries.length > 0
-    ? (entries.slice(0, 7).reduce((s, e) => s + e.mood_score, 0) / Math.min(entries.length, 7)).toFixed(1)
+  const avgMood = entries.length > 0 
+    ? (entries.reduce((s, e) => s + e.mood_score, 0) / entries.length).toFixed(1)
     : null;
+
+  if (isDoctor) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="max-w-xl mx-auto py-16 px-4 text-center space-y-6"
+      >
+         <div className="w-20 h-20 bg-violet-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <BookOpen className="w-10 h-10 text-violet-300" />
+         </div>
+         <div className="space-y-2">
+            <h2 className="text-xl font-bold font-heading">Patient Diary View</h2>
+            <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+              Diary entries reach you directly via each patient's profile clinical dashboard.
+            </p>
+         </div>
+         <Button asChild variant="outline" className="rounded-full gap-2 h-11 px-6 font-bold shadow-sm hover:shadow-md transition-all">
+          <Link to="/patient-logs">
+            <Users className="w-4 h-4" />
+            View Patient Logs
+          </Link>
+        </Button>
+      </motion.div>
+    );
+  }
 
   const showSuccessCard = mode === 'view' && todayEntry;
   const showInlineForm = mode === 'editing';
@@ -374,7 +392,16 @@ export default function Diary() {
           <BookOpen className="w-6 h-6 text-violet-500" />
           My Diary
         </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">How are you feeling today?</p>
+        <div className="flex items-center justify-between mt-0.5">
+          <p className="text-sm text-muted-foreground">How are you feeling today?</p>
+          <Button 
+            variant="link" 
+            className="h-auto p-0 text-violet-600 text-xs font-bold"
+            onClick={() => document.getElementById('previous-entries')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            View History ↓
+          </Button>
+        </div>
       </div>
 
       {/* 7-day Mood Trend */}
@@ -391,12 +418,27 @@ export default function Diary() {
               </Badge>
             )}
           </div>
-          <MoodChart entries={entries} />
+          <MoodChart 
+            entries={entries} 
+            onDateSelect={(dateStr) => {
+              const el = document.getElementById(`entry-${dateStr}`);
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.add('ring-2', 'ring-violet-400', 'ring-offset-2');
+                setTimeout(() => el.classList.remove('ring-2', 'ring-violet-400', 'ring-offset-2'), 2000);
+              } else if (dateStr === todayStr) {
+                document.getElementById('today-section')?.scrollIntoView({ behavior: 'smooth' });
+              } else {
+                toast.info(`No entry found for ${format(parseISO(dateStr), 'MMM d')}`);
+              }
+            }}
+          />
         </div>
       )}
 
       {/* Today: success card OR inline form */}
-      <AnimatePresence mode="wait">
+      <div id="today-section">
+        <AnimatePresence mode="wait">
         {showSuccessCard ? (
           <motion.div
             key="success"
@@ -538,11 +580,12 @@ export default function Diary() {
           </motion.div>
         ) : null}
       </AnimatePresence>
+    </div>
 
       {/* Past Entries */}
       {entries.filter(e => e.date !== todayStr).length > 0 && (
         <div className="space-y-3">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <p id="previous-entries" className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5" />
             Previous entries
           </p>
@@ -550,7 +593,9 @@ export default function Diary() {
             {entries
               .filter(e => e.date !== todayStr)
               .map(entry => (
-                <EntryCard key={entry.id} entry={entry} onEdit={openPastEdit} />
+                <div key={entry.id} id={`entry-${entry.date}`}>
+                  <EntryCard entry={entry} onEdit={openPastEdit} />
+                </div>
               ))}
           </div>
         </div>

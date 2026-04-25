@@ -232,11 +232,17 @@ function MedicationBlock({ med, selectedDate, onToggle, onEdit }) {
       className={`mb-1 rounded-lg px-3 py-2 border flex items-center gap-3 text-sm transition-colors ${statusStyles}`}
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        <Checkbox
-          checked={isTaken}
-          onCheckedChange={() => onToggle?.(med.data, format(selectedDate, 'yyyy-MM-dd'))}
-          className={`h-5 w-5 rounded-md shrink-0 ${isTaken ? 'border-green-500' : isMissed ? 'border-red-400' : 'border-yellow-500'}`}
-        />
+        {onToggle ? (
+          <Checkbox
+            checked={isTaken}
+            onCheckedChange={() => onToggle?.(med.data, format(selectedDate, 'yyyy-MM-dd'))}
+            className={`h-5 w-5 rounded-md shrink-0 ${isTaken ? 'border-green-500' : isMissed ? 'border-red-400' : 'border-yellow-500'}`}
+          />
+        ) : (
+          <div className={`h-5 w-5 rounded-md border shrink-0 flex items-center justify-center ${isTaken ? 'bg-green-500 border-green-500' : isMissed ? 'border-red-400' : 'border-yellow-500'}`}>
+            {isTaken && <CheckCircle2 className="w-3 h-3 text-white" />}
+          </div>
+        )}
         <div className="shrink-0">
           <span className="text-xs font-bold opacity-80">{med.time}</span>
         </div>
