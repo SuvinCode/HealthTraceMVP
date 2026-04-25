@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Calendar, ClipboardList, Plus, Users, LayoutDashboard,
   LogOut, Bell, Menu, X, FileText, UserPlus, Sun, BookOpen, NotebookPen
@@ -29,7 +29,6 @@ const doctorLinks = [
 export default function AppLayout() {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isDoctor = user?.role === 'doctor';
   const links = isDoctor ? doctorLinks : patientLinks;
@@ -128,10 +127,7 @@ export default function AppLayout() {
                 variant="ghost"
                 size="icon"
                 className="text-muted-foreground hover:text-foreground"
-                onClick={() => {
-                  logout(false);
-                  navigate('/');
-                }}
+                onClick={() => logout()}
               >
                 <LogOut className="w-4 h-4" />
               </Button>
