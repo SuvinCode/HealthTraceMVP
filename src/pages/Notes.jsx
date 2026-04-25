@@ -135,9 +135,8 @@ function NewNoteDialog({ open, onClose, connections, doctorEmail, onSaved }) {
           form.append('file', file);
           form.append('model', 'whisper-1');
 
-          const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+          const res = await fetch(`${import.meta.env.VITE_API_URL}/proxy/transcribe`, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${apiKey}` },
             body: form,
           });
           if (!res.ok) throw new Error(`Whisper error ${res.status}`);

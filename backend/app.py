@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import requests
 import json
 import os
 import random
@@ -50,6 +51,60 @@ def get_list(db, entity):
     elif entity in db:
         return db[entity], 'top'
     return None, None
+
+@app.route('/proxy/transcribe', methods=['POST'])
+def transcribe_audio():
+    api_key = os.environ.get('OPENAI_API_KEY') or os.environ.get('VITE_OPENAI_API_KEY')
+    if not api_key:
+        return jsonify({"error": "OpenAI API Key not configured on server"}), 500
+
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    audio_file = request.files['file']
+    
+    try:
+        # Prepare the request to OpenAI
+        files = {
+            'file': (audio_file.filename, audio_file.read(), audio_file.content_type)
+        }
+        data = {
+            'model': request.form.get('model', 'whisper-1')
+        }
+        headers = {
+            'Authorization': f'Bearer {api_key}'
+        }
+
+        response = requests.post(
+            'https://api.openai.com/v1/audio/transcriptions',
+            headers=headers,
+            files=files,
+            data=data
+        )
+        
+        return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/proxy/chat', methods=['POST'])
+def proxy_chat():
+    api_key = os.environ.get('OPENAI_API_KEY') or os.environ.get('VITE_OPENAI_API_KEY')
+    if not api_key:
+        return jsonify({"error": "OpenAI API Key not configured on server"}), 500
+
+    try:
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {api_key}'
+        }
+        response = requests.post(
+            'https://api.openai.com/v1/chat/completions',
+            headers=headers,
+            json=request.json
+        )
+        return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/', methods=['GET'])
 def health_check():

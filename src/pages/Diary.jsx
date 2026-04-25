@@ -78,11 +78,10 @@ function AISummaryDialog({ open, onClose, entries, patientName }) {
         notes: e.notes || '(no notes)',
       }));
 
-      fetch('https://api.openai.com/v1/chat/completions', {
+      fetch(`${import.meta.env.VITE_API_URL}/proxy/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`,
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
@@ -224,9 +223,8 @@ export default function Diary() {
           const form = new FormData();
           form.append('file', new File([blob], 'recording.webm', { type: mimeType }));
           form.append('model', 'whisper-1');
-          const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+          const res = await fetch(`${import.meta.env.VITE_API_URL}/proxy/transcribe`, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${apiKey}` },
             body: form,
           });
           if (!res.ok) throw new Error(`Whisper error ${res.status}`);
