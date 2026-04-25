@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Calendar, ClipboardList, Plus, Users, LayoutDashboard, 
-  LogOut, Bell, Menu, X, FileText, UserPlus
+  LogOut, Bell, Menu, X, FileText, UserPlus, Sun, BookOpen
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/api/client';
@@ -11,7 +11,8 @@ import NotificationBell from './NotificationBell';
 
 const patientLinks = [
   { to: '/health-form', icon: FileText, label: 'Health Form' },
-  { to: '/diary', icon: Calendar, label: 'Diary' },
+  { to: '/myday', icon: Sun, label: 'My Day' },
+  { to: '/diary', icon: BookOpen, label: 'Diary' },
   { to: '/appointments', icon: ClipboardList, label: 'Appointments' },
   { to: '/create-appointment', icon: Plus, label: 'Book Appointment' },
 ];
@@ -59,22 +60,22 @@ export default function AppLayout() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {links.map(link => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                  location.pathname === link.to
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                }`}
-              >
-                <link.icon className="w-4 h-4" />
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+          <nav className="hidden md:flex items-center gap-0.5">
+  {links.map(link => (
+    <Link
+      key={link.to}
+      to={link.to}
+      className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-sm font-medium transition-all ${
+        location.pathname === link.to
+          ? 'bg-primary text-primary-foreground'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+      }`}
+    >
+      <link.icon className="w-4 h-4" />
+      {link.label}
+    </Link>
+  ))}
+</nav>
 
           <div className="flex items-center gap-3">
 

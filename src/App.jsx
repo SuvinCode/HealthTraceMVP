@@ -10,6 +10,7 @@ import AppLayout from './components/layout/AppLayout';
 import Onboarding from './pages/Onboarding';
 
 import HealthForm from './pages/HealthForm';
+import MyDay from './pages/Myday';
 import Diary from './pages/Diary';
 import Appointments from './pages/Appointments';
 import CreateAppointment from './pages/CreateAppointment';
@@ -72,6 +73,7 @@ const AuthenticatedApp = () => {
       <Route element={<AppLayout />}>
         <Route path="/" element={<Navigate to={isDoctor ? '/doctor-dashboard' : '/health-form'} replace />} />
         <Route path="/health-form" element={<HealthForm />} />
+        <Route path="/myday" element={<MyDay />} />
         <Route path="/diary" element={<Diary />} />
         <Route path="/appointments" element={<Appointments />} />
         <Route path="/create-appointment" element={<CreateAppointment />} />
