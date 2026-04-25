@@ -158,8 +158,19 @@ export const apiClient = {
     async updateMe(data) {
       const userInfo = localStorage.getItem('user_info');
       if (!userInfo) throw new Error('User not found in session');
-      const user = JSON.parse(userInfo);
-      const updatedUser = await http(`/users/${user.id}`, { method: 'PATCH', body: data });
+      let user = JSON.parse(userInfo);
+      let updatedUser;
+      try {
+        updatedUser = await http(`/users/${user.id}`, { method: 'PATCH', body: data });
+      } catch (err) {
+        if (err.status === 404) {
+          // The backend wiped the DB but local session survived (ghost user). Auto-heal by recreating.
+          const { id, ...userData } = user;
+          updatedUser = await http('/users', { method: 'POST', body: { ...userData, ...data } });
+        } else {
+          throw err;
+        }
+      }
       updatedUser.email = cleanEmail(updatedUser.email);
       localStorage.setItem('user_info', JSON.stringify(updatedUser));
       return updatedUser;

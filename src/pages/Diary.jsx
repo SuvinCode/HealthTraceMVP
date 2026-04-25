@@ -476,7 +476,7 @@ Provide exactly 2 very short, clinical, and empathetic sentences. One summarizin
       </div>
 
       {/* Biometrics Display */}
-      {!isDoctor && user?.apple_health_connected && biometrics.length > 0 && (
+      {!isDoctor && biometrics.length > 0 && (
         <div className="space-y-3">
           <div className="grid grid-cols-3 gap-3">
             {(() => {
