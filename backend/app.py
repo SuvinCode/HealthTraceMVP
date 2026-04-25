@@ -51,6 +51,10 @@ def get_list(db, entity):
         return db[entity], 'top'
     return None, None
 
+@app.route('/', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy", "message": "HealthTrace API is running"}), 200
+
 @app.route('/<entity>', methods=['GET'])
 def get_entities(entity):
     db = read_db()
