@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '@/api/client';
 import { Linkedin, Github, Stethoscope, User, Check } from 'lucide-react';
 
@@ -65,6 +65,25 @@ const FEATURES = [
   },
 ];
 
+const TESTIMONIALS = [
+  {
+    quote: "Something like this has been needed in the medical space for a long time",
+    author: "Dr Francis, Gastroenterologist"
+  },
+  {
+    quote: "The ability to see real-time symptom trends changes how we approach treatment planning.",
+    author: "Dr Sarah Miller, Neurologist"
+  },
+  {
+    quote: "Finally, a bridge between patient reality and clinical data that actually works.",
+    author: "Prof. James Chen, CFS Specialist"
+  },
+  {
+    quote: "This tool provides the missing link for managing complex, invisible illnesses efficiently.",
+    author: "Dr Elena Rodriguez, Internal Medicine"
+  }
+];
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -97,6 +116,15 @@ export default function Landing() {
   const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -161,7 +189,7 @@ export default function Landing() {
         <div className="flex items-center gap-3">
           <motion.img 
             whileHover={{ rotate: 10, scale: 1.1 }}
-            src="/favicon.svg" alt="HealthTrace logo" className="w-14 h-14 object-contain" 
+            src={`${import.meta.env.BASE_URL}favicon.svg`} alt="HealthTrace logo" className="w-14 h-14 object-contain" 
           />
           <span className="font-heading font-bold text-2xl tracking-tight">
             <span style={{ color: '#CC2222' }}>Health</span><span style={{ color: '#1E2D4E' }}>Trace</span>
@@ -471,34 +499,42 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Testimonial */}
-      <motion.section 
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-100px' }}
-        className="px-8 py-24 bg-primary/5 text-center"
-      >
-        <div className="max-w-3xl mx-auto">
-          <motion.blockquote
-            initial={{ scale: 0.9, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-3xl italic mb-8 text-foreground/80 leading-snug"
-            style={{ fontFamily: 'Playfair Display, Georgia, serif' }}
-          >
-            "Something like this has been needed in the medical space for a long time"
-          </motion.blockquote>
-          <motion.cite 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-sm font-bold not-italic text-muted-foreground"
-          >
-            — Dr Francis, Gastroentologist
-          </motion.cite>
+      {/* Dynamic Testimonials */}
+      <section className="px-8 py-32 bg-primary/5 text-center overflow-hidden">
+        <div className="max-w-4xl mx-auto min-h-[200px] flex flex-col justify-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentTestimonial}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <blockquote
+                className="text-3xl md:text-4xl italic mb-10 text-foreground/80 leading-tight"
+                style={{ fontFamily: 'Playfair Display, Georgia, serif' }}
+              >
+                "{TESTIMONIALS[currentTestimonial].quote}"
+              </blockquote>
+              <cite className="text-sm font-bold not-italic text-muted-foreground uppercase tracking-widest">
+                — {TESTIMONIALS[currentTestimonial].author}
+              </cite>
+            </motion.div>
+          </AnimatePresence>
+          
+          {/* Progress Indicators */}
+          <div className="flex justify-center gap-2 mt-12">
+            {TESTIMONIALS.map((_, i) => (
+              <div 
+                key={i}
+                className={`h-1 rounded-full transition-all duration-500 ${
+                  i === currentTestimonial ? 'w-8 bg-primary' : 'w-2 bg-primary/20'
+                }`}
+              />
+            ))}
+          </div>
         </div>
-      </motion.section>
+      </section>
 
       {/* Founding Team */}
       <section className="px-8 py-32 max-w-7xl mx-auto">
