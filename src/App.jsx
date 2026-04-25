@@ -8,6 +8,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 import AppLayout from './components/layout/AppLayout';
 import Onboarding from './pages/Onboarding';
+import Landing from './pages/Landing';
 
 import HealthForm from './pages/HealthForm';
 import MyDay from './pages/Myday';
@@ -24,7 +25,7 @@ import Signup from './pages/Signup';
 const AuthenticatedApp = () => {
   const { user, isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
   const location = useLocation();
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/';
 
   // Show loading spinner while checking auth, but skip it if we're already on an auth page
   // or if there's no session at all (to show login/signup immediately)
@@ -70,8 +71,10 @@ const AuthenticatedApp = () => {
       <Route path="/signup" element={<Signup />} />
       <Route path="/onboarding" element={<Onboarding />} />
 
+      <Route path="/" element={user ? <Navigate to={isDoctor ? '/doctor-dashboard' : '/health-form'} replace /> : <Landing />} />
+
       <Route element={<AppLayout />}>
-        <Route path="/" element={<Navigate to={isDoctor ? '/doctor-dashboard' : '/health-form'} replace />} />
+
         <Route path="/health-form" element={<HealthForm />} />
         <Route path="/myday" element={<MyDay />} />
         <Route path="/diary" element={<Diary />} />

@@ -81,7 +81,8 @@ module.exports = {
   		},
   		fontFamily: {
   			heading: ['var(--font-heading)'],
-  			body: ['var(--font-body)']
+  			body: ['var(--font-body)'],
+  			serif: ['Playfair Display', 'Georgia', 'ui-serif', 'serif'],
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
