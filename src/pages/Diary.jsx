@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Sparkles, Pencil, CheckCircle2, Calendar, TrendingUp, Users, Mic, MicOff, Volume2 } from 'lucide-react';
+import { BookOpen, Sparkles, Pencil, CheckCircle2, Calendar, TrendingUp, Users, Mic, MicOff, Volume2, Moon, Smartphone, Activity } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Link } from 'react-router-dom';
 
@@ -195,6 +195,10 @@ export default function Diary() {
   const [notes, setNotes] = useState('');
   const [editingEntry, setEditingEntry] = useState(null);
 
+  // Biometrics AI Analysis State
+  const [bioAnalysis, setBioAnalysis] = useState(null);
+  const [isAnalyzingBio, setIsAnalyzingBio] = useState(false);
+
   // Voice recording — MediaRecorder → Whisper
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -266,6 +270,15 @@ export default function Diary() {
         .sort((a, b) => b.date.localeCompare(a.date));
     },
     enabled: !isDoctor && !!user?.email,
+  });
+
+  const { data: biometrics = [] } = useQuery({
+    queryKey: ['biometrics', user?.email],
+    queryFn: async () => {
+      return apiClient.entities.biometrics.filter({ patient_email: user?.email });
+    },
+    enabled: !isDoctor && !!user?.email,
+    refetchInterval: (!isDoctor && user?.apple_health_connected) ? 3000 : false,
   });
 
   const todayEntry = entries.find(e => e.date === todayStr);
@@ -347,6 +360,35 @@ export default function Diary() {
     ? (entries.reduce((s, e) => s + e.mood_score, 0) / entries.length).toFixed(1)
     : null;
 
+  const analyzeBiometrics = async (sleep, screen, steps) => {
+    setIsAnalyzingBio(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/proxy/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'mistral-small-latest',
+          messages: [{
+            role: 'user',
+            content: `You are a clinical AI assistant for ME/CFS pacing. 
+Patient Data for Today:
+- Sleep: ${sleep} hours
+- Screen Time: ${screen} hours
+- Steps: ${steps}
+
+Provide exactly 2 very short, clinical, and empathetic sentences. One summarizing the strain on their energy envelope, and one suggesting a practical action for the rest of their day. Keep it brief. Do not use markdown.`
+          }],
+        }),
+      });
+      const data = await res.json();
+      setBioAnalysis(data.choices?.[0]?.message?.content || 'Unable to generate analysis.');
+    } catch {
+      setBioAnalysis('Error generating analysis. Please try again later.');
+    } finally {
+      setIsAnalyzingBio(false);
+    }
+  };
+
   if (isDoctor) {
     return (
       <motion.div 
@@ -402,35 +444,117 @@ export default function Diary() {
         </div>
       </div>
 
-      {/* 7-day Mood Trend */}
-      {entries.length > 0 && (
-        <div className="rounded-xl border bg-card p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5" />
-              Last 7 days
-            </p>
-            {avgMood && (
-              <Badge variant="outline" className="text-xs font-bold">
-                Avg {avgMood} · {getMood(Math.round(parseFloat(avgMood))).label}
-              </Badge>
+      {/* 7-day Mood Trend (Always show so days are visible) */}
+      <div className="rounded-xl border bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5" />
+            Last 7 days
+          </p>
+          {avgMood && (
+            <Badge variant="outline" className="text-xs font-bold">
+              Avg {avgMood} · {getMood(Math.round(parseFloat(avgMood))).label}
+            </Badge>
+          )}
+        </div>
+        <MoodChart 
+          entries={entries} 
+          onDateSelect={(dateStr) => {
+            const el = document.getElementById(`entry-${dateStr}`);
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              el.classList.add('ring-2', 'ring-violet-400', 'ring-offset-2');
+              setTimeout(() => el.classList.remove('ring-2', 'ring-violet-400', 'ring-offset-2'), 2000);
+            } else if (dateStr === todayStr) {
+              document.getElementById('today-section')?.scrollIntoView({ behavior: 'smooth' });
+            } else {
+              // Instead of just a toast, let the user know they can log today if they haven't
+              toast.info(`No entry found for ${format(parseISO(dateStr), 'MMM d')}`);
+            }
+          }}
+        />
+      </div>
+
+      {/* Biometrics Display */}
+      {!isDoctor && user?.apple_health_connected && biometrics.some(b => b.date === todayStr) && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-3">
+            {(() => {
+              const todaysBiometrics = biometrics.filter(b => b.date === todayStr);
+              const latest = [...todaysBiometrics].reverse();
+              const sleep = latest.find(m => m.metric_name === 'sleep_analysis')?.value;
+              const screen = latest.find(m => m.metric_name === 'screen_time')?.value;
+              const steps = latest.find(m => m.metric_name === 'step_count')?.value;
+
+              const sleepColor = !sleep ? 'text-muted-foreground' : sleep >= 7 ? 'text-green-500' : sleep >= 5 ? 'text-yellow-500' : 'text-red-500';
+              const screenColor = !screen ? 'text-muted-foreground' : screen <= 4 ? 'text-green-500' : screen <= 8 ? 'text-yellow-500' : 'text-red-500';
+
+              return (
+                <>
+                  <div className="rounded-xl border bg-card p-3 flex flex-col items-center justify-center text-center gap-1.5 shadow-sm">
+                    <Moon className={`w-4 h-4 ${sleepColor}`} />
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Sleep</p>
+                    <p className={`font-bold font-mono text-sm ${sleepColor}`}>
+                      {sleep ? `${sleep} / 8 Hr` : 'No data'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border bg-card p-3 flex flex-col items-center justify-center text-center gap-1.5 shadow-sm">
+                    <Smartphone className={`w-4 h-4 ${screenColor}`} />
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Screen</p>
+                    <p className={`font-bold font-mono text-sm ${screenColor}`}>
+                      {screen ? `${screen} / 12 Hr` : 'No data'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border bg-card p-3 flex flex-col items-center justify-center text-center gap-1.5 shadow-sm">
+                    <Activity className="w-4 h-4 text-violet-500" />
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Active</p>
+                    <p className="font-bold font-mono text-sm text-foreground">
+                      {steps ? `${steps} steps` : 'No data'}
+                    </p>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+          
+          <div className="rounded-xl border bg-violet-50 border-violet-100 p-4">
+            {!bioAnalysis ? (
+              <Button 
+                onClick={() => {
+                  const latest = [...biometrics.filter(b => b.date === todayStr)].reverse();
+                  analyzeBiometrics(
+                    latest.find(m => m.metric_name === 'sleep_analysis')?.value || 0,
+                    latest.find(m => m.metric_name === 'screen_time')?.value || 0,
+                    latest.find(m => m.metric_name === 'step_count')?.value || 0
+                  );
+                }}
+                disabled={isAnalyzingBio}
+                className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold gap-2 shadow-sm rounded-full"
+              >
+                {isAnalyzingBio ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Analyzing Apple Health Data...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-violet-200" />
+                    AI Biometric Analysis
+                  </>
+                )}
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-violet-500" />
+                  <h4 className="font-bold text-violet-900 text-sm">Actionable Insight</h4>
+                </div>
+                <p className="text-sm text-violet-800 leading-relaxed">
+                  {bioAnalysis}
+                </p>
+              </div>
             )}
           </div>
-          <MoodChart 
-            entries={entries} 
-            onDateSelect={(dateStr) => {
-              const el = document.getElementById(`entry-${dateStr}`);
-              if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                el.classList.add('ring-2', 'ring-violet-400', 'ring-offset-2');
-                setTimeout(() => el.classList.remove('ring-2', 'ring-violet-400', 'ring-offset-2'), 2000);
-              } else if (dateStr === todayStr) {
-                document.getElementById('today-section')?.scrollIntoView({ behavior: 'smooth' });
-              } else {
-                toast.info(`No entry found for ${format(parseISO(dateStr), 'MMM d')}`);
-              }
-            }}
-          />
         </div>
       )}
 

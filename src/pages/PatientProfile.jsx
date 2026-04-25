@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { User, FileText, Pill, Calendar, Plus, ArrowLeft, Loader2, Clock, CheckCircle2, Ruler, Weight, Heart, X, BookOpen, Sparkles, TrendingUp, Send } from 'lucide-react';
+import { User, FileText, Pill, Calendar, Plus, ArrowLeft, Loader2, Clock, CheckCircle2, Ruler, Weight, Heart, X, BookOpen, Sparkles, TrendingUp, Send, Moon, Smartphone, Activity } from 'lucide-react';
 import { format, parseISO, subDays, isToday, startOfDay } from 'date-fns';
 
 import { motion } from 'framer-motion';
@@ -57,7 +57,7 @@ function DiaryMoodChart({ entries }) {
   );
 }
 
-function DiaryAISummaryDialog({ open, onClose, entries, patientName }) {
+function DiaryAISummaryDialog({ open, onClose, entries, patientName, biometrics, lastApptDate }) {
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -65,11 +65,16 @@ function DiaryAISummaryDialog({ open, onClose, entries, patientName }) {
     if (open && entries.length > 0) {
       setLoading(true);
       setSummary('');
-      const recent = entries.slice(0, 14).map(e => ({
+      
+      const scopedEntries = entries.filter(e => lastApptDate ? parseISO(e.date) >= startOfDay(lastApptDate) : true);
+      const scopedBios = biometrics.filter(b => lastApptDate ? parseISO(b.date) >= startOfDay(lastApptDate) : true);
+
+      const recent = scopedEntries.slice(0, 30).map(e => ({
         date: e.date,
         mood: getMood(e.mood_score).label,
         notes: e.notes || '(no notes)',
       }));
+
       fetch(`${import.meta.env.VITE_API_URL}/proxy/chat`, {
         method: 'POST',
         headers: {
@@ -79,19 +84,24 @@ function DiaryAISummaryDialog({ open, onClose, entries, patientName }) {
           model: 'gpt-4o-mini',
           messages: [{
             role: 'user',
-            content: `You are a clinical assistant helping a doctor understand a patient's recent wellbeing based on their self-reported diary entries.
+            content: `You are a clinical ME/CFS assistant helping a doctor review a patient's pacing and wellbeing since their last appointment.
 
 Patient: ${patientName}
-Diary entries (most recent first):
+Timeframe: Since ${lastApptDate ? format(lastApptDate, 'MMM d, yyyy') : 'beginning of records'}
+
+Diary notes & feelings (most recent first):
 ${JSON.stringify(recent, null, 2)}
 
-Please provide:
-1. A brief clinical summary (2-3 sentences) of the patient's mood trends
-2. Key themes or concerns mentioned in their notes
-3. Any patterns worth discussing at their next appointment
-4. An overall wellbeing assessment (improving / stable / declining)
+${scopedBios.length > 0 ? `Apple Health Biometrics for same period:
+${JSON.stringify(scopedBios, null, 2)}` : 'No Apple Health metrics connected/available.'}
 
-Be concise, clinical, and helpful. Format with clear sections.`,
+Please provide a highly clinical report addressing:
+1. General trend in mood and wellbeing over this timeframe.
+2. A synthesis of their handwritten/voice notes (themes, triggers, or symptom flares).
+${scopedBios.length > 0 ? '3. Insights correlating their Apple Health data (sleep, screen time, active steps) with their reported feelings.' : ''}
+4. Points of concern to discuss in the upcoming appointment.
+
+Make it clean, empathetic but professional, and easily scannable for a physician.`
           }],
         }),
       })
@@ -100,7 +110,7 @@ Be concise, clinical, and helpful. Format with clear sections.`,
         .catch(() => setSummary('Error generating summary. Please try again.'))
         .finally(() => setLoading(false));
     }
-  }, [open, entries, patientName]);
+  }, [open, entries, patientName, biometrics, lastApptDate]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -219,6 +229,19 @@ export default function PatientProfile() {
     },
     enabled: !!patientEmail,
   });
+
+  const { data: biometrics = [] } = useQuery({
+    queryKey: ['patient-biometrics', patientEmail],
+    queryFn: () => apiClient.entities.biometrics.filter({ patient_email: cleanEmail(patientEmail) }),
+    enabled: !!patientEmail,
+    refetchInterval: 3000,
+  });
+
+  const lastAppointment = useMemo(() => {
+    if (!appointments?.length) return null;
+    const past = appointments.filter(a => parseISO(a.date) < new Date()).sort((a, b) => new Date(b.date) - new Date(a.date));
+    return past.length > 0 ? parseISO(past[0].date) : null;
+  }, [appointments]);
 
   // Mutations
   const addMed = useMutation({
@@ -722,6 +745,43 @@ export default function PatientProfile() {
             </Card>
           )}
 
+          {patient?.apple_health_connected && biometrics.length > 0 && (
+            <div className="grid grid-cols-3 gap-3">
+              {(() => {
+                const todayStr = format(new Date(), 'yyyy-MM-dd');
+                const todays = biometrics.filter(b => b.date === todayStr);
+                const latest = todays.length > 0 ? [...todays].reverse() : [...biometrics].reverse();
+                
+                const sleep = latest.find(m => m.metric_name === 'sleep_analysis')?.value;
+                const screen = latest.find(m => m.metric_name === 'screen_time')?.value;
+                const steps = latest.find(m => m.metric_name === 'step_count')?.value;
+
+                const sleepColor = !sleep ? 'text-muted-foreground' : sleep >= 7 ? 'text-green-500' : sleep >= 5 ? 'text-yellow-500' : 'text-red-500';
+                const screenColor = !screen ? 'text-muted-foreground' : screen <= 4 ? 'text-green-500' : screen <= 8 ? 'text-yellow-500' : 'text-red-500';
+
+                return (
+                  <>
+                    <div className="rounded-xl border bg-card p-3 flex flex-col items-center justify-center text-center gap-1.5 shadow-sm">
+                      <Moon className={`w-4 h-4 ${sleepColor}`} />
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Sleep</p>
+                      <p className={`font-bold font-mono text-sm ${sleepColor}`}>{sleep ? `${sleep} / 8 Hr` : 'No data'}</p>
+                    </div>
+                    <div className="rounded-xl border bg-card p-3 flex flex-col items-center justify-center text-center gap-1.5 shadow-sm">
+                      <Smartphone className={`w-4 h-4 ${screenColor}`} />
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Screen</p>
+                      <p className={`font-bold font-mono text-sm ${screenColor}`}>{screen ? `${screen} / 12 Hr` : 'No data'}</p>
+                    </div>
+                    <div className="rounded-xl border bg-card p-3 flex flex-col items-center justify-center text-center gap-1.5 shadow-sm">
+                      <Activity className="w-4 h-4 text-violet-500" />
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Active</p>
+                      <p className="font-bold font-mono text-sm text-foreground">{steps ? `${steps} steps` : 'No data'}</p>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          )}
+
           {diaryEntries.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
@@ -762,6 +822,8 @@ export default function PatientProfile() {
             onClose={() => setShowDiarySummary(false)}
             entries={diaryEntries}
             patientName={patient?.full_name || patientEmail}
+            biometrics={patient?.apple_health_connected ? biometrics : []}
+            lastApptDate={lastAppointment}
           />
         </TabsContent>
       </Tabs>

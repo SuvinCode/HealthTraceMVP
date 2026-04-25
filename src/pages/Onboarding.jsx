@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { User, Stethoscope, ArrowRight, Loader2 } from 'lucide-react';
+import { User, Stethoscope, ArrowRight, Loader2, Smartphone, Check, Copy } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Onboarding() {
@@ -17,10 +17,23 @@ export default function Onboarding() {
   const [step, setStep] = useState(user?.role && user.role !== 'user' ? 2 : 1);
   const [role, setRole] = useState(user?.role || 'user');
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [formData, setFormData] = useState({
     age: '', weight: '', height: '',
     medical_license: '', specialisation: ''
   });
+
+  const webhookUrl = `https://api.healthtrace.com/webhook/apple-health?user_email=${user?.email}`;
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(webhookUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy!', err);
+    }
+  };
 
   const handleField = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
@@ -36,13 +49,17 @@ export default function Onboarding() {
     navigate('/login');
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (skipAppleHealth = false) => {
     setSaving(true);
     const data = { role, onboarding_complete: true };
     if (role === 'user') {
       data.age = Number(formData.age);
       data.weight = Number(formData.weight);
       data.height = Number(formData.height);
+      if (skipAppleHealth !== true) {
+        data.apple_health_webhook_url = webhookUrl;
+        data.apple_health_connected = true;
+      }
     } else {
       data.age = Number(formData.age);
       data.medical_license = formData.medical_license;
@@ -179,7 +196,70 @@ export default function Onboarding() {
               )}
               <div className="flex gap-3 pt-2">
                 <Button variant="outline" onClick={() => setStep(1)} className="flex-1">Back</Button>
-                <Button onClick={handleSubmit} disabled={saving} className="flex-1">
+                {role === 'user' ? (
+                  <Button onClick={() => setStep(3)} className="flex-1">
+                    Continue <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                ) : (
+                  <Button onClick={() => handleSubmit(true)} disabled={saving} className="flex-1">
+                    {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Complete Setup
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 3 && role === 'user' && (
+          <Card className="border-border shadow-lg">
+            <CardHeader className="text-center pb-2">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Smartphone className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle className="font-heading text-xl">Connect Apple Health (Recommended)</CardTitle>
+              <CardDescription>
+                Sync your biometric data to automate tracking and power clinical insights.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 pt-4">
+              
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">1</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Download <span className="font-semibold text-foreground">Health Auto Export</span> from the iOS App Store. Open it and choose the <span className="font-semibold text-foreground">free tier</span> (you can close or skip any subscription prompts).</div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">2</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Go to the <span className="font-semibold text-foreground">Automated</span> tab at the left sidebar. Tap <span className="font-semibold text-foreground">New Automation</span>, click enabled, and choose <span className="font-semibold text-foreground">REST API</span> (or Export to REST API).</div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">3</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Under the <span className="font-semibold text-foreground">API URL</span> field, paste your personal HealthTrace webhook link:</div>
+                </div>
+
+                <div className="ml-9 p-3 bg-muted/50 rounded-xl border border-border flex items-center gap-2">
+                  <div className="flex-1 truncate text-xs font-mono text-muted-foreground" title={webhookUrl}>
+                    {webhookUrl}
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={copyToClipboard} className="h-8 w-8 shrink-0 relative transition-transform active:scale-95 text-foreground hover:bg-background">
+                    {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">4</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Continue to the next step, select the metrics you want to safely share, and scroll up and click on <span className="font-semibold text-foreground">update</span> in the automation you created. Data will now flow automatically!</div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-6 border-t border-border">
+                <Button variant="ghost" onClick={() => handleSubmit(true)} disabled={saving} className="flex-1 text-muted-foreground hover:text-foreground">
+                  Skip for now
+                </Button>
+                <Button onClick={() => handleSubmit(false)} disabled={saving} className="flex-1 bg-primary text-primary-foreground hover:opacity-90">
                   {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Complete Setup
                 </Button>

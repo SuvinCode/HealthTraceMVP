@@ -9,6 +9,18 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+# Manually load .env.development if it exists (for local development)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(BASE_DIR, '..', '.env.development')
+if os.path.exists(env_path):
+    with open(env_path, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, value = line.split('=', 1)
+                if key not in os.environ:
+                    os.environ[key] = value.strip('"\'')
+
 app = Flask(__name__)
 CORS(app, origins=[
     "https://healthtrace.me",
@@ -88,20 +100,25 @@ def transcribe_audio():
 
 @app.route('/proxy/chat', methods=['POST'])
 def proxy_chat():
-    api_key = os.environ.get('OPENAI_API_KEY') or os.environ.get('VITE_OPENAI_API_KEY')
-    if not api_key:
-        return jsonify({"error": "OpenAI API Key not configured on server"}), 500
+    model = request.json.get('model', '').lower()
+    
+    if 'mistral' in model:
+        api_key = os.environ.get('MISTRAL_DATA_ANALYZER_KEY')
+        url = 'https://api.mistral.ai/v1/chat/completions'
+        if not api_key:
+            return jsonify({"error": "Mistral API Key not configured on server"}), 500
+    else:
+        api_key = os.environ.get('OPENAI_API_KEY') or os.environ.get('VITE_OPENAI_API_KEY')
+        url = 'https://api.openai.com/v1/chat/completions'
+        if not api_key:
+            return jsonify({"error": "OpenAI API Key not configured on server"}), 500
 
     try:
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {api_key}'
         }
-        response = requests.post(
-            'https://api.openai.com/v1/chat/completions',
-            headers=headers,
-            json=request.json
-        )
+        response = requests.post(url, headers=headers, json=request.json)
         return jsonify(response.json()), response.status_code
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -265,6 +282,76 @@ def send_feedback():
     except Exception as e:
         print(f"Error sending email: {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/webhook/apple-health', methods=['POST', 'GET'])
+def apple_health_webhook():
+    """
+    Receives JSON payload from the 'Health Auto Export' iOS app.
+    The user_email is passed as a query parameter.
+    """
+    user_email = request.args.get('user_email')
+    
+    if request.method == 'GET':
+         # Just to allow checking if the endpoint is up
+         return jsonify({"status": "active", "message": f"Webhook endpoint ready for {user_email or 'any user'}"}), 200
+
+    payload = request.json
+    print(f"\n[Webhook Received] Apple Health data for {user_email}")
+    
+    db = read_db()
+    if 'entities' not in db:
+        db['entities'] = {}
+    if 'biometrics' not in db['entities']:
+        db['entities']['biometrics'] = []
+
+    # Store incoming metrics attached to the user
+    # Health Auto Export wraps custom JSON differently depending on config
+    # We dynamically calculate the value by filtering for today's points
+    import datetime
+    today_local = datetime.datetime.now()
+    today_str = today_local.strftime('%Y-%m-%d')
+    
+    metrics_received = payload.get('data', {}).get('metrics', [])
+    for metric in metrics_received:
+        metric_name = metric.get('name')
+        
+        # Calculate the value:
+        # If it has a 'data' array of points, sum only the ones that match today's date (since midnight).
+        # Otherwise, fallback to a direct 'value' if it's sent as a simple aggregate.
+        extracted_value = metric.get('value')
+        
+        if extracted_value is None and 'data' in metric:
+            total_qty = 0.0
+            for point in metric['data']:
+                date_str = point.get('date', '')
+                # Date format: 'YYYY-MM-DD HH:MM:SS Z', we check if it's from today
+                if date_str.startswith(today_str):
+                    try:
+                        total_qty += float(point.get('qty', 0))
+                    except ValueError:
+                        pass
+            
+            # Format as int if whole, else round
+            extracted_value = int(total_qty) if total_qty.is_integer() else round(total_qty, 2)
+            
+        # Only save if we actually got a value
+        if extracted_value is not None:
+            new_record = {
+                "id": generate_id(),
+                "patient_email": user_email,
+                "metric_name": metric_name,
+                "value": extracted_value,
+                "date": today_str,
+                "source": "Apple Health"
+            }
+            db['entities']['biometrics'].append(new_record)
+        
+    write_db(db)
+    
+    return jsonify({
+        "status": "success", 
+        "message": f"Saved {len(metrics_received)} biometric records to database"
+    }), 200
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))
