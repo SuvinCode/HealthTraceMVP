@@ -283,13 +283,22 @@ def send_feedback():
         print(f"Error sending email: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/biometrics', methods=['GET'])
+def get_biometrics():
+    email = (request.args.get('patient_email') or "").lower()
+    db = read_db()
+    items = db['entities'].get('biometrics', [])
+    if email:
+        items = [i for i in items if (i.get('patient_email') or "").lower() == email]
+    return jsonify(items)
+
 @app.route('/webhook/apple-health', methods=['POST', 'GET'])
 def apple_health_webhook():
     """
     Receives JSON payload from the 'Health Auto Export' iOS app.
     The user_email is passed as a query parameter.
     """
-    user_email = request.args.get('user_email')
+    user_email = (request.args.get('user_email') or "").lower()
     
     if request.method == 'GET':
          # Just to allow checking if the endpoint is up

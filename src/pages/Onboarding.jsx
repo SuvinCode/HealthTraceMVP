@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiClient } from '@/api/client';
+import { apiClient, API_BASE_URL } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,7 @@ export default function Onboarding() {
     medical_license: '', specialisation: ''
   });
 
-  const webhookUrl = `https://api.healthtrace.com/webhook/apple-health?user_email=${user?.email}`;
+  const webhookUrl = `${API_BASE_URL}/webhook/apple-health?user_email=${user?.email?.toLowerCase()}`;
 
   const copyToClipboard = async () => {
     try {

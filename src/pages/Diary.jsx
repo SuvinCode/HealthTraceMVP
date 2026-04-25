@@ -275,7 +275,7 @@ export default function Diary() {
   const { data: biometrics = [] } = useQuery({
     queryKey: ['biometrics', user?.email],
     queryFn: async () => {
-      return apiClient.entities.biometrics.filter({ patient_email: user?.email });
+      return apiClient.entities.biometrics.filter({ patient_email: user?.email?.toLowerCase() });
     },
     enabled: !isDoctor && !!user?.email,
     refetchInterval: (!isDoctor && user?.apple_health_connected) ? 3000 : false,
