@@ -10,6 +10,19 @@ CORS(app)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.path.join(BASE_DIR, '..', 'db.json')
+DB_TEMPLATE = os.path.join(BASE_DIR, '..', 'db.template.json')
+
+# Auto-create db.json from template if it doesn't exist (e.g. first deploy on Render)
+if not os.path.exists(DB_FILE):
+    if os.path.exists(DB_TEMPLATE):
+        import shutil
+        shutil.copy2(DB_TEMPLATE, DB_FILE)
+        print(f"Initialized db.json from template")
+    else:
+        # Fallback: create a minimal db
+        with open(DB_FILE, 'w') as f:
+            json.dump({"users": [], "patients": [], "entities": {}}, f, indent=2)
+        print(f"Created empty db.json")
 
 def read_db():
     with open(DB_FILE, 'r') as f:
