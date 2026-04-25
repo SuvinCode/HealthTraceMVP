@@ -505,40 +505,63 @@ export default function Diary() {
               </div>
             </div>
 
+            {/* Voice Note Section */}
+            <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-primary/10'}`}>
+                    <Mic className={`w-4 h-4 ${isRecording ? 'text-white' : 'text-primary'}`} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-foreground">Voice Diary</h4>
+                    <p className="text-[10px] text-muted-foreground">Record your thoughts aloud</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={isTranscribing}
+                  onClick={isRecording ? stopRecording : startRecording}
+                  className={`relative px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    isRecording
+                      ? 'bg-red-500 text-white shadow-lg shadow-red-200'
+                      : 'bg-primary text-primary-foreground hover:opacity-90'
+                  } disabled:opacity-40`}
+                >
+                  {isRecording ? 'Stop Recording' : 'Start Recording'}
+                  {isRecording && <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-40" />}
+                </button>
+              </div>
+
+              {isRecording && (
+                <div className="flex items-center gap-2 px-1">
+                  <div className="flex-1 h-1 bg-red-100 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ x: '-100%' }}
+                      animate={{ x: '100%' }}
+                      transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                      className="w-1/2 h-full bg-red-500"
+                    />
+                  </div>
+                  <span className="text-[10px] font-medium text-red-500 tabular-nums uppercase tracking-tighter">Recording...</span>
+                </div>
+              )}
+
+              {micError && (
+                <p className="text-[10px] text-destructive bg-destructive/10 p-2 rounded-lg">{micError}</p>
+              )}
+            </div>
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   Notes <span className="font-normal normal-case">(optional)</span>
                 </label>
-                <div className="flex items-center gap-2">
-                  {isTranscribing && (
-                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                      <div className="w-3 h-3 border border-muted-foreground border-t-primary rounded-full animate-spin" />
-                      Transcribing…
-                    </span>
-                  )}
-                  {isRecording && !isTranscribing && (
-                    <span className="text-[11px] text-red-500 font-medium flex items-center gap-1">
-                      <Volume2 className="w-3 h-3" /> Recording…
-                    </span>
-                  )}
-                  {micError && (
-                    <span className="text-[11px] text-destructive max-w-[180px] truncate" title={micError}>{micError}</span>
-                  )}
-                  <button
-                    type="button"
-                    disabled={isTranscribing}
-                    onClick={isRecording ? stopRecording : startRecording}
-                    className={`relative w-8 h-8 rounded-full flex items-center justify-center transition-all shrink-0 ${
-                      isRecording
-                        ? 'bg-red-500 text-white shadow-md shadow-red-200'
-                        : 'bg-primary/10 text-primary hover:bg-primary/20'
-                    } disabled:opacity-40`}
-                  >
-                    {isRecording ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-                    {isRecording && <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-30" />}
-                  </button>
-                </div>
+                {isTranscribing && (
+                  <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                    <div className="w-3 h-3 border border-muted-foreground border-t-primary rounded-full animate-spin" />
+                    Transcribing…
+                  </span>
+                )}
               </div>
               <div className="relative">
                 <Textarea

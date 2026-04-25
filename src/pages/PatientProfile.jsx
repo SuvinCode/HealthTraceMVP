@@ -14,7 +14,7 @@ import { User, FileText, Pill, Calendar, Plus, ArrowLeft, Loader2, Clock, CheckC
 import { format, parseISO, subDays, isToday, startOfDay } from 'date-fns';
 
 import { motion } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import MonthCalendar from '@/components/dashboard/MonthCalendar';
 import DayTimeline from '@/components/dashboard/DayTimeline';
@@ -134,8 +134,7 @@ export default function PatientProfile() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const urlParams = new URLSearchParams(window.location.search);
-  const patientEmail = decodeURIComponent(window.location.pathname.split('/patient/')[1]);
+  const { patientEmail } = useParams();
 
   const [medForm, setMedForm] = useState({
     medication_name: '', type: 'tablet', dosage: '', start_date: '', end_date: '', frequency: 'once_daily'

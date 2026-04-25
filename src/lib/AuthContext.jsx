@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       localStorage.setItem('auth_token', token);
       // Clean up URL
-      const newUrl = window.location.pathname;
+      const newUrl = window.location.pathname + (window.location.hash || '');
       window.history.replaceState({}, document.title, newUrl);
     }
   };
@@ -71,12 +71,12 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     if (shouldRedirect) {
-      window.location.href = '/';
+      window.location.hash = '#/';
     }
   };
 
   const navigateToLogin = () => {
-    window.location.href = '/login';
+    window.location.hash = '#/login';
   };
 
   const login = async (credentials) => {
