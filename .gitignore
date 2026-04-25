@@ -29,3 +29,12 @@ dist-ssr
 
 .env
 .vite
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database
+db.json
