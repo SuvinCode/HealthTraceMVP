@@ -188,6 +188,7 @@ function EntryCard({ entry, onEdit }) {
 // ─── Main Diary Component ────────────────────────────────────────────────────
 export default function Diary() {
   const { user } = useAuth();
+  console.log("🔍 DIARY PAGE LOADED. Current User:", user);
   const queryClient = useQueryClient();
 
   const [mode, setMode] = useState('view');
