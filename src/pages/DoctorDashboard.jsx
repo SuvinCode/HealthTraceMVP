@@ -47,32 +47,7 @@ export default function DoctorDashboard() {
     },
   });
   
-  const scrollToEarliest = () => {
-    const now = new Date();
-    const todayStr = format(now, 'yyyy-MM-dd');
-    const currentTime = now.getHours() * 60 + now.getMinutes();
-
-    const upcomingToday = appointments
-      .filter(a => a.date === todayStr && a.status === 'upcoming')
-      .filter(a => {
-        const [h, m] = a.time_slot.split(':').map(Number);
-        return h * 60 + m >= currentTime;
-      })
-      .sort((a, b) => a.time_slot.localeCompare(b.time_slot));
-
-    if (upcomingToday.length > 0) {
-      setSelectedDate(now);
-      setCurrentMonth(now);
-      setTimeout(() => {
-        timelineRef.current?.scrollToTime(upcomingToday[0].time_slot);
-      }, 100);
-    } else {
-      toast.info('No more upcoming appointments for today');
-    }
-  };
-
-
-  const totalUpcoming = appointments.filter(a => a.status === 'upcoming').length;
+const totalUpcoming = appointments.filter(a => a.status === 'upcoming').length;
   const totalCompleted = appointments.filter(a => a.status === 'completed').length;
 
   const stats = [
@@ -93,10 +68,7 @@ export default function DoctorDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         {stats.map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-            <Card 
-              className={s.label === 'Upcoming' ? 'cursor-pointer hover:shadow-md transition-shadow ring-primary/20 hover:ring-2' : ''}
-              onClick={s.label === 'Upcoming' ? scrollToEarliest : undefined}
-            >
+            <Card>
               <CardContent className="p-4 flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl ${s.color} flex items-center justify-center`}>
                   <s.icon className="w-5 h-5" />

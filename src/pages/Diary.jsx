@@ -269,13 +269,13 @@ export default function Diary() {
   const todayEntry = entries.find(e => e.date === todayStr);
 
   useEffect(() => {
-    if (isDoctor) return;
+    if (isDoctor || isLoading) return;
     if (!todayEntry && mode === 'view') {
       setMode('editing');
       setSelectedMood(null);
       setNotes('');
     }
-  }, [isDoctor, todayEntry, mode]);
+  }, [isDoctor, isLoading, todayEntry, mode]);
 
   if (isDoctor) {
     return (

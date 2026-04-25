@@ -51,19 +51,19 @@ export default function Appointments() {
   const getDateOnly = (apt) => startOfDay(parseISO(apt.date));
   const getDateTime = (apt) => parse(`${apt.date} ${apt.time_slot}`, 'yyyy-MM-dd HH:mm', new Date());
 
-  // Today's appointments — keep completed ones here (greyed out) rather than hiding them
+  // Appointment datetime has passed OR was manually marked complete
+  const isDone = (a) => isBefore(getDateTime(a), now) || a.status === 'completed';
+
   const upcoming = appointments
-    .filter(a => a.status !== 'cancelled' && isToday(parseISO(a.date)))
+    .filter(a => a.status !== 'cancelled' && isToday(parseISO(a.date)) && !isDone(a))
     .sort((a, b) => getDateTime(a) - getDateTime(b));
 
-  // Future appointments — same: completed ones stay here greyed out
   const later = appointments
-    .filter(a => a.status !== 'cancelled' && isAfter(getDateOnly(a), todayStart))
+    .filter(a => a.status !== 'cancelled' && isAfter(getDateOnly(a), todayStart) && !isDone(a))
     .sort((a, b) => getDateTime(a) - getDateTime(b));
 
-  // Past-dated appointments (previous days only)
   const completed = appointments
-    .filter(a => a.status !== 'cancelled' && isBefore(getDateOnly(a), todayStart))
+    .filter(a => a.status !== 'cancelled' && isDone(a))
     .sort((a, b) => getDateTime(b) - getDateTime(a));
 
   const AppointmentCard = ({ apt, showCancel = false, showComplete = false }) => {
