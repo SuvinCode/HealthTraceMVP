@@ -278,7 +278,7 @@ export default function Diary() {
       return apiClient.entities.biometrics.filter({ patient_email: user?.email?.toLowerCase() });
     },
     enabled: !isDoctor && !!user?.email,
-    refetchInterval: (!isDoctor && user?.apple_health_connected) ? 3000 : false,
+    refetchInterval: !isDoctor ? 3000 : false,
   });
 
   const todayEntry = entries.find(e => e.date === todayStr);
@@ -480,10 +480,16 @@ Provide exactly 2 very short, clinical, and empathetic sentences. One summarizin
         <div className="space-y-3">
           <div className="grid grid-cols-3 gap-3">
             {(() => {
+              console.log("📊 BIOMETRICS FETCHED:", biometrics.length, biometrics);
               const latest = [...biometrics].reverse();
-              const sleep = latest.find(m => m.metric_name === 'sleep_analysis')?.value;
-              const screen = latest.find(m => m.metric_name === 'screen_time')?.value;
-              const steps = latest.find(m => m.metric_name === 'step_count')?.value;
+              
+              const findMetric = (namePart) => latest.find(m => 
+                m.metric_name?.toLowerCase().replace(/_/g, ' ').includes(namePart.toLowerCase())
+              )?.value;
+
+              const sleep = findMetric('sleep');
+              const screen = findMetric('screen');
+              const steps = findMetric('step');
 
               const sleepColor = !sleep ? 'text-muted-foreground' : sleep >= 7 ? 'text-green-500' : sleep >= 5 ? 'text-yellow-500' : 'text-red-500';
               const screenColor = !screen ? 'text-muted-foreground' : screen <= 4 ? 'text-green-500' : screen <= 8 ? 'text-yellow-500' : 'text-red-500';

@@ -4,7 +4,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:50
 export function cleanEmail(raw) {
   if (!raw) return raw;
   const match = raw.match(/^\[([^\]]+)\]\(mailto:[^)]+\)$/);
-  return match ? match[1] : raw;
+  return (match ? match[1] : raw).trim().toLowerCase();
 }
 
 function buildUrl(path, query) {
