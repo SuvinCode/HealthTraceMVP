@@ -16,63 +16,6 @@ import {
   Trash2, ChevronDown, ChevronRight, NotebookPen, Volume2,
 } from 'lucide-react';
 
-// ─── Medical vocabulary ───────────────────────────────────────────────────────
-const MEDICAL_TERMS = {
-  Symptoms: [
-    'dyspnea', 'tachycardia', 'bradycardia', 'hypertension', 'hypotension',
-    'arrhythmia', 'palpitations', 'syncope', 'diaphoresis', 'edema',
-    'cyanosis', 'pallor', 'jaundice', 'pruritus', 'erythema',
-    'hematemesis', 'melena', 'hematuria', 'proteinuria', 'oliguria',
-  ],
-  Diagnoses: [
-    'myocardial infarction', 'angina pectoris', 'heart failure', 'atrial fibrillation',
-    'pulmonary embolism', 'deep vein thrombosis', 'pneumonia', 'COPD', 'asthma',
-    'diabetes mellitus', 'hypothyroidism', 'hyperlipidemia', 'anaemia',
-    'stroke', 'TIA', 'migraine', 'seizure', 'appendicitis', 'cholecystitis',
-    'pancreatitis', "Crohn's disease", 'ulcerative colitis', 'renal failure',
-  ],
-  Medications: [
-    'metformin', 'lisinopril', 'atorvastatin', 'amlodipine', 'omeprazole',
-    'metoprolol', 'losartan', 'albuterol', 'prednisone', 'amoxicillin',
-    'warfarin', 'aspirin', 'clopidogrel', 'furosemide', 'spironolactone',
-    'levothyroxine', 'insulin', 'gabapentin', 'sertraline', 'quetiapine',
-  ],
-  Clinical: [
-    'c/o', 'Hx', 'Dx', 'Rx', 'PRN', 'QID', 'TID', 'BID', 'QD', 'NPO',
-    'SOB', 'O/E', 'BP', 'HR', 'RR', 'SpO2', 'BMI', 'GCS', 'AVPU',
-  ],
-};
-
-
-// ─── Term chip with cursor-aware insert ──────────────────────────────────────
-function TermChip({ term, textareaRef, onInsert }) {
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        const el = textareaRef?.current;
-        if (el) {
-          const start = el.selectionStart;
-          const end = el.selectionEnd;
-          const val = el.value;
-          const newVal = val.slice(0, start) + term + ' ' + val.slice(end);
-          onInsert(newVal);
-          // restore cursor after React re-render
-          requestAnimationFrame(() => {
-            el.selectionStart = el.selectionEnd = start + term.length + 1;
-            el.focus();
-          });
-        } else {
-          onInsert(prev => prev ? prev + ' ' + term : term);
-        }
-      }}
-      className="px-2 py-0.5 text-[10px] font-medium rounded-full border border-border bg-muted/60 hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-colors whitespace-nowrap"
-    >
-      {term}
-    </button>
-  );
-}
-
 // ─── Note card ────────────────────────────────────────────────────────────────
 function NoteCard({ note, onDelete }) {
   return (
@@ -152,9 +95,6 @@ function NewNoteDialog({ open, onClose, connections, doctorEmail, onSaved }) {
   const [inputType, setInputType] = useState('written');
   const [content, setContent] = useState('');
   const [patientEmail, setPatientEmail] = useState('none');
-  const [activeMedCategory, setActiveMedCategory] = useState('Symptoms');
-  const textareaRef = useRef(null);
-
   // Voice recording state — MediaRecorder → Whisper API
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -304,41 +244,9 @@ function NewNoteDialog({ open, onClose, connections, doctorEmail, onSaved }) {
             ))}
           </div>
 
-          {/* Medical term chips */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Quick insert:</span>
-              {Object.keys(MEDICAL_TERMS).map(cat => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setActiveMedCategory(cat)}
-                  className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full transition-colors ${
-                    activeMedCategory === cat
-                      ? 'bg-primary/15 text-primary border border-primary/30'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-1.5 max-h-16 overflow-y-auto">
-              {MEDICAL_TERMS[activeMedCategory].map(term => (
-                <TermChip
-                  key={term}
-                  term={term}
-                  textareaRef={inputType === 'written' ? textareaRef : null}
-                  onInsert={(val) => setContent(typeof val === 'function' ? val(content) : val)}
-                />
-              ))}
-            </div>
-          </div>
-
           {/* Content area */}
           {inputType === 'written' ? (
             <Textarea
-              ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Start typing your note…"

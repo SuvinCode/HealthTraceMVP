@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Sparkles, Pencil, CheckCircle2, Calendar, TrendingUp, Users } from 'lucide-react';
+import { BookOpen, Sparkles, Pencil, CheckCircle2, Calendar, TrendingUp, Users, Mic, MicOff, Volume2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Link } from 'react-router-dom';
 
@@ -191,6 +191,64 @@ export default function Diary() {
   const [selectedMood, setSelectedMood] = useState(null);
   const [notes, setNotes] = useState('');
   const [editingEntry, setEditingEntry] = useState(null);
+
+  // Voice recording — MediaRecorder → Whisper
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [micError, setMicError] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const streamRef = useRef(null);
+
+  const startRecording = async () => {
+    setMicError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      chunksRef.current = [];
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
+      const recorder = new MediaRecorder(stream, { mimeType });
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+        const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+        if (!apiKey) { setMicError('Add VITE_OPENAI_API_KEY to .env for voice transcription.'); return; }
+        setIsTranscribing(true);
+        try {
+          const blob = new Blob(chunksRef.current, { type: mimeType });
+          const form = new FormData();
+          form.append('file', new File([blob], 'recording.webm', { type: mimeType }));
+          form.append('model', 'whisper-1');
+          const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${apiKey}` },
+            body: form,
+          });
+          if (!res.ok) throw new Error(`Whisper error ${res.status}`);
+          const { text } = await res.json();
+          setNotes(prev => prev ? `${prev} ${text}` : text);
+        } catch (err) {
+          setMicError(`Transcription failed: ${err.message}`);
+        } finally {
+          setIsTranscribing(false);
+        }
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch {
+      setMicError('Microphone access denied. Allow microphone access and try again.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop();
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    mediaRecorderRef.current = null;
+    setIsRecording(false);
+  };
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
@@ -408,16 +466,58 @@ export default function Diary() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                Notes <span className="font-normal normal-case">(optional)</span>
-              </label>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="How are you feeling? Any symptoms, thoughts, or things you'd like your doctor to know…"
-                className="min-h-[100px] text-sm resize-none rounded-lg border-border/60 focus:border-violet-300 focus:ring-violet-100"
-                maxLength={1000}
-              />
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Notes <span className="font-normal normal-case">(optional)</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  {isTranscribing && (
+                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <div className="w-3 h-3 border border-muted-foreground border-t-primary rounded-full animate-spin" />
+                      Transcribing…
+                    </span>
+                  )}
+                  {isRecording && !isTranscribing && (
+                    <span className="text-[11px] text-red-500 font-medium flex items-center gap-1">
+                      <Volume2 className="w-3 h-3" /> Recording…
+                    </span>
+                  )}
+                  {micError && (
+                    <span className="text-[11px] text-destructive max-w-[180px] truncate" title={micError}>{micError}</span>
+                  )}
+                  <button
+                    type="button"
+                    disabled={isTranscribing}
+                    onClick={isRecording ? stopRecording : startRecording}
+                    className={`relative w-8 h-8 rounded-full flex items-center justify-center transition-all shrink-0 ${
+                      isRecording
+                        ? 'bg-red-500 text-white shadow-md shadow-red-200'
+                        : 'bg-primary/10 text-primary hover:bg-primary/20'
+                    } disabled:opacity-40`}
+                  >
+                    {isRecording ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                    {isRecording && <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-30" />}
+                  </button>
+                </div>
+              </div>
+              <div className="relative">
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="How are you feeling? Any symptoms, thoughts, or things you'd like your doctor to know…"
+                  className="min-h-[100px] text-sm resize-none rounded-lg border-border/60 focus:border-violet-300 focus:ring-violet-100"
+                  maxLength={1000}
+                  disabled={isRecording || isTranscribing}
+                />
+                {isTranscribing && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="w-4 h-4 border-2 border-muted-foreground border-t-primary rounded-full animate-spin" />
+                      Transcribing…
+                    </div>
+                  </div>
+                )}
+              </div>
               <p className="text-[10px] text-muted-foreground text-right">{notes.length}/1000</p>
             </div>
 
@@ -489,13 +589,57 @@ export default function Diary() {
                 </motion.button>
               ))}
             </div>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add notes…"
-              className="min-h-[90px] text-sm resize-none"
-              maxLength={1000}
-            />
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Notes <span className="font-normal normal-case">(optional)</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  {isTranscribing && (
+                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <div className="w-3 h-3 border border-muted-foreground border-t-primary rounded-full animate-spin" />
+                      Transcribing…
+                    </span>
+                  )}
+                  {isRecording && !isTranscribing && (
+                    <span className="text-[11px] text-red-500 font-medium flex items-center gap-1">
+                      <Volume2 className="w-3 h-3" /> Recording…
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    disabled={isTranscribing}
+                    onClick={isRecording ? stopRecording : startRecording}
+                    className={`relative w-8 h-8 rounded-full flex items-center justify-center transition-all shrink-0 ${
+                      isRecording
+                        ? 'bg-red-500 text-white shadow-md shadow-red-200'
+                        : 'bg-primary/10 text-primary hover:bg-primary/20'
+                    } disabled:opacity-40`}
+                  >
+                    {isRecording ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                    {isRecording && <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-30" />}
+                  </button>
+                </div>
+              </div>
+              <div className="relative">
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add notes…"
+                  className="min-h-[90px] text-sm resize-none"
+                  maxLength={1000}
+                  disabled={isRecording || isTranscribing}
+                />
+                {isTranscribing && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="w-4 h-4 border-2 border-muted-foreground border-t-primary rounded-full animate-spin" />
+                      Transcribing…
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={closePastEdit}>Cancel</Button>
