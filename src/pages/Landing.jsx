@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { apiClient } from '@/api/client';
@@ -41,6 +41,29 @@ const TEAM = [
   },
 ];
 
+const FEATURES = [
+  { 
+    title: 'Seamless Connection', 
+    video: '/videos/Connecting doctor and patients.mp4'
+  },
+  { 
+    title: 'Precision Medication', 
+    video: '/videos/Assigning medication.mp4'
+  },
+  { 
+    title: 'Intuitive Diary', 
+    video: '/videos/Diary.mp4'
+  },
+  { 
+    title: 'Smart Appointments', 
+    video: '/videos/Appointments.mp4'
+  },
+  { 
+    title: 'Custom Health Forms', 
+    video: '/videos/Creating a health form.mp4'
+  },
+];
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -73,6 +96,27 @@ export default function Landing() {
   const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        // Mute all feature videos when exiting fullscreen
+        const videos = document.querySelectorAll('video');
+        videos.forEach(v => {
+          if (v.src.includes('/videos/')) {
+            v.muted = true;
+          }
+        });
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
@@ -359,6 +403,70 @@ export default function Landing() {
               </ul>
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* Features Showcase */}
+      <section className="px-8 py-32 max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-20"
+        >
+          <h2 className="text-4xl font-heading font-bold mb-4 tracking-tight">Features Showcase</h2>
+          <p className="text-muted-foreground">Experience the powerful tools designed to simplify complex care.</p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {FEATURES.map((feature, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-card rounded-[32px] border border-border overflow-hidden hover:shadow-2xl transition-all group"
+            >
+              <div 
+                className="aspect-video bg-muted relative overflow-hidden cursor-pointer group"
+                onClick={(e) => {
+                  const video = e.currentTarget.querySelector('video');
+                  if (video) {
+                    if (video.requestFullscreen) video.requestFullscreen();
+                    else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+                    video.muted = false;
+                    video.play();
+                  }
+                }}
+              >
+                <video 
+                  src={feature.video}
+                  autoPlay 
+                  loop 
+                  muted 
+                  playsInline
+                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100"
+                />
+                
+                {/* Split Screen Labels */}
+                <div className="absolute inset-x-0 top-4 px-6 flex justify-between pointer-events-none">
+                  <span className="text-[8px] uppercase tracking-[0.2em] font-bold bg-black/40 backdrop-blur-md px-2 py-1 rounded-md text-white/90 border border-white/10">Patient</span>
+                  <span className="text-[8px] uppercase tracking-[0.2em] font-bold bg-black/40 backdrop-blur-md px-2 py-1 rounded-md text-white/90 border border-white/10">Doctor</span>
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                
+                {/* Fullscreen indicator on hover */}
+                <div className="absolute inset-x-0 bottom-4 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <span className="text-[10px] uppercase tracking-widest font-bold bg-primary/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-white shadow-lg">Click to Fullscreen</span>
+                </div>
+              </div>
+              <div className="p-8 text-center">
+                <h3 className="text-xl font-heading font-bold">{feature.title}</h3>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
