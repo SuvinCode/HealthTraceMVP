@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '@/api/client';
-import { Linkedin, Github, Stethoscope, User, Check } from 'lucide-react';
+import { Linkedin, Github, Stethoscope, User, Check, Shield, Info, Lock, FileText, X } from 'lucide-react';
 
 const STATS = [
   { val: '219,000', label: 'Australians live with ME/CFS' },
@@ -65,6 +65,46 @@ const FEATURES = [
   },
 ];
 
+const FOOTER_CONTENT = {
+  how: {
+    title: "How to use HealthTrace",
+    icon: Info,
+    sections: [
+      { t: "1. Baseline", d: "Start by logging your symptoms for 72 hours. This establishes your metabolic baseline." },
+      { t: "2. Track", d: "Connect Witness or log manually in the Diary. We track energy, cognitive load, and pain." },
+      { t: "3. Analyze", d: "Our algorithms look for PEM (Post-Exertional Malaise) triggers and patterns." },
+      { t: "4. Report", d: "Generate clinical-grade reports to show your specialist exactly what's happening." }
+    ]
+  },
+  calc: {
+    title: "The Math of ME/CFS",
+    icon: Shield,
+    sections: [
+      { t: "Energy Envelope", d: "Calculated using HRV (Heart Rate Variability) and RHR (Resting Heart Rate) deviations." },
+      { t: "Cognitive Load", d: "A proxy measurement based on task complexity and duration logged in your diary." },
+      { t: "Pacing Index", d: "A real-time score indicating your proximity to your 'crash' threshold." }
+    ]
+  },
+  data: {
+    title: "Your Data, Secured",
+    icon: Lock,
+    sections: [
+      { t: "Biometrics", d: "Heart rate, HRV, and sleep trends from connected wearables." },
+      { t: "Symptom Logs", d: "Daily logs of brain fog, pain, and energy levels." },
+      { t: "Encryption", d: "All health data is AES-256 encrypted. We never sell your data." }
+    ]
+  },
+  terms: {
+    title: "Terms of Service",
+    icon: FileText,
+    sections: [
+      { t: "MVP Beta", d: "This is a clinical assistant tool, not a medical diagnostic platform." },
+      { t: "Data Ownership", d: "You own your data. You can delete your entire health history in one tap." },
+      { t: "Liability", d: "Usage of this application is at the user's discretion during the beta phase." }
+    ]
+  }
+};
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -93,6 +133,7 @@ export default function Landing() {
   const [reviewComment, setReviewComment] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [reviewSent, setReviewSent] = useState(false);
+  const [activeModal, setActiveModal] = useState(null);
 
   const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -156,21 +197,21 @@ export default function Landing() {
       <motion.nav 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="flex items-center justify-between px-8 py-5 max-w-7xl mx-auto border-b border-red-100/60"
+        className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 max-w-7xl mx-auto border-b border-red-100/60"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <motion.img 
             whileHover={{ rotate: 10, scale: 1.1 }}
-            src={`${import.meta.env.BASE_URL}favicon.svg`} alt="HealthTrace logo" className="w-14 h-14 object-contain" 
+            src={`${import.meta.env.BASE_URL}favicon.svg`} alt="HealthTrace logo" className="w-10 h-10 sm:w-14 sm:h-14 object-contain" 
           />
-          <span className="font-heading font-bold text-2xl tracking-tight">
+          <span className="font-heading font-bold text-lg sm:text-2xl tracking-tight">
             <span style={{ color: '#CC2222' }}>Health</span><span style={{ color: '#1E2D4E' }}>Trace</span>
           </span>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-1 sm:gap-3">
           <button
             onClick={() => navigate('/login')}
-            className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="px-3 sm:px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
           >
             Log in
           </button>
@@ -178,7 +219,7 @@ export default function Landing() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/signup')}
-            className="bg-foreground text-background px-5 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-all shadow-sm"
+            className="bg-foreground text-background px-4 sm:px-5 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-all shadow-sm whitespace-nowrap"
           >
             Create account
           </motion.button>
@@ -624,9 +665,131 @@ export default function Landing() {
       </section>
           
 
-      <footer className="p-8 border-t border-border text-center text-[10px] text-muted-foreground uppercase tracking-widest">
-        © 2026 HealthTrace • Built at UQ Ventures Hackathon
+      {/* Premium Footer */}
+      <footer className="px-8 py-24 bg-card border-t border-border">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div className="col-span-1 md:col-span-1">
+              <div className="flex items-center gap-3 mb-6">
+                <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="Logo" className="w-10 h-10" />
+                <span className="font-heading font-bold text-xl tracking-tight">
+                  <span style={{ color: '#CC2222' }}>Health</span><span style={{ color: '#1E2D4E' }}>Trace</span>
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
+                Empowering patients with invisible illnesses to prove their symptoms and optimize their care through deep clinical insights.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="font-heading font-bold text-xs uppercase tracking-widest text-foreground/40 mb-6">Product</h4>
+              <ul className="space-y-4">
+                <li><button onClick={() => setActiveModal('how')} className="text-muted-foreground hover:text-primary text-sm transition-colors">How it works</button></li>
+                <li><button onClick={() => setActiveModal('calc')} className="text-muted-foreground hover:text-primary text-sm transition-colors">Calculations</button></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-heading font-bold text-xs uppercase tracking-widest text-foreground/40 mb-6">Trust & Legal</h4>
+              <ul className="space-y-4">
+                <li><button onClick={() => setActiveModal('data')} className="text-muted-foreground hover:text-primary text-sm transition-colors">Data Collection</button></li>
+                <li><button onClick={() => setActiveModal('terms')} className="text-muted-foreground hover:text-primary text-sm transition-colors">Terms of Service</button></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-heading font-bold text-xs uppercase tracking-widest text-foreground/40 mb-6">Connect</h4>
+              <div className="flex gap-4">
+                <a href={TEAM[0].linkedin} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-muted rounded-full flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all">
+                  <Linkedin className="w-5 h-5" />
+                </a>
+                <a href={TEAM[0].github} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-muted rounded-full flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all">
+                  <Github className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-muted-foreground uppercase tracking-widest pt-12">
+            <div>© 2026 HealthTrace • Australian MedTech Innovation</div>
+            <div className="flex gap-6">
+              <span className="hover:text-foreground transition-colors cursor-default">Privacy Centric</span>
+              <span className="hover:text-foreground transition-colors cursor-default">Research Backed</span>
+              <span className="hover:text-foreground transition-colors cursor-default">Patient Focused</span>
+            </div>
+          </div>
+        </div>
       </footer>
+
+      {/* Info Modals */}
+      <AnimatePresence>
+        {activeModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+            onClick={() => setActiveModal(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-card w-full max-w-xl rounded-[40px] border border-border overflow-hidden shadow-2xl relative"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-8 md:p-12">
+                <div className="flex items-center justify-between mb-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
+                      {(() => {
+                        const Icon = FOOTER_CONTENT[activeModal].icon;
+                        return <Icon className="w-7 h-7" />;
+                      })()}
+                    </div>
+                    <h2 className="text-3xl font-heading font-bold tracking-tight">{FOOTER_CONTENT[activeModal].title}</h2>
+                  </div>
+                  <button 
+                    onClick={() => setActiveModal(null)} 
+                    className="absolute top-8 right-8 p-3 hover:bg-muted rounded-full transition-all text-muted-foreground hover:rotate-90"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                
+                <div className="space-y-8">
+                  {FOOTER_CONTENT[activeModal].sections.map((section, i) => (
+                    <motion.div 
+                      key={i}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="group"
+                    >
+                      <h3 className="font-heading font-bold text-lg mb-2 text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                        {section.t}
+                      </h3>
+                      <p className="text-muted-foreground text-sm leading-relaxed ml-3.5 pl-4 border-l border-border group-hover:border-primary/30 transition-colors">
+                        {section.d}
+                      </p>
+                    </motion.div>
+                  ))}
+                </div>
+                
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setActiveModal(null)}
+                  className="w-full mt-12 bg-foreground text-background py-5 rounded-[20px] font-bold text-lg hover:opacity-90 transition-all font-heading shadow-xl shadow-foreground/10"
+                >
+                  Close
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
