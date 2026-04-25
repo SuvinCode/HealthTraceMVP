@@ -23,8 +23,8 @@ export default function Onboarding() {
     medical_license: '', specialisation: ''
   });
 
-  const baseUrl = API_BASE_URL.trim().replace(/\/$/, "");
-  const webhookUrl = `${baseUrl}/webhook/apple-health?user_email=${user?.email?.toLowerCase()}`.replace(/\s/g, '');
+  const baseUrl = API_BASE_URL.replace(/\/$/, "").trim();
+  const webhookUrl = (baseUrl + "/webhook/apple-health?user_email=" + (user?.email?.toLowerCase() || "")).replace(/\s/g, "");
 
   const copyToClipboard = async () => {
     try {
