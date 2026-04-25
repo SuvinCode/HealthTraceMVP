@@ -11,7 +11,7 @@ import { User, Stethoscope, ArrowRight, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Onboarding() {
-  const { user, checkUserAuth } = useAuth();
+  const { user, checkUserAuth, logout } = useAuth();
   const navigate = useNavigate();
   // If role was already selected during signup (and it's not the default 'user'), skip to step 2
   const [step, setStep] = useState(user?.role && user.role !== 'user' ? 2 : 1);
@@ -23,6 +23,18 @@ export default function Onboarding() {
   });
 
   const handleField = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+
+  const handleBack = async () => {
+    if (user?.id) {
+      try {
+        await apiClient.auth.deleteMe(user.id);
+      } catch (err) {
+        console.error("Cleanup failed:", err);
+      }
+    }
+    logout();
+    navigate('/login');
+  };
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -36,7 +48,20 @@ export default function Onboarding() {
       data.medical_license = formData.medical_license;
       data.specialisation = formData.specialisation;
     }
-    await apiClient.auth.updateMe(data);
+    
+    // 1. Update the user record
+    const updatedUser = await apiClient.auth.updateMe(data);
+    
+    // 2. If patient, add to searchable patients list
+    if (role === 'user') {
+      await apiClient.entities.patients.create({
+        id: updatedUser.id,
+        full_name: updatedUser.full_name,
+        email: updatedUser.email,
+        role: 'user'
+      });
+    }
+
     await checkUserAuth();
     navigate(role === 'doctor' ? '/doctor-dashboard' : '/health-form');
   };
@@ -91,9 +116,14 @@ export default function Onboarding() {
                   <p className="text-sm text-muted-foreground">Paid — Manage patients & schedules</p>
                 </div>
               </button>
-              <Button onClick={() => setStep(2)} className="w-full mt-4" size="lg">
-                Continue <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <div className="flex gap-3 mt-4">
+                <Button variant="outline" onClick={handleBack} className="flex-1">
+                  Back
+                </Button>
+                <Button onClick={() => setStep(2)} className="flex-1" size="lg">
+                  Continue <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
