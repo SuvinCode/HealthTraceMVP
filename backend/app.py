@@ -9,7 +9,7 @@ app = Flask(__name__)
 CORS(app)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_FILE = os.path.join(BASE_DIR, '..', 'db.template.json')
+DB_FILE = os.path.join(BASE_DIR, '..', 'db.json')
 
 def read_db():
     with open(DB_FILE, 'r') as f:
@@ -73,7 +73,9 @@ def create_entity(entity):
     if new_item is None:
         return jsonify({'error': 'Request body must be JSON'}), 400
 
-    new_item['id'] = generate_id()
+    # Use provided ID if available, otherwise generate a new one
+    if 'id' not in new_item:
+        new_item['id'] = generate_id()
 
     if entity in db.get('entities', {}):
         db['entities'][entity].append(new_item)

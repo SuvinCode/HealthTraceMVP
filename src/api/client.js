@@ -130,6 +130,9 @@ export const apiClient = {
       localStorage.setItem('user_info', JSON.stringify(updatedUser));
       return updatedUser;
     },
+    async deleteMe(id) {
+      return await http(`/users/${id}`, { method: 'DELETE' });
+    }
   },
   entities: new Proxy(
     {},
