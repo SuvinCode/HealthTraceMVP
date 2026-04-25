@@ -197,7 +197,7 @@ export default function Landing() {
       <motion.nav 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 max-w-7xl mx-auto border-b border-red-100/60"
+        className="sticky top-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 max-w-7xl mx-auto border-b border-red-100/60"
       >
         <div className="flex items-center gap-2 sm:gap-3">
           <motion.img 
@@ -664,6 +664,59 @@ export default function Landing() {
         </div>
       </section>
           
+
+      {/* Documentation & Transparency Section */}
+      <section className="px-8 py-32 max-w-7xl mx-auto border-t border-border mt-32">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <motion.div 
+            whileHover={{ y: -5 }}
+            onClick={() => setActiveModal('how')}
+            className="p-8 bg-card rounded-[32px] border border-border cursor-pointer hover:shadow-xl transition-all group"
+          >
+            <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Info className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-heading font-bold mb-3">How to Use</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">A simple guide to baseline tracking and clinical reports.</p>
+          </motion.div>
+
+          <motion.div 
+            whileHover={{ y: -5 }}
+            onClick={() => setActiveModal('calc')}
+            className="p-8 bg-card rounded-[32px] border border-border cursor-pointer hover:shadow-xl transition-all group"
+          >
+            <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Shield className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-heading font-bold mb-3">Calculations</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">Understand the HRV and energy algorithms behind your data.</p>
+          </motion.div>
+
+          <motion.div 
+            whileHover={{ y: -5 }}
+            onClick={() => setActiveModal('data')}
+            className="p-8 bg-card rounded-[32px] border border-border cursor-pointer hover:shadow-xl transition-all group"
+          >
+            <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Lock className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-heading font-bold mb-3">Data Safety</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">How we collect and secure your sensitive health information.</p>
+          </motion.div>
+
+          <motion.div 
+            whileHover={{ y: -5 }}
+            onClick={() => setActiveModal('terms')}
+            className="p-8 bg-card rounded-[32px] border border-border cursor-pointer hover:shadow-xl transition-all group"
+          >
+            <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <FileText className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-heading font-bold mb-3">Terms</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">The clinical and legal framework for using HealthTrace.</p>
+          </motion.div>
+        </div>
+      </section>
 
       {/* Premium Footer */}
       <footer className="px-8 py-24 bg-card border-t border-border">
