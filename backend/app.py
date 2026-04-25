@@ -6,7 +6,11 @@ import random
 import string
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=[
+    "https://healthtrace.me",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+], supports_credentials=True, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.path.join(BASE_DIR, '..', 'db.json')
