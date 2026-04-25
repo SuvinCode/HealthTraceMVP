@@ -1,3 +1,7 @@
+// Originally "Diary.jsx" — renamed to MyDay.jsx
+// This is the daily schedule/timeline view (medications, appointments).
+// The "Diary" name now belongs to the mood & journal feature.
+
 import { useState, useMemo, useEffect } from 'react';
 import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
@@ -22,11 +26,19 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 const TYPE_COLORS = {
   medication: 'bg-blue-100 border-blue-200 text-blue-700',
+  medicationDone: 'bg-green-100 border-green-300 text-green-800',
   appointment: 'bg-emerald-100 border-emerald-200 text-emerald-700',
   form: 'bg-amber-100 border-amber-200 text-amber-700',
 };
 
-export default function Diary() {
+const getEventColor = (event) => {
+  if (event.type === 'medication') {
+    return event.completed ? TYPE_COLORS.medicationDone : TYPE_COLORS.medication;
+  }
+  return TYPE_COLORS[event.type];
+};
+
+export default function MyDay() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -84,21 +96,19 @@ export default function Diary() {
     const events = [];
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
-    // Add Medications
     medications.forEach(m => {
       if (isWithinInterval(selectedDate, { start: parseISO(m.start_date), end: parseISO(m.end_date) })) {
         const times = m.scheduled_times || (
           m.frequency === 'twice_daily' ? ['09:00', '21:00'] : 
           m.frequency === 'three_times_daily' ? ['08:00', '14:00', '20:00'] : ['09:00']
         );
-        
         times.forEach(time => {
           events.push({
             id: `med-${m.id}-${time}`,
             type: 'medication',
             title: m.medication_name,
             time,
-            duration: 50, // Increased for better visibility
+            duration: 50,
             data: m,
             completed: m.completed_dates?.includes(dateStr)
           });
@@ -106,7 +116,6 @@ export default function Diary() {
       }
     });
 
-    // Add Appointments
     appointments.forEach(a => {
       if (a.date === dateStr) {
         events.push({
@@ -150,15 +159,11 @@ export default function Diary() {
     const startMins = h * 60 + m;
     const deltaMins = Math.round(info.offset.y);
     const totalMins = Math.max(0, Math.min(1439, startMins + deltaMins));
-    
     const snappedMins = Math.round(totalMins / 15) * 15;
     const newH = Math.floor(snappedMins / 60);
     const newM = snappedMins % 60;
     const newTime = `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
-    
-    if (newTime !== evtObj.time) {
-      updateTaskTime.mutate({ event: evtObj, newTime });
-    }
+    if (newTime !== evtObj.time) updateTaskTime.mutate({ event: evtObj, newTime });
   };
 
   const openManualEdit = (evt) => {
@@ -173,7 +178,6 @@ export default function Diary() {
     }
   };
 
-
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <Dialog open={!!selectedEventForEdit} onOpenChange={(open) => !open && setSelectedEventForEdit(null)}>
@@ -184,11 +188,7 @@ export default function Diary() {
           <div className="py-4 space-y-4">
             <div className="space-y-2">
               <Label>Set Time for "{selectedEventForEdit?.title}"</Label>
-              <Input 
-                type="time" 
-                value={editTime} 
-                onChange={(e) => setEditTime(e.target.value)} 
-              />
+              <Input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} />
             </div>
             <p className="text-xs text-muted-foreground italic">
               Tip: You can also drag the event on the timeline to reschedule.
@@ -200,9 +200,9 @@ export default function Diary() {
           </div>
         </DialogContent>
       </Dialog>
+
       <div className="flex flex-1 overflow-hidden bg-background border rounded-2xl shadow-sm">
-        
-        {/* Sidebar - Small Month View */}
+        {/* Sidebar */}
         <aside className="w-72 border-r bg-card/50 hidden md:flex flex-col p-6 space-y-8 overflow-y-auto">
           <div>
             <div className="flex items-center justify-between mb-4 px-1">
@@ -216,14 +216,11 @@ export default function Diary() {
                 </Button>
               </div>
             </div>
-            
             <div className="grid grid-cols-7 gap-y-1 text-center">
               {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
                 <div key={d} className="text-[10px] font-bold text-muted-foreground/60 uppercase">{d}</div>
               ))}
-              {Array.from({ length: startPadding }).map((_, i) => (
-                <div key={`pad-${i}`} />
-              ))}
+              {Array.from({ length: startPadding }).map((_, i) => <div key={`pad-${i}`} />)}
               {calendarDays.map(day => (
                 <button
                   key={day.toISOString()}
@@ -252,20 +249,17 @@ export default function Diary() {
                     <p className="text-[11px] font-semibold leading-none mb-1 group-hover:text-primary transition-colors">{e.title}</p>
                     <p className="text-[10px] text-muted-foreground">{e.time}</p>
                   </div>
-                  {e.title !== 'test appointment' && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => openManualEdit(e)}>
-                      <Pencil className="w-3 h-3" />
-                    </Button>
-                  )}
+                  <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => openManualEdit(e)}>
+                    <Pencil className="w-3 h-3" />
+                  </Button>
                 </div>
               ))}
             </div>
           </div>
         </aside>
 
-        {/* Main Timeline View */}
+        {/* Main Timeline */}
         <main className="flex-1 flex flex-col min-w-0 bg-white">
-          {/* Timeline Header */}
           <header className="flex items-center justify-between p-4 border-b bg-card/10">
             <div className="flex items-center gap-4">
               <h1 className="font-heading text-xl font-bold flex items-center gap-2">
@@ -287,10 +281,8 @@ export default function Diary() {
             </div>
           </header>
 
-          {/* Timeline Body */}
           <div className="flex-1 overflow-y-auto relative custom-scrollbar">
             <div className="relative min-h-[1440px] px-4 md:px-0">
-              {/* Hour Lines */}
               {HOURS.map(hour => (
                 <div key={hour} className="flex group" style={{ height: '60px' }}>
                   <div className="w-16 md:w-20 pr-4 text-right text-[10px] text-muted-foreground/60 font-bold -translate-y-2 select-none">
@@ -300,13 +292,11 @@ export default function Diary() {
                 </div>
               ))}
 
-              {/* Events Layer */}
               <div className="absolute inset-y-0 left-16 md:left-20 right-4 pointer-events-none">
                 <AnimatePresence mode="popLayout">
                   {timelineEvents.map((event) => {
                     const [h, m] = event.time.split(':').map(Number);
                     const top = (h * 60) + m;
-                    
                     return (
                       <motion.div
                         key={event.id}
@@ -319,28 +309,27 @@ export default function Diary() {
                         dragMomentum={false}
                         onDragEnd={(e, info) => handleDragEnd(e, info, event)}
                         whileDrag={{ zIndex: 50, scale: 1.02, boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)' }}
-                        className={`absolute left-1 right-2 p-2 rounded-lg border shadow-sm pointer-events-auto cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md hover:brightness-95 group overflow-hidden ${TYPE_COLORS[event.type]}`}
-                        style={{ 
-                          top: `${top}px`, 
-                          height: `${event.duration}px`,
-                          minHeight: '45px',
-                          zIndex: 10
-                        }}
+                        className={`absolute left-1 right-2 p-2 rounded-lg border shadow-sm pointer-events-auto cursor-grab active:cursor-grabbing transition-colors transition-shadow hover:shadow-md hover:brightness-95 group overflow-hidden ${getEventColor(event)}`}
+                        style={{ top: `${top}px`, height: `${event.duration}px`, minHeight: '45px', zIndex: 10 }}
                       >
                         <div className="flex items-start justify-between h-full min-w-0">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 mb-1">
-                              {event.type === 'medication' ? <Pill className="w-3.5 h-3.5 shrink-0" /> : 
+                              {event.type === 'medication' ? <Pill className="w-3.5 h-3.5 shrink-0" /> :
                                event.type === 'appointment' ? <Clock className="w-3.5 h-3.5 shrink-0" /> : <FileText className="w-3.5 h-3.5 shrink-0" />}
                               <p className="text-[11px] font-bold truncate leading-none uppercase tracking-tight">{event.title}</p>
                             </div>
                             <p className="text-[10px] opacity-70 font-bold tracking-wide">{event.time}</p>
                           </div>
                           {event.type === 'medication' && (
-                            <Checkbox 
+                            <Checkbox
                               checked={event.completed}
                               onCheckedChange={() => toggleMedication.mutate({ task: event.data, dateStr: format(selectedDate, 'yyyy-MM-dd') })}
-                              className="w-5 h-5 border-blue-400 bg-white/50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 shrink-0 ml-2"
+                              className={`w-5 h-5 bg-white/50 shrink-0 ml-2 transition-colors ${
+                                event.completed
+                                  ? 'border-green-500 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600'
+                                  : 'border-blue-400 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600'
+                              }`}
                             />
                           )}
                         </div>
@@ -355,19 +344,10 @@ export default function Diary() {
       </div>
 
       <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #e2e8f0;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #cbd5e1;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
       `}</style>
     </div>
   );

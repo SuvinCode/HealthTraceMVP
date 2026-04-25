@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { User, FileText, Pill, Calendar, Plus, ArrowLeft, Loader2, Clock, CheckCircle2, Ruler, Weight, Heart, X, BookOpen, Sparkles, TrendingUp } from 'lucide-react';
-import { format, parseISO, subDays, isToday } from 'date-fns';
+import { format, parseISO, subDays, isToday, eachDayOfInterval, isFuture, startOfDay } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -412,29 +412,76 @@ export default function PatientProfile() {
           )}
         </TabsContent>
 
-        <TabsContent value="medications" className="mt-4 space-y-3">
+        <TabsContent value="medications" className="mt-4 space-y-4">
           {tasks.length === 0 ? (
             <p className="text-center py-12 text-muted-foreground">No medications assigned yet</p>
           ) : (
-            tasks.map(task => (
-              <Card key={task.id}>
-                <CardContent className="p-4 flex items-center gap-4">
-                  <Pill className="w-5 h-5 text-primary shrink-0" />
-                  <div className="flex-1">
-                    <p className="font-medium">{task.medication_name}</p>
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                      <Badge variant="secondary" className="text-xs">{task.type}</Badge>
-                      {task.dosage && <Badge variant="outline" className="text-xs">{task.dosage}</Badge>}
-                      <Badge variant="outline" className="text-xs">{task.frequency?.replace(/_/g, ' ')}</Badge>
+            tasks.map(task => {
+              const allDays = eachDayOfInterval({
+                start: parseISO(task.start_date),
+                end: parseISO(task.end_date),
+              });
+              const takenSet = new Set(task.completed_dates || []);
+              const takenCount = (task.completed_dates || []).length;
+              const adherencePct = allDays.length > 0 ? Math.round((takenCount / allDays.length) * 100) : 0;
+
+              return (
+                <Card key={task.id}>
+                  <CardContent className="p-4 space-y-4">
+                    {/* Header */}
+                    <div className="flex items-start gap-3">
+                      <Pill className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold">{task.medication_name}</p>
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          <Badge variant="secondary" className="text-xs">{task.type}</Badge>
+                          {task.dosage && <Badge variant="outline" className="text-xs">{task.dosage}</Badge>}
+                          <Badge variant="outline" className="text-xs">{task.frequency?.replace(/_/g, ' ')}</Badge>
+                        </div>
+                      </div>
+                      <div className="text-right text-xs text-muted-foreground shrink-0">
+                        <p>{task.start_date} — {task.end_date}</p>
+                        <p className={`font-semibold mt-0.5 ${adherencePct >= 80 ? 'text-green-600' : adherencePct >= 50 ? 'text-yellow-600' : 'text-red-500'}`}>
+                          {takenCount}/{allDays.length} days · {adherencePct}%
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right text-xs text-muted-foreground">
-                    <p>{task.start_date} — {task.end_date}</p>
-                    <p>{task.completed_dates?.length || 0} days completed</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+
+                    {/* Adherence timeline */}
+                    <div className="border-t pt-3 space-y-2">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Adherence</p>
+                      <div className="flex flex-wrap gap-1">
+                        {allDays.map(day => {
+                          const dateStr = format(day, 'yyyy-MM-dd');
+                          const taken = takenSet.has(dateStr);
+                          const upcoming = isFuture(startOfDay(day)) && !isToday(day);
+                          return (
+                            <div
+                              key={dateStr}
+                              title={`${format(day, 'EEE MMM d')} — ${taken ? 'Taken' : upcoming ? 'Upcoming' : 'Missed'}`}
+                              className={`w-6 h-6 rounded-sm flex items-center justify-center text-[9px] font-bold select-none ${
+                                taken
+                                  ? 'bg-green-500 text-white'
+                                  : upcoming
+                                  ? 'bg-muted text-muted-foreground/40'
+                                  : 'bg-red-100 text-red-400'
+                              }`}
+                            >
+                              {format(day, 'd')}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex items-center gap-4 text-[10px] text-muted-foreground pt-1">
+                        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-green-500 inline-block" />Taken</span>
+                        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-100 inline-block" />Missed</span>
+                        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-muted inline-block" />Upcoming</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </TabsContent>
 
