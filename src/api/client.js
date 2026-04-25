@@ -1,5 +1,12 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5001';
 
+// Strips markdown link formatting e.g. "[a@b.com](mailto:a@b.com)" → "a@b.com"
+function cleanEmail(raw) {
+  if (!raw) return raw;
+  const match = raw.match(/^\[([^\]]+)\]\(mailto:[^)]+\)$/);
+  return match ? match[1] : raw;
+}
+
 function buildUrl(path, query) {
   const url = new URL(`${API_BASE_URL}${path}`);
   if (query && typeof query === 'object') {
@@ -62,7 +69,8 @@ export const apiClient = {
   auth: {
     async login(credentials) {
       const user = await http('/login', { method: 'POST', body: credentials });
-      const token = btoa(`${user.email}:${user.password}`); // Simple mock token
+      user.email = cleanEmail(user.email);
+      const token = btoa(`${user.email}:${user.password}`);
       localStorage.setItem('auth_token', token);
       localStorage.setItem('user_info', JSON.stringify(user));
       return { token, user };
@@ -73,29 +81,33 @@ export const apiClient = {
         throw new Error('User already exists');
       }
       const newUser = await http('/users', { method: 'POST', body: data });
+      newUser.email = cleanEmail(newUser.email);
       const token = btoa(`${newUser.email}:${newUser.password}`);
       localStorage.setItem('auth_token', token);
       localStorage.setItem('user_info', JSON.stringify(newUser));
       return { token, user: newUser };
     },
     me() {
-      const user = localStorage.getItem('user_info');
-      if (user) return JSON.parse(user);
-      
+      const raw = localStorage.getItem('user_info');
+      if (raw) {
+        const user = JSON.parse(raw);
+        user.email = cleanEmail(user.email);
+        return user;
+      }
+
       // Fallback for mock auto-login (e.g. from Google redirect)
       const token = localStorage.getItem('auth_token');
       if (token && token.includes('@')) {
-        // If the token looks like an email, it's our simplified mock token
-        // Provide consistent IDs for known demo users from db.json
-        const isDoctor = token === 'doctor@gmail.com';
-        const isPatient = token === 'patient@gmail.com';
-        
+        const email = cleanEmail(token);
+        const isDoctor = email === 'doctor@gmail.com';
+        const isPatient = email === 'patient@gmail.com';
+
         const mockUser = {
-          id: isDoctor ? 2 : (isPatient ? 1 : 999), 
-          email: token,
-          full_name: token.split('@')[0],
+          id: isDoctor ? 2 : (isPatient ? 1 : 999),
+          email,
+          full_name: email.split('@')[0],
           role: isDoctor ? 'doctor' : 'user',
-          onboarding_complete: true
+          onboarding_complete: true,
         };
         localStorage.setItem('user_info', JSON.stringify(mockUser));
         return mockUser;
@@ -107,15 +119,14 @@ export const apiClient = {
       localStorage.removeItem('user_info');
     },
     googleLogin() {
-      // Mock Google login by redirecting with a test token
       window.location.href = '/login?token=patient@gmail.com';
     },
     async updateMe(data) {
       const userInfo = localStorage.getItem('user_info');
       if (!userInfo) throw new Error('User not found in session');
       const user = JSON.parse(userInfo);
-      // We use the same update logic as other entities
       const updatedUser = await http(`/users/${user.id}`, { method: 'PATCH', body: data });
+      updatedUser.email = cleanEmail(updatedUser.email);
       localStorage.setItem('user_info', JSON.stringify(updatedUser));
       return updatedUser;
     },
@@ -124,13 +135,14 @@ export const apiClient = {
     {},
     {
       get(_target, prop) {
-        // Handle nested entities from db.json
         const entityMap = {
-          ConnectionRequest: 'ConnectionRequest',
-          MedicationTask: 'MedicationTask',
-          HealthForm: 'HealthForm',
-          Appointment: 'Appointment',
-          HealthFormSubmission: 'HealthFormSubmission'
+          ConnectionRequest:    'ConnectionRequest',
+          MedicationTask:       'MedicationTask',
+          HealthForm:           'HealthForm',
+          HealthFormSubmission: 'HealthFormSubmission',
+          HealthFormResponse:   'HealthFormResponse',
+          Appointment:          'Appointment',
+          DiaryEntry:           'DiaryEntry',
         };
         return entityApi(entityMap[prop] || prop);
       },

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -10,10 +10,125 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { User, FileText, Pill, Calendar, Plus, ArrowLeft, Loader2, Clock, CheckCircle2, Ruler, Weight, Heart, X } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { User, FileText, Pill, Calendar, Plus, ArrowLeft, Loader2, Clock, CheckCircle2, Ruler, Weight, Heart, X, BookOpen, Sparkles, TrendingUp } from 'lucide-react';
+import { format, parseISO, subDays, isToday } from 'date-fns';
+import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
+
+// ─── Diary helpers ───────────────────────────────────────────────────────────
+const MOODS = [
+  { value: 1, emoji: '😞', label: 'Rough', color: '#ef4444', bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-600'    },
+  { value: 2, emoji: '😕', label: 'Low',   color: '#f97316', bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-600' },
+  { value: 3, emoji: '😐', label: 'Okay',  color: '#eab308', bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-600' },
+  { value: 4, emoji: '🙂', label: 'Good',  color: '#84cc16', bg: 'bg-lime-50',   border: 'border-lime-200',   text: 'text-lime-600'   },
+  { value: 5, emoji: '😄', label: 'Great', color: '#22c55e', bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-600'  },
+];
+const getMood = (value) => MOODS.find(m => m.value === value) || MOODS[2];
+
+function DiaryMoodChart({ entries }) {
+  const last7 = Array.from({ length: 7 }, (_, i) => {
+    const date = subDays(new Date(), 6 - i);
+    const entry = entries.find(e => e.date === format(date, 'yyyy-MM-dd'));
+    return { date, mood: entry?.mood_score ?? null };
+  });
+  return (
+    <div className="flex items-end gap-1.5 h-12">
+      {last7.map(({ date, mood }, i) => {
+        const m = mood ? getMood(mood) : null;
+        return (
+          <div key={i} className="flex flex-col items-center gap-1 flex-1">
+            <motion.div
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: 1 }}
+              transition={{ delay: i * 0.05, duration: 0.4, ease: 'easeOut' }}
+              style={{ height: mood ? `${(mood / 5) * 36}px` : '4px', backgroundColor: m ? m.color : '#e2e8f0', originY: 1 }}
+              className="w-full rounded-t-sm"
+            />
+            <span className="text-[9px] text-muted-foreground font-medium">{format(date, 'EEE')[0]}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function DiaryAISummaryDialog({ open, onClose, entries, patientName }) {
+  const [summary, setSummary] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (open && entries.length > 0) {
+      setLoading(true);
+      setSummary('');
+      const recent = entries.slice(0, 14).map(e => ({
+        date: e.date,
+        mood: getMood(e.mood_score).label,
+        notes: e.notes || '(no notes)',
+      }));
+      fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY || '',
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: `You are a clinical assistant helping a doctor understand a patient's recent wellbeing based on their self-reported diary entries.
+
+Patient: ${patientName}
+Diary entries (most recent first):
+${JSON.stringify(recent, null, 2)}
+
+Please provide:
+1. A brief clinical summary (2-3 sentences) of the patient's mood trends
+2. Key themes or concerns mentioned in their notes
+3. Any patterns worth discussing at their next appointment
+4. An overall wellbeing assessment (improving / stable / declining)
+
+Be concise, clinical, and helpful. Format with clear sections.`,
+          }],
+        }),
+      })
+        .then(r => r.json())
+        .then(data => setSummary(data.content?.find(b => b.type === 'text')?.text || 'Unable to generate summary.'))
+        .catch(() => setSummary('Error generating summary. Please try again.'))
+        .finally(() => setLoading(false));
+    }
+  }, [open, entries, patientName]);
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[580px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-violet-500" />
+            AI Clinical Summary — {patientName}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="py-2">
+          {loading ? (
+            <div className="flex flex-col items-center py-10 gap-3">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+                className="w-8 h-8 border-2 border-violet-200 border-t-violet-500 rounded-full"
+              />
+              <p className="text-sm text-muted-foreground">Analysing diary entries…</p>
+            </div>
+          ) : (
+            <div className="prose prose-sm max-w-none text-sm leading-relaxed whitespace-pre-wrap text-foreground/80">{summary}</div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function PatientProfile() {
   const { user } = useAuth();
@@ -29,6 +144,7 @@ export default function PatientProfile() {
   const [medDialog, setMedDialog] = useState(false);
   const [newForm, setNewForm] = useState({ title: '', questions: [] });
   const [newQ, setNewQ] = useState({ label: '', type: 'text', required: false, options: '' });
+  const [showDiarySummary, setShowDiarySummary] = useState(false);
 
   // Queries
   const { data: patients } = useQuery({
@@ -60,6 +176,17 @@ export default function PatientProfile() {
     queryKey: ['patient-connections', patientEmail],
     queryFn: () => apiClient.entities.ConnectionRequest.filter({ patient_email: patientEmail, doctor_email: user?.email }),
     initialData: [],
+  });
+
+  const { data: diaryEntries = [] } = useQuery({
+    queryKey: ['patient-diary', patientEmail],
+    queryFn: async () => {
+      const all = await apiClient.entities.DiaryEntry.filter();
+      return all
+        .filter(e => e.patient_email === patientEmail)
+        .sort((a, b) => b.date.localeCompare(a.date));
+    },
+    enabled: !!patientEmail,
   });
 
   // Mutations
@@ -258,6 +385,7 @@ export default function PatientProfile() {
           <TabsTrigger value="submissions"><FileText className="w-4 h-4 mr-1" /> Forms ({submissions.length})</TabsTrigger>
           <TabsTrigger value="medications"><Pill className="w-4 h-4 mr-1" /> Medications ({tasks.length})</TabsTrigger>
           <TabsTrigger value="appointments"><Calendar className="w-4 h-4 mr-1" /> Appointments ({appointments.length})</TabsTrigger>
+          <TabsTrigger value="diary"><BookOpen className="w-4 h-4 mr-1" /> Diary ({diaryEntries.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="submissions" className="mt-4 space-y-3">
@@ -332,6 +460,75 @@ export default function PatientProfile() {
               </Card>
             ))
           )}
+        </TabsContent>
+
+        <TabsContent value="diary" className="mt-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {diaryEntries.length === 0 ? 'No diary entries yet' : `${diaryEntries.length} entr${diaryEntries.length === 1 ? 'y' : 'ies'}`}
+            </p>
+            <Button
+              size="sm"
+              className="gap-2 rounded-full"
+              disabled={diaryEntries.length === 0}
+              onClick={() => setShowDiarySummary(true)}
+            >
+              <Sparkles className="w-4 h-4" />
+              AI Summary
+            </Button>
+          </div>
+
+          {diaryEntries.length > 0 && (
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  Last 7 days
+                </p>
+                <DiaryMoodChart entries={diaryEntries} />
+              </CardContent>
+            </Card>
+          )}
+
+          {diaryEntries.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">No diary entries yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {diaryEntries.map(entry => {
+                const mood = getMood(entry.mood_score);
+                return (
+                  <Card key={entry.id}>
+                    <CardContent className={`p-4 ${mood.bg} border ${mood.border} rounded-xl`}>
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{mood.emoji}</span>
+                        <div>
+                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            {isToday(parseISO(entry.date)) ? 'Today' : format(parseISO(entry.date), 'EEEE, MMM d')}
+                          </p>
+                          <p className={`text-sm font-bold ${mood.text}`}>{mood.label}</p>
+                        </div>
+                      </div>
+                      {entry.notes && (
+                        <p className="mt-3 text-sm text-foreground/70 leading-relaxed border-t border-current/10 pt-3">
+                          {entry.notes}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          <DiaryAISummaryDialog
+            open={showDiarySummary}
+            onClose={() => setShowDiarySummary(false)}
+            entries={diaryEntries}
+            patientName={patient?.full_name || patientEmail}
+          />
         </TabsContent>
       </Tabs>
     </div>

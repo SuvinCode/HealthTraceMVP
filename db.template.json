@@ -92,6 +92,13 @@
       "age": 40,
       "weight": 70,
       "height": 180
+    },
+    {
+      "full_name": "Alex Test",
+      "email": "wingstopfiregiantguy@gmail.com",
+      "password": "wingstop",
+      "role": "user",
+      "id": "2irpckewt"
     }
   ],
   "patients": [
@@ -275,8 +282,15 @@
       }
     ],
     "DiaryEntry": [
-      
-
-    ]
+      {
+        "patient_email": "patient@gmail.com",
+        "patient_name": "Patient",
+        "date": "2026-04-25",
+        "mood_score": 4,
+        "notes": "decent",
+        "id": "9hz5p7g0v"
+      }
+    ],
+    "HealthFormResponse": []
   }
 }

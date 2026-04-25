@@ -2,22 +2,23 @@ import { useState, useEffect } from 'react';
 import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format, parseISO, subDays, isToday, isSameDay } from 'date-fns';
+import { format, parseISO, subDays, isToday } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, BookOpen, Sparkles, Pencil, CheckCircle2, Calendar, TrendingUp, User } from 'lucide-react';
+import { BookOpen, Sparkles, Pencil, CheckCircle2, Calendar, TrendingUp, Users } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Link } from 'react-router-dom';
 
 // ─── Mood Config ────────────────────────────────────────────────────────────
 const MOODS = [
-  { value: 1, emoji: '😞', label: 'Rough',    color: '#ef4444', bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-600'    },
-  { value: 2, emoji: '😕', label: 'Low',      color: '#f97316', bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-600' },
-  { value: 3, emoji: '😐', label: 'Okay',     color: '#eab308', bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-600' },
-  { value: 4, emoji: '🙂', label: 'Good',     color: '#84cc16', bg: 'bg-lime-50',   border: 'border-lime-200',   text: 'text-lime-600'   },
-  { value: 5, emoji: '😄', label: 'Great',    color: '#22c55e', bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-600'  },
+  { value: 1, emoji: '😞', label: 'Rough', color: '#ef4444', bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-600'    },
+  { value: 2, emoji: '😕', label: 'Low',   color: '#f97316', bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-600' },
+  { value: 3, emoji: '😐', label: 'Okay',  color: '#eab308', bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-600' },
+  { value: 4, emoji: '🙂', label: 'Good',  color: '#84cc16', bg: 'bg-lime-50',   border: 'border-lime-200',   text: 'text-lime-600'   },
+  { value: 5, emoji: '😄', label: 'Great', color: '#22c55e', bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-600'  },
 ];
 
 const getMood = (value) => MOODS.find(m => m.value === value) || MOODS[2];
@@ -28,7 +29,7 @@ function MoodChart({ entries }) {
     const date = subDays(new Date(), 6 - i);
     const dateStr = format(date, 'yyyy-MM-dd');
     const entry = entries.find(e => e.date === dateStr);
-    return { date, dateStr, mood: entry?.mood_score ?? null };
+    return { date, mood: entry?.mood_score ?? null };
   });
 
   return (
@@ -58,7 +59,7 @@ function MoodChart({ entries }) {
   );
 }
 
-// ─── AI Summary Dialog (Doctor View) ────────────────────────────────────────
+// ─── AI Summary Dialog ───────────────────────────────────────────────────────
 function AISummaryDialog({ open, onClose, entries, patientName }) {
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
@@ -75,9 +76,14 @@ function AISummaryDialog({ open, onClose, entries, patientName }) {
 
       fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY || '',
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 1000,
           messages: [{
             role: 'user',
@@ -93,9 +99,9 @@ Please provide:
 3. Any patterns worth discussing at their next appointment
 4. An overall wellbeing assessment (improving / stable / declining)
 
-Be concise, clinical, and helpful. Format with clear sections.`
+Be concise, clinical, and helpful. Format with clear sections.`,
           }],
-        })
+        }),
       })
         .then(r => r.json())
         .then(data => {
@@ -157,14 +163,16 @@ function EntryCard({ entry, onEdit }) {
             <p className={`text-sm font-bold ${mood.text}`}>{mood.label}</p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-          onClick={() => onEdit(entry)}
-        >
-          <Pencil className="w-3.5 h-3.5" />
-        </Button>
+        {onEdit && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+            onClick={() => onEdit(entry)}
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </Button>
+        )}
       </div>
       {entry.notes && (
         <p className="mt-3 text-sm text-foreground/70 leading-relaxed border-t border-current/10 pt-3">
@@ -175,20 +183,22 @@ function EntryCard({ entry, onEdit }) {
   );
 }
 
+
 // ─── Main Diary Component ────────────────────────────────────────────────────
 export default function Diary() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  const [mode, setMode] = useState('view');
   const [selectedMood, setSelectedMood] = useState(null);
   const [notes, setNotes] = useState('');
   const [editingEntry, setEditingEntry] = useState(null);
-  const [showSummary, setShowSummary] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
-  // ── Fetch diary entries ──────────────────────────────────────────────────
+  const isDoctor = user?.role === 'doctor' || user?.user_type === 'doctor';
+
+  // ── Patient: Fetch own entries (disabled for doctors) ─────────────────────
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ['diary-entries', user?.email],
     queryFn: async () => {
@@ -197,106 +207,103 @@ export default function Diary() {
         .filter(e => e.patient_email === user?.email)
         .sort((a, b) => b.date.localeCompare(a.date));
     },
-    enabled: !!user?.email,
+    enabled: !isDoctor && !!user?.email,
   });
 
   const todayEntry = entries.find(e => e.date === todayStr);
 
-  // Pre-fill form if today's entry exists
   useEffect(() => {
-    if (todayEntry && !submitted) {
-      setSelectedMood(todayEntry.mood_score);
-      setNotes(todayEntry.notes || '');
+    if (isDoctor) return;
+    if (!todayEntry && mode === 'view') {
+      setMode('editing');
+      setSelectedMood(null);
+      setNotes('');
     }
-  }, [todayEntry]);
+  }, [isDoctor, todayEntry, mode]);
 
-  // ── Save / Update mutation ────────────────────────────────────────────────
-  const saveMutation = useMutation({
-    mutationFn: async ({ mood, text, entryId }) => {
-      const payload = {
-        patient_email: user.email,
-        patient_name: user.full_name,
-        date: entryId ? editingEntry.date : todayStr,
-        mood_score: mood,
-        notes: text,
-      };
-      if (entryId) {
-        await apiClient.entities.DiaryEntry.update(entryId, payload);
-      } else {
-        await apiClient.entities.DiaryEntry.create(payload);
-      }
-    },
-    onSuccess: (_, { entryId }) => {
-      queryClient.invalidateQueries({ queryKey: ['diary-entries'] });
-      toast.success(entryId ? 'Entry updated' : 'Diary entry saved');
-      setSubmitted(true);
-      setEditingEntry(null);
-    },
-    onError: () => toast.error('Something went wrong. Please try again.'),
-  });
-
-  const handleSubmit = () => {
-    if (!selectedMood) return;
-    saveMutation.mutate({
-      mood: selectedMood,
-      text: notes,
-      entryId: todayEntry?.id ?? null,
-    });
-  };
-
-  const handleEditSave = () => {
-    if (!selectedMood || !editingEntry) return;
-    saveMutation.mutate({ mood: selectedMood, text: notes, entryId: editingEntry.id });
-  };
-
-  const openEdit = (entry) => {
-    setEditingEntry(entry);
-    setSelectedMood(entry.mood_score);
-    setNotes(entry.notes || '');
-  };
-
-  const isDoctor = user?.role === 'doctor' || user?.user_type === 'doctor';
-
-  // ── Doctor view ──────────────────────────────────────────────────────────
   if (isDoctor) {
     return (
-      <div className="max-w-2xl mx-auto py-8 px-4 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold font-heading">Patient Diaries</h1>
-            <p className="text-sm text-muted-foreground">Patient-reported mood & wellbeing entries</p>
-          </div>
-          <Button onClick={() => setShowSummary(true)} className="gap-2 rounded-full" size="sm">
-            <Sparkles className="w-4 h-4" />
-            AI Summary
-          </Button>
-        </div>
-
-        {entries.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
-            <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">No diary entries yet</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {entries.map(e => <EntryCard key={e.id} entry={e} onEdit={() => {}} />)}
-          </div>
-        )}
-
-        <AISummaryDialog
-          open={showSummary}
-          onClose={() => setShowSummary(false)}
-          entries={entries}
-          patientName={user?.full_name || 'Patient'}
-        />
+      <div className="max-w-xl mx-auto py-16 px-4 text-center space-y-4 text-muted-foreground">
+        <BookOpen className="w-10 h-10 mx-auto opacity-30" />
+        <p className="text-sm">Diary entries are available in each patient's profile.</p>
+        <Button asChild variant="outline" className="rounded-full gap-2">
+          <Link to="/patient-logs">
+            <Users className="w-4 h-4" />
+            Go to Patient Logs
+          </Link>
+        </Button>
       </div>
     );
   }
 
-  // ── Patient view ──────────────────────────────────────────────────────────
+  // ── Mutation ─────────────────────────────────────────────────────────────
+  const saveMutation = useMutation({
+    mutationFn: async ({ entryId, mood, text, date }) => {
+      const payload = {
+        patient_email: user.email,
+        patient_name: user.full_name,
+        date,
+        mood_score: mood,
+        notes: text,
+      };
+      if (entryId) {
+        return apiClient.entities.DiaryEntry.update(entryId, payload);
+      }
+      return apiClient.entities.DiaryEntry.create(payload);
+    },
+    onSuccess: async (_, vars) => {
+      await queryClient.invalidateQueries({ queryKey: ['diary-entries'] });
+      toast.success(vars.entryId ? 'Entry updated' : 'Diary entry saved');
+      setEditingEntry(null);
+      setMode('view');
+    },
+    onError: () => toast.error('Something went wrong. Please try again.'),
+  });
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
+  const startEditingToday = () => {
+    setSelectedMood(todayEntry?.mood_score ?? null);
+    setNotes(todayEntry?.notes ?? '');
+    setMode('editing');
+  };
+
+  const cancelEditingToday = () => setMode('view');
+
+  const saveToday = () => {
+    if (!selectedMood || !user?.email) return;
+    saveMutation.mutate({ entryId: todayEntry?.id ?? null, mood: selectedMood, text: notes, date: todayStr });
+  };
+
+  const openPastEdit = (entry) => {
+    setEditingEntry(entry);
+    setSelectedMood(entry.mood_score);
+    setNotes(entry.notes || '');
+    setMode('editPast');
+  };
+
+  const closePastEdit = () => {
+    setEditingEntry(null);
+    setMode(todayEntry ? 'view' : 'editing');
+    if (todayEntry) {
+      setSelectedMood(todayEntry.mood_score);
+      setNotes(todayEntry.notes || '');
+    } else {
+      setSelectedMood(null);
+      setNotes('');
+    }
+  };
+
+  const savePastEdit = () => {
+    if (!selectedMood || !editingEntry) return;
+    saveMutation.mutate({ entryId: editingEntry.id, mood: selectedMood, text: notes, date: editingEntry.date });
+  };
+
   const avgMood = entries.length > 0
     ? (entries.slice(0, 7).reduce((s, e) => s + e.mood_score, 0) / Math.min(entries.length, 7)).toFixed(1)
     : null;
+
+  const showSuccessCard = mode === 'view' && todayEntry;
+  const showInlineForm = mode === 'editing';
 
   return (
     <div className="max-w-xl mx-auto py-6 px-4 space-y-6">
@@ -327,9 +334,9 @@ export default function Diary() {
         </div>
       )}
 
-      {/* Today's Entry Form */}
+      {/* Today: success card OR inline form */}
       <AnimatePresence mode="wait">
-        {submitted && todayEntry && !editingEntry ? (
+        {showSuccessCard ? (
           <motion.div
             key="success"
             initial={{ opacity: 0, scale: 0.97 }}
@@ -347,7 +354,7 @@ export default function Diary() {
                 variant="ghost"
                 size="sm"
                 className="ml-auto rounded-full text-xs h-7 text-green-700 hover:text-green-900 hover:bg-green-100"
-                onClick={() => { setSubmitted(false); setSelectedMood(todayEntry.mood_score); setNotes(todayEntry.notes || ''); }}
+                onClick={startEditingToday}
               >
                 <Pencil className="w-3 h-3 mr-1" />
                 Edit
@@ -363,7 +370,7 @@ export default function Diary() {
               <p className="text-sm text-green-800/70 leading-relaxed">{todayEntry.notes}</p>
             )}
           </motion.div>
-        ) : (
+        ) : showInlineForm ? (
           <motion.div
             key="form"
             initial={{ opacity: 0, y: 6 }}
@@ -373,12 +380,8 @@ export default function Diary() {
           >
             <div>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
-                {editingEntry
-                  ? `Editing — ${format(parseISO(editingEntry.date), 'EEEE, MMM d')}`
-                  : `${format(new Date(), 'EEEE, MMMM d')}`}
+                {format(new Date(), 'EEEE, MMMM d')}
               </p>
-
-              {/* Mood Selector */}
               <div className="grid grid-cols-5 gap-2">
                 {MOODS.map((mood) => (
                   <motion.button
@@ -386,30 +389,21 @@ export default function Diary() {
                     whileTap={{ scale: 0.92 }}
                     whileHover={{ scale: 1.05 }}
                     onClick={() => setSelectedMood(mood.value)}
-                    className={`
-                      flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl border-2 transition-all duration-150
-                      ${selectedMood === mood.value
+                    className={`flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl border-2 transition-all duration-150 ${
+                      selectedMood === mood.value
                         ? `${mood.bg} ${mood.border} shadow-sm`
-                        : 'border-border bg-muted/30 hover:bg-muted/60'}
-                    `}
+                        : 'border-border bg-muted/30 hover:bg-muted/60'
+                    }`}
                   >
                     <span className="text-2xl leading-none">{mood.emoji}</span>
                     <span className={`text-[10px] font-bold uppercase tracking-wide ${selectedMood === mood.value ? mood.text : 'text-muted-foreground'}`}>
                       {mood.label}
                     </span>
-                    {selectedMood === mood.value && (
-                      <motion.div
-                        layoutId="mood-indicator"
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ backgroundColor: mood.color }}
-                      />
-                    )}
                   </motion.button>
                 ))}
               </div>
             </div>
 
-            {/* Notes */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 Notes <span className="font-normal normal-case">(optional)</span>
@@ -424,27 +418,22 @@ export default function Diary() {
               <p className="text-[10px] text-muted-foreground text-right">{notes.length}/1000</p>
             </div>
 
-            {/* Actions */}
             <div className="flex gap-2 pt-1">
-              {editingEntry && (
-                <Button
-                  variant="outline"
-                  className="rounded-full flex-1"
-                  onClick={() => { setEditingEntry(null); setSelectedMood(todayEntry?.mood_score ?? null); setNotes(todayEntry?.notes || ''); }}
-                >
+              {todayEntry && (
+                <Button variant="outline" className="rounded-full flex-1" onClick={cancelEditingToday}>
                   Cancel
                 </Button>
               )}
               <Button
                 className="rounded-full flex-1 bg-violet-600 hover:bg-violet-700 text-white"
                 disabled={!selectedMood || saveMutation.isPending}
-                onClick={editingEntry ? handleEditSave : handleSubmit}
+                onClick={saveToday}
               >
-                {saveMutation.isPending ? 'Saving…' : editingEntry ? 'Save Changes' : todayEntry ? 'Update Entry' : 'Save Entry'}
+                {saveMutation.isPending ? 'Saving…' : todayEntry ? 'Update Entry' : 'Save Entry'}
               </Button>
             </div>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
 
       {/* Past Entries */}
@@ -458,7 +447,7 @@ export default function Diary() {
             {entries
               .filter(e => e.date !== todayStr)
               .map(entry => (
-                <EntryCard key={entry.id} entry={entry} onEdit={openEdit} />
+                <EntryCard key={entry.id} entry={entry} onEdit={openPastEdit} />
               ))}
           </div>
         </div>
@@ -466,13 +455,13 @@ export default function Diary() {
 
       {entries.length === 0 && !isLoading && (
         <div className="text-center py-10 text-muted-foreground">
-          <span className="text-4xl block mb-3">📓</span>
+          <span className="text-4xl block mb-3">{'📓'}</span>
           <p className="text-sm">No entries yet — start by logging how you feel today.</p>
         </div>
       )}
 
       {/* Edit Past Entry Dialog */}
-      <Dialog open={!!editingEntry} onOpenChange={(open) => !open && setEditingEntry(null)}>
+      <Dialog open={mode === 'editPast'} onOpenChange={(open) => !open && closePastEdit()}>
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle>
@@ -506,13 +495,13 @@ export default function Diary() {
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setEditingEntry(null)}>Cancel</Button>
+            <Button variant="ghost" onClick={closePastEdit}>Cancel</Button>
             <Button
               className="bg-violet-600 hover:bg-violet-700 text-white"
               disabled={!selectedMood || saveMutation.isPending}
-              onClick={handleEditSave}
+              onClick={savePastEdit}
             >
-              Save Changes
+              {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
             </Button>
           </div>
         </DialogContent>
