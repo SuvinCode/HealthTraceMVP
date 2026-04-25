@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://127.0.0.1:5001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5001';
 
 function buildUrl(path, query) {
   const url = new URL(`${API_BASE_URL}${path}`);

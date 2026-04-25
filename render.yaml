@@ -1,0 +1,25 @@
+services:
+  # Flask Backend
+  - type: web
+    name: healthtrace-api
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn --chdir backend app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.2
+      - key: RENDER
+        value: true
+
+  # Vite Frontend
+  - type: web
+    name: healthtrace-frontend
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview -- --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: healthtrace-api
+          property: host

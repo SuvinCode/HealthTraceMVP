@@ -154,4 +154,7 @@ def login():
     return jsonify({'error': 'Invalid credentials'}), 401
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    # Use the PORT environment variable provided by Render, defaulting to 5001 for local dev
+    port = int(os.environ.get('PORT', 5001))
+    # In production (e.g. Render), we must bind to 0.0.0.0
+    app.run(debug=True if os.environ.get('RENDER') is None else False, host='0.0.0.0', port=port)
