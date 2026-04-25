@@ -70,11 +70,12 @@ def create_entity(entity):
     new_item = request.json
     
     if entity in db.get('entities', {}):
-        # Logic to generate a new ID
-        import random
-        import string
-        new_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=9))
-        new_item['id'] = new_id
+        # Use provided ID if available, otherwise generate a new one
+        if 'id' not in new_item:
+            import random
+            import string
+            new_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=9))
+            new_item['id'] = new_id
         db['entities'][entity].append(new_item)
     elif entity in db:
         # Simple ID generation for top-level entities
