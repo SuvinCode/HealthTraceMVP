@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { apiClient } from '@/api/client';
+import { apiClient, cleanEmail } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { User, FileText, Pill, Calendar, Plus, ArrowLeft, Loader2, Clock, CheckCircle2, Ruler, Weight, Heart, X, BookOpen, Sparkles, TrendingUp } from 'lucide-react';
+import { User, FileText, Pill, Calendar, Plus, ArrowLeft, Loader2, Clock, CheckCircle2, Ruler, Weight, Heart, X, BookOpen, Sparkles, TrendingUp, Send } from 'lucide-react';
 import { format, parseISO, subDays, isToday, startOfDay } from 'date-fns';
 
 import { motion } from 'framer-motion';
@@ -167,27 +167,33 @@ export default function PatientProfile() {
   // Queries
   const { data: patients } = useQuery({
     queryKey: ['patient-user', patientEmail],
-    queryFn: () => apiClient.entities.patients.filter({ email: patientEmail }),
+    queryFn: () => apiClient.entities.patients.filter({ email: cleanEmail(patientEmail) }),
     initialData: [],
   });
   const patient = patients?.[0];
 
   const { data: submissions } = useQuery({
     queryKey: ['patient-submissions', patientEmail],
-    queryFn: () => apiClient.entities.HealthFormSubmission.filter({ patient_email: patientEmail, doctor_email: user?.email }),
+    queryFn: () => apiClient.entities.HealthFormSubmission.filter({ patient_email: cleanEmail(patientEmail), doctor_email: cleanEmail(user?.email) }),
     initialData: [],
   });
 
   const { data: tasks } = useQuery({
     queryKey: ['patient-tasks', patientEmail],
-    queryFn: () => apiClient.entities.MedicationTask.filter({ patient_email: patientEmail, doctor_email: user?.email }),
+    queryFn: () => apiClient.entities.MedicationTask.filter({ patient_email: cleanEmail(patientEmail), doctor_email: cleanEmail(user?.email) }),
     initialData: [],
   });
 
   const { data: appointments } = useQuery({
     queryKey: ['patient-appointments', patientEmail],
-    queryFn: () => apiClient.entities.Appointment.filter({ patient_email: patientEmail, doctor_email: user?.email }),
+    queryFn: () => apiClient.entities.Appointment.filter({ patient_email: cleanEmail(patientEmail), doctor_email: cleanEmail(user?.email) }),
     initialData: [],
+  });
+
+  const { data: allForms = [] } = useQuery({
+    queryKey: ['patient-forms', patientEmail],
+    queryFn: () => apiClient.entities.HealthForm.filter({ patient_email: cleanEmail(patientEmail), doctor_email: cleanEmail(user?.email) }),
+    enabled: !!patientEmail && !!user?.email,
   });
  
   const { data: connections = [], isLoading: isLoadingConnections } = useQuery({
@@ -196,8 +202,8 @@ export default function PatientProfile() {
       const all = await apiClient.entities.ConnectionRequest.filter();
       // Mock API returns all, so we filter by doctor AND patient in JS
       return all.filter(c => 
-        c.doctor_email === user?.email && 
-        c.patient_email === patientEmail &&
+        cleanEmail(c.doctor_email) === cleanEmail(user?.email) && 
+        cleanEmail(c.patient_email) === cleanEmail(patientEmail) &&
         c.status === 'accepted'
       );
     },
@@ -220,13 +226,13 @@ export default function PatientProfile() {
   const addMed = useMutation({
     mutationFn: (data) => apiClient.entities.MedicationTask.create({
       ...data,
-      patient_email: patientEmail,
+      patient_email: cleanEmail(patientEmail),
       patient_name: patient?.full_name || '',
-      doctor_email: user.email,
+      doctor_email: cleanEmail(user.email),
       completed_dates: [],
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patient-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['patient-tasks', patientEmail] });
       setMedDialog(false);
       setMedForm({ medication_name: '', type: 'tablet', dosage: '', start_date: '', end_date: '', frequency: 'once_daily' });
       toast.success('Medication assigned');
@@ -236,12 +242,13 @@ export default function PatientProfile() {
   const createForm = useMutation({
     mutationFn: (data) => apiClient.entities.HealthForm.create({
       ...data,
-      doctor_email: user.email,
-      patient_email: patientEmail,
+      doctor_email: cleanEmail(user.email),
+      patient_email: cleanEmail(patientEmail),
       active: true,
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['health-forms'] });
+      queryClient.invalidateQueries({ queryKey: ['patient-forms', patientEmail] });
       setFormDialog(false);
       setNewForm({ title: '', questions: [] });
       toast.success('Health form created');
@@ -469,30 +476,62 @@ export default function PatientProfile() {
           <TabsTrigger value="diary"><BookOpen className="w-4 h-4 mr-1" /> Diary ({diaryEntries.length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="submissions" className="mt-4 space-y-3">
-          {submissions.length === 0 ? (
-            <p className="text-center py-12 text-muted-foreground">No form submissions yet</p>
-          ) : (
-            [...submissions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).map((sub, i) => (
-              <motion.div key={sub.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle2 className="w-4 h-4 text-primary" />
-                      <span className="font-medium">{sub.form_title}</span>
-                      <Badge variant="secondary" className="ml-auto text-xs">{format(new Date(sub.created_date), 'MMM d, yyyy h:mm a')}</Badge>
-                    </div>
-                    {sub.answers?.map((a, i) => (
-                      <div key={i} className="text-sm mt-1">
-                        <span className="text-muted-foreground">{a.question_label}: </span>
-                        <span className="font-medium">{a.answer || '—'}</span>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))
-          )}
+        <TabsContent value="submissions" className="mt-4 space-y-6">
+          <div>
+            <h3 className="text-sm font-bold flex items-center gap-2 mb-4 text-primary">
+              <Send className="w-4 h-4" /> Outgoing Forms ({allForms.filter(f => f.active && !submissions.some(s => s.form_id === f.id)).length})
+            </h3>
+            {allForms.filter(f => f.active && !submissions.some(s => s.form_id === f.id)).length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground border rounded-xl border-dashed text-sm">No pending outgoing forms</p>
+            ) : (
+              <div className="grid gap-3">
+                {allForms.filter(f => f.active && !submissions.some(s => s.form_id === f.id)).map((form, i) => (
+                  <motion.div key={form.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                    <Card className="bg-muted/30">
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-sm">{form.title}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">{form.questions?.length || 0} Questions</p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">Awaiting Submission</Badge>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="pt-4 border-t border-dashed">
+            <h3 className="text-sm font-bold flex items-center gap-2 mb-4 text-muted-foreground">
+              <CheckCircle2 className="w-4 h-4" /> Submitted Forms ({submissions.length})
+            </h3>
+            {submissions.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground border rounded-xl border-dashed">No form submissions yet</p>
+            ) : (
+              <div className="grid gap-3">
+                {[...submissions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).map((sub, i) => (
+                  <motion.div key={sub.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle2 className="w-4 h-4 text-primary" />
+                          <span className="font-medium">{sub.form_title}</span>
+                          <Badge variant="secondary" className="ml-auto text-xs">{format(new Date(sub.created_date), 'MMM d, yyyy h:mm a')}</Badge>
+                        </div>
+                        {sub.answers?.map((a, i) => (
+                          <div key={i} className="text-sm mt-1">
+                            <span className="text-muted-foreground">{a.question_label}: </span>
+                            <span className="font-medium">{a.answer || '—'}</span>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="timeline" className="mt-4 space-y-4">

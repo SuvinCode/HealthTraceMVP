@@ -65,7 +65,8 @@ def get_entities(entity):
 
     filtered_data = []
     for item in data:
-        match = all(str(item.get(key)) == value for key, value in query_params.items())
+        # Case-insensitive comparison for string representations (handles booleans like True vs 'true')
+        match = all(str(item.get(key)).lower() == str(value).lower() for key, value in query_params.items())
         if match:
             filtered_data.append(item)
 

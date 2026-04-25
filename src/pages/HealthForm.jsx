@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { apiClient } from '@/api/client';
+import { apiClient, cleanEmail } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -31,7 +31,7 @@ export default function HealthForm() {
       const allConnections = await apiClient.entities.ConnectionRequest.filter();
       return allConnections.filter((connection) => {
         const status = String(connection.status || '').toLowerCase();
-        const byEmail = connection.patient_email === user?.email;
+        const byEmail = cleanEmail(connection.patient_email) === cleanEmail(user?.email);
         const byName = connection.patient_name === user?.full_name;
         return status === 'accepted' && (byEmail || byName);
       });
@@ -43,11 +43,12 @@ export default function HealthForm() {
   const connectedDoctors = useMemo(() => {
     const uniqueDoctors = new Map();
     connections.forEach((connection) => {
-      if (!connection.doctor_email) return;
-      if (!uniqueDoctors.has(connection.doctor_email)) {
-        uniqueDoctors.set(connection.doctor_email, {
-          email: connection.doctor_email,
-          name: connection.doctor_name || connection.doctor_email,
+      const docEmail = cleanEmail(connection.doctor_email);
+      if (!docEmail) return;
+      if (!uniqueDoctors.has(docEmail)) {
+        uniqueDoctors.set(docEmail, {
+          email: docEmail,
+          name: connection.doctor_name || docEmail,
         });
       }
     });
@@ -61,7 +62,7 @@ export default function HealthForm() {
     queryFn: async () => {
       const allSubmissions = await apiClient.entities.HealthFormSubmission.filter();
       return allSubmissions.filter((submission) => {
-        const byEmail = submission.patient_email === user?.email;
+        const byEmail = cleanEmail(submission.patient_email) === cleanEmail(user?.email);
         const byName = submission.patient_name === user?.full_name;
         return byEmail || byName;
       });
@@ -81,7 +82,7 @@ export default function HealthForm() {
         allForms.push(...f);
       }
       const existingSubIds = submissions.map(s => s.form_id);
-      return allForms.filter(f => (!f.patient_email || f.patient_email === user.email) && !existingSubIds.includes(f.id));
+      return allForms.filter(f => (!f.patient_email || cleanEmail(f.patient_email) === cleanEmail(user.email)) && !existingSubIds.includes(f.id));
     },
     enabled: doctorEmails.length > 0,
     initialData: [],
@@ -106,9 +107,9 @@ export default function HealthForm() {
       await apiClient.entities.HealthFormSubmission.create({
         form_id: form.id,
         form_title: form.title,
-        patient_email: user.email,
+        patient_email: cleanEmail(user.email),
         patient_name: user.full_name,
-        doctor_email: form.doctor_email,
+        doctor_email: cleanEmail(form.doctor_email),
         answers: formAnswers,
         created_date: new Date().toISOString(),
       });

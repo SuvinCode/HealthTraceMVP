@@ -137,24 +137,7 @@ export default function Signup() {
                 {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Create Account'}
               </Button>
 
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-slate-200" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-slate-400">Or signup with</span>
-                </div>
-              </div>
 
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full h-11 border-slate-200 hover:bg-slate-50 transition-colors"
-                onClick={() => googleLogin()}
-              >
-                <Chrome className="w-4 h-4 mr-2" />
-                Google
-              </Button>
             </CardContent>
             <CardFooter className="pt-2">
               <p className="text-sm text-center w-full text-slate-500">

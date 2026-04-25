@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { apiClient } from '@/api/client';
+import { apiClient, cleanEmail } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO, subDays, isToday, eachDayOfInterval, startOfDay } from 'date-fns';
@@ -264,7 +264,7 @@ export default function Diary() {
     queryFn: async () => {
       const all = await apiClient.entities.DiaryEntry.filter();
       return all
-        .filter(e => e.patient_email === user?.email)
+        .filter(e => cleanEmail(e.patient_email) === cleanEmail(user?.email))
         .sort((a, b) => b.date.localeCompare(a.date));
     },
     enabled: !isDoctor && !!user?.email,

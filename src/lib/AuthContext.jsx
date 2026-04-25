@@ -40,6 +40,16 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
     try {
       setIsLoadingAuth(true);
+      
+      // Handle Google sync if needed
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const role = params.get('role');
+      
+      if (token && token.includes('@')) {
+        await apiClient.auth.googleSync(token, role || 'user');
+      }
+
       const currentUser = apiClient.auth.me();
       setUser(currentUser);
       setIsAuthenticated(!!currentUser);
@@ -87,8 +97,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const googleLogin = () => {
-    apiClient.auth.googleLogin();
+  const googleLogin = (role = 'user') => {
+    apiClient.auth.googleLogin(role);
   };
 
   return (

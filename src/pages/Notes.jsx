@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { apiClient } from '@/api/client';
+import { apiClient, cleanEmail } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -180,10 +180,10 @@ function NewNoteDialog({ open, onClose, connections, doctorEmail, onSaved }) {
 
   const handleSave = async () => {
     if (!content.trim()) { toast.error('Note content is required'); return; }
-    const conn = connections.find(c => c.patient_email === patientEmail);
+    const conn = connections.find(c => cleanEmail(c.patient_email) === cleanEmail(patientEmail));
     await onSaved({
-      doctor_email: doctorEmail,
-      patient_email: patientEmail === 'none' ? null : patientEmail,
+      doctor_email: cleanEmail(doctorEmail),
+      patient_email: patientEmail === 'none' ? null : cleanEmail(patientEmail),
       patient_name: conn?.patient_name || null,
       content: content.trim(),
       input_type: inputType,
@@ -338,7 +338,7 @@ export default function Notes() {
 
   const { data: connections = [] } = useQuery({
     queryKey: ['doctor-connections', user?.email],
-    queryFn: () => apiClient.entities.ConnectionRequest.filter({ doctor_email: user?.email, status: 'accepted' }),
+    queryFn: () => apiClient.entities.ConnectionRequest.filter({ doctor_email: cleanEmail(user?.email), status: 'accepted' }),
     enabled: !!user?.email,
   });
 
@@ -347,7 +347,7 @@ export default function Notes() {
     queryFn: async () => {
       const all = await apiClient.entities.DoctorNote.filter();
       return all
-        .filter(n => n.doctor_email === user?.email)
+        .filter(n => cleanEmail(n.doctor_email) === cleanEmail(user?.email))
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     },
     enabled: !!user?.email,

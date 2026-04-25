@@ -3,7 +3,7 @@
 // The "Diary" name now belongs to the mood & journal feature.
 
 import { useState, useMemo } from 'react';
-import { apiClient } from '@/api/client';
+import { apiClient, cleanEmail } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -61,7 +61,7 @@ export default function MyDay() {
     queryFn: async () => {
       const allTasks = await apiClient.entities.MedicationTask.filter();
       return allTasks.filter((task) => {
-        const byEmail = task.patient_email === user?.email;
+        const byEmail = cleanEmail(task.patient_email) === cleanEmail(user?.email);
         const byName = task.patient_name === user?.full_name;
         return byEmail || byName;
       });
@@ -75,7 +75,7 @@ export default function MyDay() {
     queryFn: async () => {
       const allAppointments = await apiClient.entities.Appointment.filter();
       return allAppointments.filter((appointment) => {
-        const byEmail = appointment.patient_email === user?.email;
+        const byEmail = cleanEmail(appointment.patient_email) === cleanEmail(user?.email);
         const byName = appointment.patient_name === user?.full_name;
         return byEmail || byName;
       });
@@ -88,7 +88,7 @@ export default function MyDay() {
     queryKey: ['my-diary', user?.email],
     queryFn: async () => {
       const all = await apiClient.entities.DiaryEntry.filter();
-      return all.filter(e => e.patient_email === user?.email);
+      return all.filter(e => cleanEmail(e.patient_email) === cleanEmail(user?.email));
     },
     enabled: !!user?.email,
     initialData: [],

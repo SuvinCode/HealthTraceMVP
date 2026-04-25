@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiClient } from '@/api/client';
+import { apiClient, cleanEmail } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,14 +34,14 @@ export default function CreateAppointment() {
 
   const { data: connections } = useQuery({
     queryKey: ['my-connections', user?.email],
-    queryFn: () => apiClient.entities.ConnectionRequest.filter({ patient_email: user?.email, status: 'accepted' }),
+    queryFn: () => apiClient.entities.ConnectionRequest.filter({ patient_email: cleanEmail(user?.email), status: 'accepted' }),
     initialData: [],
   });
 
   const { data: existingAppts } = useQuery({
     queryKey: ['doctor-appointments', doctorEmail, date],
     queryFn: () => apiClient.entities.Appointment.filter({
-      doctor_email: doctorEmail,
+      doctor_email: cleanEmail(doctorEmail),
       date: format(date, 'yyyy-MM-dd'),
       status: 'upcoming',
     }),
@@ -72,15 +72,15 @@ export default function CreateAppointment() {
       return;
     }
     setSaving(true);
-    const conn = connections.find(c => c.doctor_email === doctorEmail);
+    const conn = connections.find(c => cleanEmail(c.doctor_email) === cleanEmail(doctorEmail));
     await apiClient.entities.Appointment.create({
       title,
       description,
       date: format(date, 'yyyy-MM-dd'),
       time_slot: timeSlot,
-      patient_email: user.email,
+      patient_email: cleanEmail(user.email),
       patient_name: user.full_name,
-      doctor_email: doctorEmail,
+      doctor_email: cleanEmail(doctorEmail),
       doctor_name: conn?.doctor_name || '',
       status: 'upcoming',
     });

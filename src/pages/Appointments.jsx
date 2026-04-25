@@ -1,4 +1,4 @@
-import { apiClient } from '@/api/client';
+import { apiClient, cleanEmail } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,8 +22,8 @@ export default function Appointments() {
     queryFn: async () => {
       const all = await apiClient.entities.Appointment.filter();
       return all.filter(a => {
-        if (isDoctor) return a.doctor_email === user?.email || a.doctor_name === user?.full_name;
-        return a.patient_email === user?.email || a.patient_name === user?.full_name;
+        if (isDoctor) return cleanEmail(a.doctor_email) === cleanEmail(user?.email) || a.doctor_name === user?.full_name;
+        return cleanEmail(a.patient_email) === cleanEmail(user?.email) || a.patient_name === user?.full_name;
       });
     },
     enabled: !!user?.email,
