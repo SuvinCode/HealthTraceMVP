@@ -308,10 +308,20 @@ def apple_health_webhook():
     # Health Auto Export wraps custom JSON differently depending on config
     # We dynamically calculate the value by filtering for today's points
     import datetime
-    today_local = datetime.datetime.now()
-    today_str = today_local.strftime('%Y-%m-%d')
-    
+    server_today_str = datetime.datetime.now().strftime('%Y-%m-%d')
     metrics_received = payload.get('data', {}).get('metrics', [])
+    
+    # Infer the correct local date from the payload to avoid Server UTC timezone issues
+    inferred_today_str = None
+    for m in metrics_received:
+        if m.get('data'):
+            last_point = m['data'][-1]
+            date_str = last_point.get('date', '')
+            if len(date_str) >= 10:
+                inferred_today_str = date_str[:10]
+                break
+    today_str = inferred_today_str or server_today_str
+    
     for metric in metrics_received:
         metric_name = metric.get('name')
         
@@ -334,7 +344,9 @@ def apple_health_webhook():
             # Format as int if whole, else round
             extracted_value = int(total_qty) if total_qty.is_integer() else round(total_qty, 2)
             
-        # Only save if we actually got a value
+        # Only save if we actually got a value or if total_qty was 0 (meaning valid but no data)
+        # We save 0 so the UI can at least show it, except if the user just didn't track it.
+        # But Health Auto Export typically doesn't send metrics at all if there is no data.
         if extracted_value is not None:
             new_record = {
                 "id": generate_id(),
