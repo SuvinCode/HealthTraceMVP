@@ -44,23 +44,23 @@ const TEAM = [
 const FEATURES = [
   { 
     title: 'Seamless Connection', 
-    video: '/videos/Connecting doctor and patients.mp4'
+    video: 'videos/Connecting_doctor_and_patients.mp4'
   },
   { 
     title: 'Precision Medication', 
-    video: '/videos/Assigning medication.mp4'
+    video: 'videos/Assigning_medication.mp4'
   },
   { 
     title: 'Intuitive Diary', 
-    video: '/videos/Diary.mp4'
+    video: 'videos/Diary.mp4'
   },
   { 
     title: 'Smart Appointments', 
-    video: '/videos/Appointments.mp4'
+    video: 'videos/Appointments.mp4'
   },
   { 
     title: 'Custom Health Forms', 
-    video: '/videos/Creating a health form.mp4'
+    video: 'videos/Creating_a_health_form.mp4'
   },
 ];
 
@@ -441,7 +441,7 @@ export default function Landing() {
                 }}
               >
                 <video 
-                  src={feature.video}
+                  src={`${import.meta.env.BASE_URL}${feature.video}`}
                   autoPlay 
                   loop 
                   muted 
