@@ -238,7 +238,7 @@ export default function Onboarding() {
 
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">3</div>
-                  <div className="text-sm leading-relaxed text-muted-foreground">Under <span className="font-semibold text-foreground">Automation Type</span>, select <span className="font-semibold text-foreground">REST API</span>. This lets HealthTrace receive your data automatically.</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Under <span className="font-semibold text-foreground">Automation Type</span>, select <span className="font-semibold text-foreground">REST API</span>.</div>
                 </div>
 
                 <div className="flex gap-3">
@@ -258,7 +258,7 @@ export default function Onboarding() {
 
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">5</div>
-                  <div className="text-sm leading-relaxed text-muted-foreground">Scroll down to <span className="font-semibold text-foreground">Export Settings</span> and set <span className="font-semibold text-foreground">Export Version</span> to <span className="font-semibold text-foreground">v1</span>. This is critical for data to sync.</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Scroll down to <span className="font-semibold text-foreground">Export Settings</span> and set <span className="font-semibold text-foreground">Export Version</span> to <span className="font-semibold text-foreground">v1</span>.</div>
                 </div>
 
                 <div className="flex gap-3">
@@ -268,12 +268,12 @@ export default function Onboarding() {
 
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">7</div>
-                  <div className="text-sm leading-relaxed text-muted-foreground">Scroll back up and tap <span className="font-semibold text-foreground">Update</span> in the top right corner to save.</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Scroll back up and tap <span className="font-semibold text-foreground">Update</span> in the top right corner to save everything.</div>
                 </div>
 
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">8</div>
-                  <div className="text-sm leading-relaxed text-muted-foreground">Scroll all the way down to <span className="font-semibold text-foreground">Help & Troubleshooting</span> and tap <span className="font-semibold text-foreground">Manual Export</span>. You should see <span className="font-semibold text-foreground text-green-600">Response: 200</span>!</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Scroll all the way down to <span className="font-semibold text-foreground">Export Existing Data</span> and tap <span className="font-semibold text-foreground">Manual Export</span>, and then tap <span className="font-semibold text-foreground">Begin Export</span>. You should see <span className="font-semibold text-foreground text-green-600">Response: 200</span> and a success message!</div>
                 </div>
               </div>
 
