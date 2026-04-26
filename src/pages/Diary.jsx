@@ -273,6 +273,7 @@ export default function Diary() {
     enabled: !isDoctor && !!user?.email,
   });
 
+  console.log("🔑 user object at biometrics query:", user?.email, user?.id);
   const { data: biometrics = [] } = useQuery({
     queryKey: ['biometrics', user?.email],
     queryFn: async () => {
