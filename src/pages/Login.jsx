@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Mail, Lock, Loader2, Chrome } from 'lucide-react';
+import { Mail, Lock, Loader2, Chrome, Stethoscope, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -101,7 +101,37 @@ export default function Login() {
 
 
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4 pt-2">
+            <CardFooter className="flex flex-col gap-4 pt-2">
+              <div className="w-full flex flex-col gap-2">
+                <div className="relative flex items-center py-2">
+                  <div className="flex-grow border-t border-slate-200"></div>
+                  <span className="flex-shrink mx-4 text-[10px] uppercase tracking-widest text-slate-400 font-bold">Quick Demo Login</span>
+                  <div className="flex-grow border-t border-slate-200"></div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    className="h-10 text-xs gap-2 border-slate-200 hover:bg-slate-50 transition-all font-medium"
+                    onClick={() => setFormData({ email: 'dr.smith@example.com', password: 'smith123' })}
+                  >
+                    <Stethoscope className="w-3.5 h-3.5 text-primary" />
+                    Doctor
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    className="h-10 text-xs gap-2 border-slate-200 hover:bg-slate-50 transition-all font-medium"
+                    onClick={() => setFormData({ email: 'alice@example.com', password: 'alice123' })}
+                  >
+                    <User className="w-3.5 h-3.5 text-blue-500" />
+                    Patient
+                  </Button>
+                </div>
+              </div>
+
               <p className="text-sm text-center text-slate-500">
                 Don't have an account?{' '}
                 <Link to="/signup" className="text-primary font-medium hover:underline">
