@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { apiClient, cleanEmail } from '@/api/client';
+import { apiClient, cleanEmail, API_BASE_URL } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO, subDays, isToday, eachDayOfInterval, startOfDay } from 'date-fns';
@@ -78,7 +78,7 @@ function AISummaryDialog({ open, onClose, entries, patientName }) {
         notes: e.notes || '(no notes)',
       }));
 
-      fetch(`${import.meta.env.VITE_API_URL}/proxy/chat`, {
+      fetch(`${API_BASE_URL}/proxy/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -220,8 +220,6 @@ export default function Diary() {
       recorder.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         streamRef.current = null;
-        const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-        if (!apiKey) { setMicError('Add VITE_OPENAI_API_KEY to .env for voice transcription.'); return; }
         setIsTranscribing(true);
         try {
           const blob = new Blob(chunksRef.current, { type: mimeType });
@@ -384,10 +382,15 @@ Provide exactly 2 very short, clinical, and empathetic sentences. One summarizin
           }],
         }),
       });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Server error: ${res.status}`);
+      }
       const data = await res.json();
       setBioAnalysis(data.choices?.[0]?.message?.content || 'Unable to generate analysis.');
-    } catch {
-      setBioAnalysis('Error generating analysis. Please try again later.');
+    } catch (err) {
+      console.error("AI Analysis Error:", err);
+      setBioAnalysis(`Error: ${err.message || 'Please try again later.'}`);
     } finally {
       setIsAnalyzingBio(false);
     }

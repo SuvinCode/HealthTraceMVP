@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { apiClient, cleanEmail } from '@/api/client';
+import { apiClient, cleanEmail, API_BASE_URL } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -75,7 +75,7 @@ function DiaryAISummaryDialog({ open, onClose, entries, patientName, biometrics,
         notes: e.notes || '(no notes)',
       }));
 
-      fetch(`${import.meta.env.VITE_API_URL}/proxy/chat`, {
+      fetch(`${API_BASE_URL}/proxy/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
