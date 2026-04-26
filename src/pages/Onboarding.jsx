@@ -89,7 +89,7 @@ export default function Onboarding() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        className="w-full max-w-lg"
       >
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mx-auto mb-4 shadow-md">
@@ -228,31 +228,52 @@ export default function Onboarding() {
               <div className="space-y-4">
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">1</div>
-                  <div className="text-sm leading-relaxed text-muted-foreground">Download <span className="font-semibold text-foreground">Health Auto Export</span> from the iOS App Store. Open it and choose the <span className="font-semibold text-foreground">free tier</span> (you can close or skip any subscription prompts).</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Download <span className="font-semibold text-foreground">Health Auto Export</span> from the iOS App Store. Open it and tap <span className="font-semibold text-foreground">Skip</span> or <span className="font-semibold text-foreground">Continue for Free</span> if it asks you to subscribe.</div>
                 </div>
-                
+
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">2</div>
-                  <div className="text-sm leading-relaxed text-muted-foreground">Go to the <span className="font-semibold text-foreground">Automated</span> tab at the left sidebar. Tap <span className="font-semibold text-foreground">New Automation</span>, click enabled, and choose <span className="font-semibold text-foreground">REST API</span> (or Export to REST API).</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Tap the <span className="font-semibold text-foreground">Automated</span> tab on the left. Then tap <span className="font-semibold text-foreground">New Automation</span> and make sure the toggle at the top says <span className="font-semibold text-foreground">Enabled</span>.</div>
                 </div>
 
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">3</div>
-                  <div className="text-sm leading-relaxed text-muted-foreground">Under the <span className="font-semibold text-foreground">API URL</span> field, paste your personal HealthTrace webhook link:</div>
-                </div>
-
-                <div className="ml-9 p-3 bg-muted/50 rounded-xl border border-border flex items-center gap-2">
-                  <div className="flex-1 truncate text-xs font-mono text-muted-foreground" title={webhookUrl}>
-                    {webhookUrl}
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={copyToClipboard} className="h-8 w-8 shrink-0 relative transition-transform active:scale-95 text-foreground hover:bg-background">
-                    {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                  </Button>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Under <span className="font-semibold text-foreground">Automation Type</span>, select <span className="font-semibold text-foreground">REST API</span>. This lets HealthTrace receive your data automatically.</div>
                 </div>
 
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">4</div>
-                  <div className="text-sm leading-relaxed text-muted-foreground">Continue to the next step, select the metrics you want to safely share, and scroll up and click on <span className="font-semibold text-foreground">update</span> in the automation you created. Data will now flow automatically!</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground flex-1">
+                    Tap the <span className="font-semibold text-foreground">URL field</span> and paste your personal HealthTrace link:
+                    <div className="mt-2 p-3 bg-muted/50 rounded-xl border border-border flex items-center gap-2">
+                      <div className="flex-1 break-all text-xs font-mono text-muted-foreground" title={webhookUrl}>
+                        {webhookUrl}
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={copyToClipboard} className="h-8 w-8 shrink-0 relative transition-transform active:scale-95 text-foreground hover:bg-background">
+                        {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">5</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Scroll down to <span className="font-semibold text-foreground">Export Settings</span> and set <span className="font-semibold text-foreground">Export Version</span> to <span className="font-semibold text-foreground">v1</span>. This is critical for data to sync.</div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">6</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Scroll down to <span className="font-semibold text-foreground">Data Type Settings</span> and tap <span className="font-semibold text-foreground">Select Health Metrics</span>. Choose the metrics you'd like to share (Sleep, Steps, Screen Time).</div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">7</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Scroll back up and tap <span className="font-semibold text-foreground">Update</span> in the top right corner to save.</div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-muted-foreground mt-0.5">8</div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">Scroll all the way down to <span className="font-semibold text-foreground">Help & Troubleshooting</span> and tap <span className="font-semibold text-foreground">Manual Export</span>. You should see <span className="font-semibold text-foreground text-green-600">Response: 200</span>!</div>
                 </div>
               </div>
 
