@@ -1,12 +1,17 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Calendar, ClipboardList, Plus, Users, LayoutDashboard,
-  LogOut, Bell, Menu, X, FileText, UserPlus, Sun, BookOpen, NotebookPen
+  LogOut, Bell, Menu, X, FileText, UserPlus, Sun, BookOpen, NotebookPen,
+  Settings, Smartphone, MessageSquare, Bug, Check, Copy, Loader2
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { apiClient } from '@/api/client';
+import { apiClient, API_BASE_URL } from '@/api/client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 import NotificationBell from './NotificationBell';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -123,14 +128,7 @@ export default function AppLayout() {
             </motion.div>
             <div className="flex items-center gap-1">
               <NotificationBell />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-foreground"
-                onClick={() => logout()}
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
+              <SettingsMenu />
               <Button
                 variant="ghost"
                 size="icon"
@@ -203,5 +201,176 @@ export default function AppLayout() {
         </motion.div>
       </main>
     </div>
+  );
+}
+
+function SettingsMenu() {
+  const { user, logout } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState('menu'); // menu, apple_health, review, bug
+  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  // Forms state
+  const [name, setName] = useState(user?.full_name || '');
+  const [content, setContent] = useState('');
+
+  const baseUrl = API_BASE_URL.replace(/\/$/, "").trim();
+  const webhookUrl = (baseUrl + "/webhook/apple-health?user_email=" + (user?.email?.toLowerCase() || "")).replace(/\s/g, "");
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(webhookUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSubmitReport = async (subject) => {
+    setLoading(true);
+    try {
+      await fetch('https://formsubmit.co/ajax/0dc615d475c9bb4377bc1572ec4af891', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ name, message: content, _subject: subject, email: user?.email })
+      });
+      toast.success('Submitted successfully!');
+      setView('menu');
+      setContent('');
+    } catch {
+      toast.error('Failed to submit. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setView('menu'); }}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+          <Settings className="w-4 h-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-xl p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
+        <div className="flex flex-col h-[500px]">
+          <div className="p-6 border-b bg-card sm:flex items-center justify-between">
+            <DialogTitle className="font-heading font-bold text-xl flex items-center gap-2">
+              {view === 'menu' && <>Settings</>}
+              {view === 'apple_health' && <><Smartphone className="w-5 h-5 text-primary" /> Apple Health Setup</>}
+              {view === 'review' && <><MessageSquare className="w-5 h-5 text-primary" /> Leave a Review</>}
+              {view === 'bug' && <><Bug className="w-5 h-5 text-red-500" /> Report a Bug</>}
+            </DialogTitle>
+            {view !== 'menu' && (
+              <Button variant="ghost" size="sm" onClick={() => setView('menu')} className="text-xs">Back to menu</Button>
+            )}
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 bg-background custom-scrollbar">
+            {view === 'menu' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <MenuButton 
+                  icon={Smartphone} 
+                  label="Connect Apple Health" 
+                  desc="Sync your metrics" 
+                  onClick={() => setView('apple_health')} 
+                />
+                <MenuButton 
+                  icon={MessageSquare} 
+                  label="Leave a Review" 
+                  desc="Share your feedback" 
+                  onClick={() => setView('review')} 
+                />
+                <MenuButton 
+                  icon={Bug} 
+                  label="Report a Bug" 
+                  desc="Help us improve" 
+                  onClick={() => setView('bug')} 
+                  color="text-red-500"
+                />
+                <MenuButton 
+                  icon={LogOut} 
+                  label="Log Out" 
+                  desc="End your session" 
+                  onClick={logout} 
+                  color="text-muted-foreground"
+                />
+              </div>
+            )}
+
+            {view === 'apple_health' && (
+              <div className="space-y-6 text-sm">
+                {[
+                  { s: 1, t: "Download", d: "Download Health Auto Export from the iOS App Store. Open it and tap Skip or Continue for Free if it asks you to subscribe." },
+                  { s: 2, t: "Automation", d: "Tap the Automated tab on the left. Then tap New Automation and make sure the toggle at the top says Enabled." },
+                  { s: 3, t: "Type", d: "Under Automation Type, select REST API." },
+                  { s: 4, t: "URL", d: "Tap the URL field and paste your personal HealthTrace link below.", custom: (
+                    <div className="mt-3 p-3 bg-muted rounded-xl border flex items-center gap-2">
+                      <code className="flex-1 break-all text-[10px] font-mono leading-tight">{webhookUrl}</code>
+                      <Button variant="outline" size="sm" onClick={handleCopy} className="h-8 shrink-0">
+                        {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                      </Button>
+                    </div>
+                  )},
+                  { s: 5, t: "Version", d: "Scroll down to Export Settings and set Export Version to v1." },
+                  { s: 6, t: "Metrics", d: "Scroll down to Data Type Settings and tap Select Health Metrics. Choose Sleep, Steps, and Screen Time." },
+                  { s: 7, t: "Save", d: "Scroll back up and tap Update in the top right corner to save everything." },
+                  { s: 8, t: "Verify", d: "Scroll all the way down to Export Existing Data and tap Manual Export, and then tap Begin Export. You should see Response: 200!" },
+                ].map(step => (
+                  <div key={step.s} className="flex gap-4">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">{step.s}</div>
+                    <div className="flex-1">
+                      <p className="font-bold mb-1">{step.t}</p>
+                      <p className="text-muted-foreground leading-relaxed">{step.d}</p>
+                      {step.custom}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {(view === 'review' || view === 'bug') && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Your Name</label>
+                  <Input value={name} onChange={e => setName(e.target.value)} placeholder="Full Name" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    {view === 'review' ? 'Your Feedback' : 'Bug Description'}
+                  </label>
+                  <Textarea 
+                    value={content} 
+                    onChange={e => setContent(e.target.value)} 
+                    placeholder={view === 'review' ? "How's your experience?" : "What went wrong?"}
+                    rows={6}
+                  />
+                </div>
+                <Button 
+                  className="w-full h-12 rounded-xl bg-primary" 
+                  disabled={loading}
+                  onClick={() => handleSubmitReport(view === 'review' ? 'App Review' : 'Bug Report')}
+                >
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : 'Submit'}
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+      <style>{`.custom-scrollbar::-webkit-scrollbar { width: 4px; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }`}</style>
+    </Dialog>
+  );
+}
+
+function MenuButton({ icon: Icon, label, desc, onClick, color = "text-primary" }) {
+  return (
+    <button 
+      onClick={onClick}
+      className="p-4 bg-card hover:bg-muted border rounded-2xl text-left transition-all hover:scale-[1.02] active:scale-[0.98] group"
+    >
+      <div className={`w-10 h-10 rounded-xl bg-background border flex items-center justify-center mb-3 group-hover:bg-card transition-colors`}>
+        <Icon className={`w-5 h-5 ${color}`} />
+      </div>
+      <p className="font-bold text-sm mb-0.5">{label}</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{desc}</p>
+    </button>
   );
 }
