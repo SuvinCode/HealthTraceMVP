@@ -17,25 +17,25 @@ const STEPS = [
 ];
 
 const TEAM = [
-  { 
-    name: 'Suvin', 
+  {
+    name: 'Suvin',
     role: 'Founder & CEO',
     linkedin: 'https://www.linkedin.com/in/suvin-chin-90389b157/',
     github: 'https://github.com/SuvinCode'
   },
-  { 
-    name: 'Alex', 
+  {
+    name: 'Alex',
     role: 'CPO',
     github: 'https://github.com/slpyalex'
   },
-  { 
-    name: 'Tanmayi', 
+  {
+    name: 'Tanmayi',
     role: 'CTO',
     linkedin: 'https://www.linkedin.com/in/tanmayi-mendhe-44ab34278/',
     github: 'https://github.com/Queen-Tanmayi-09'
   },
-  { 
-    name: 'Ian', 
+  {
+    name: 'Ian',
     role: 'CFO',
     linkedin: 'https://www.linkedin.com/in/ian-chang-66464225a/',
     github: 'https://github.com/ianxxc'
@@ -43,54 +43,55 @@ const TEAM = [
 ];
 
 const FEATURES = [
-  { 
-    title: 'Seamless Connection', 
+  {
+    title: 'Seamless Connection',
     video: 'videos/Connecting_doctor_and_patients.mp4'
   },
-  { 
-    title: 'Precision Medication', 
+  {
+    title: 'Precision Medication',
     video: 'videos/Assigning_medication.mp4'
   },
-  { 
-    title: 'Intuitive Diary', 
+  {
+    title: 'Intuitive Diary',
     video: 'videos/Diary.mp4'
   },
-  { 
-    title: 'Smart Appointments', 
+  {
+    title: 'Smart Appointments',
     video: 'videos/Appointments.mp4'
   },
-  { 
-    title: 'Custom Health Forms', 
+  {
+    title: 'Custom Health Forms',
     video: 'videos/Creating_a_health_form.mp4'
   },
 ];
 
+
 const FOOTER_CONTENT = {
   how: {
-    title: "How to use HealthTrace",
+    title: "How to Use HealthTrace",
     icon: Info,
     sections: [
-      { t: "1. Baseline", d: "Start by logging your symptoms for 72 hours. This establishes your metabolic baseline." },
-      { t: "2. Track", d: "Connect Witness or log manually in the Diary. We track energy, cognitive load, and pain." },
-      { t: "3. Analyze", d: "Our algorithms look for PEM (Post-Exertional Malaise) triggers and patterns." },
-      { t: "4. Report", d: "Generate clinical-grade reports to show your specialist exactly what's happening." }
+      { t: "Patients: Manage Care", d: "Fill health forms, track medications, and manage appointments on your clinical calendar." },
+      { t: "Patients: Daily Diary", d: "Securely log your symptoms and mood to share progress with your healthcare team." },
+      { t: "Doctors: Connected Care", d: "Connect with patients and monitor their real-time health data from your dashboard." },
+      { t: "Doctors: Workflow", d: "Assign custom forms, manage clinical notes, and generate clinical-grade progress reports." }
     ]
   },
-  calc: {
-    title: "The Math of ME/CFS",
+  ai_evaluation: {
+    title: "Ai Evaluation",
     icon: Shield,
     sections: [
-      { t: "Energy Envelope", d: "Calculated using HRV (Heart Rate Variability) and RHR (Resting Heart Rate) deviations." },
-      { t: "Cognitive Load", d: "A proxy measurement based on task complexity and duration logged in your diary." },
-      { t: "Pacing Index", d: "A real-time score indicating your proximity to your 'crash' threshold." }
+      { t: "Metric Analysis", d: "Our Ai evaluates sleep analysis, step count, and screen time to find health correlations." },
+      { t: "Note Summarization", d: "Voice and written notes are analyzed to extract key clinical trends and symptoms." },
+      { t: "Safety First", d: "All Ai processing is done with strict medical-grade privacy and encryption standards." }
     ]
   },
   data: {
     title: "Your Data, Secured",
     icon: Lock,
     sections: [
-      { t: "Biometrics", d: "Heart rate, HRV, and sleep trends from connected wearables." },
-      { t: "Symptom Logs", d: "Daily logs of brain fog, pain, and energy levels." },
+      { t: "Biometrics", d: "Sleep analysis, step count and screen time from Apple Health or connected wearables." },
+      { t: "Notes", d: "The voice notes and written notes you make are private and secure." },
       { t: "Encryption", d: "All health data is AES-256 encrypted. We never sell your data." }
     ]
   },
@@ -163,12 +164,12 @@ export default function Landing() {
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     const name = isAnonymous ? 'Anonymous' : reviewName || 'Anonymous';
-    
+
     try {
       // Use FormSubmit.co for direct email delivery without backend SMTP config.
       await fetch('https://formsubmit.co/ajax/suvinbusiness@gmail.com', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
@@ -178,7 +179,7 @@ export default function Landing() {
           _subject: `New Review from ${name}`
         })
       });
-      
+
       setReviewSent(true);
       setReviewName('');
       setReviewComment('');
@@ -193,111 +194,111 @@ export default function Landing() {
       {/* Hero gradient wrapper */}
       <div className="bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-100 via-red-50/40 to-background overflow-hidden">
 
-      {/* Navigation */}
-      <motion.nav 
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 max-w-7xl mx-auto border-b border-red-100/60"
-      >
-        <div className="flex items-center gap-2 sm:gap-3">
-          <motion.img 
-            whileHover={{ rotate: 10, scale: 1.1 }}
-            src={`${import.meta.env.BASE_URL}favicon.svg`} alt="HealthTrace logo" className="w-10 h-10 sm:w-14 sm:h-14 object-contain" 
-          />
-          <span className="font-heading font-bold text-lg sm:text-2xl tracking-tight">
-            <span style={{ color: '#CC2222' }}>Health</span><span style={{ color: '#1E2D4E' }}>Trace</span>
-          </span>
-        </div>
-        <div className="flex gap-1 sm:gap-3">
-          <button
-            onClick={() => navigate('/login')}
-            className="px-3 sm:px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
-          >
-            Log in
-          </button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/signup')}
-            className="bg-foreground text-background px-4 sm:px-5 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-all shadow-sm whitespace-nowrap"
-          >
-            Create account
-          </motion.button>
-        </div>
-      </motion.nav>
+        {/* Navigation */}
+        <motion.nav
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="sticky top-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 max-w-7xl mx-auto border-b border-red-100/60"
+        >
+          <div className="flex items-center gap-2 sm:gap-3">
+            <motion.img
+              whileHover={{ rotate: 10, scale: 1.1 }}
+              src={`${import.meta.env.BASE_URL}favicon.svg`} alt="HealthTrace logo" className="w-10 h-10 sm:w-14 sm:h-14 object-contain"
+            />
+            <span className="font-heading font-bold text-lg sm:text-2xl tracking-tight">
+              <span style={{ color: '#CC2222' }}>Health</span><span style={{ color: '#1E2D4E' }}>Trace</span>
+            </span>
+          </div>
+          <div className="flex gap-1 sm:gap-3">
+            <button
+              onClick={() => navigate('/login')}
+              className="px-3 sm:px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+            >
+              Log in
+            </button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/signup')}
+              className="bg-foreground text-background px-4 sm:px-5 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-all shadow-sm whitespace-nowrap"
+            >
+              Create account
+            </motion.button>
+          </div>
+        </motion.nav>
 
-      {/* Hero */}
-      <section className="px-8 pt-24 pb-32 max-w-5xl mx-auto text-center relative">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="inline-block px-3 py-1 border border-primary text-primary text-[10px] uppercase tracking-[0.2em] rounded-full mb-8 font-bold font-heading"
-        >
-          Chronic Fatigue • ME/CFS • Invisible Illness
-        </motion.div>
-        <motion.h1 
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="text-6xl md:text-7xl font-heading font-bold leading-[1.1] mb-8 tracking-tight"
-        >
-          Your symptoms are real. <br />
-          <motion.span 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 1 }}
-            className="text-muted-foreground font-normal italic" 
-            style={{ fontFamily: 'Playfair Display, Georgia, serif' }}
+        {/* Hero */}
+        <section className="px-8 pt-24 pb-32 max-w-5xl mx-auto text-center relative">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="inline-block px-3 py-1 border border-primary text-primary text-[10px] uppercase tracking-[0.2em] rounded-full mb-8 font-bold font-heading"
           >
-            Now you can prove it.
-          </motion.span>
-        </motion.h1>
-        <motion.p 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.7, delay: 0.4 }}
-          className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 font-light leading-relaxed"
-        >
-          HealthTrace silently tracks your energy, crashes, and patterns — then generates a clinical report your doctor can't ignore.
-        </motion.p>
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.7, delay: 0.6 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center"
-        >
-          <motion.button
-            whileHover={{ scale: 1.05, shadow: "0px 10px 30px rgba(204, 34, 34, 0.2)" }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/signup')}
-            className="bg-primary text-primary-foreground px-8 py-4 rounded-xl font-medium text-lg hover:opacity-90 transition-all"
+            Chronic Fatigue • ME/CFS • Invisible Illness
+          </motion.div>
+          <motion.h1
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="text-6xl md:text-7xl font-heading font-bold leading-[1.1] mb-8 tracking-tight"
           >
-            Start tracking free ↗
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05, backgroundColor: "rgba(0,0,0,0.02)" }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => scrollTo('how-it-works')}
-            className="bg-card border border-border px-8 py-4 rounded-xl font-medium text-lg hover:bg-muted transition-all"
+            Your symptoms are real. <br />
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8, duration: 1 }}
+              className="text-muted-foreground font-normal italic"
+              style={{ fontFamily: 'Playfair Display, Georgia, serif' }}
+            >
+              Now you can prove it.
+            </motion.span>
+          </motion.h1>
+          <motion.p
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 font-light leading-relaxed"
           >
-            See how it works
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05, shadow: "0px 10px 30px rgba(30, 45, 78, 0.2)" }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => scrollTo('reviews-section')}
-            style={{ backgroundColor: '#1E2D4E' }}
-            className="text-white px-8 py-4 rounded-xl font-medium text-lg hover:opacity-90 transition-all shadow-lg shadow-slate-900/10"
+            HealthTrace silently tracks your energy, crashes, and patterns — then generates a clinical report your doctor can't ignore.
+          </motion.p>
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.7, delay: 0.6 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            Leave a review
-          </motion.button>
-        </motion.div>
-      </section>
+            <motion.button
+              whileHover={{ scale: 1.05, shadow: "0px 10px 30px rgba(204, 34, 34, 0.2)" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/signup')}
+              className="bg-primary text-primary-foreground px-8 py-4 rounded-xl font-medium text-lg hover:opacity-90 transition-all"
+            >
+              Start tracking free ↗
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05, backgroundColor: "rgba(0,0,0,0.02)" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => scrollTo('how-it-works')}
+              className="bg-card border border-border px-8 py-4 rounded-xl font-medium text-lg hover:bg-muted transition-all"
+            >
+              See how it works
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05, shadow: "0px 10px 30px rgba(30, 45, 78, 0.2)" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => scrollTo('reviews-section')}
+              style={{ backgroundColor: '#1E2D4E' }}
+              className="text-white px-8 py-4 rounded-xl font-medium text-lg hover:opacity-90 transition-all shadow-lg shadow-slate-900/10"
+            >
+              Leave a review
+            </motion.button>
+          </motion.div>
+        </section>
       </div>{/* end hero gradient wrapper */}
 
       {/* Stats — dark strip */}
-      <motion.section 
+      <motion.section
         initial={{ opacity: 0, scale: 0.95 }}
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true, margin: '-100px' }}
@@ -305,7 +306,7 @@ export default function Landing() {
         className="px-8 py-24 bg-foreground text-background rounded-[40px] mx-4 shadow-2xl"
       >
         <div className="max-w-7xl mx-auto">
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 0.4 }}
             viewport={{ once: true }}
@@ -313,7 +314,7 @@ export default function Landing() {
           >
             The Reality
           </motion.p>
-          <motion.div 
+          <motion.div
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
@@ -322,7 +323,7 @@ export default function Landing() {
           >
             {STATS.map((stat, i) => (
               <motion.div key={i} variants={itemVariants} className="border-l border-background/10 pl-8">
-                <motion.div 
+                <motion.div
                   initial={{ scale: 0.5, opacity: 0 }}
                   whileInView={{ scale: 1, opacity: 1 }}
                   viewport={{ once: true }}
@@ -340,7 +341,7 @@ export default function Landing() {
 
       {/* How It Works */}
       <section id="how-it-works" className="px-8 py-32 max-w-7xl mx-auto">
-        <motion.h2 
+        <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -348,7 +349,7 @@ export default function Landing() {
         >
           Vision to Validation
         </motion.h2>
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -356,8 +357,8 @@ export default function Landing() {
           className="grid md:grid-cols-3 gap-8"
         >
           {STEPS.map((item, i) => (
-            <motion.div 
-              key={i} 
+            <motion.div
+              key={i}
               variants={itemVariants}
               whileHover={{ y: -10, transition: { duration: 0.2 } }}
               className="bg-card p-10 rounded-3xl border border-border hover:shadow-xl transition-shadow"
@@ -396,7 +397,7 @@ export default function Landing() {
               </div>
               <h3 className="text-2xl font-heading font-bold mb-4">Patient Account</h3>
               <p className="text-muted-foreground mb-8 font-light">Focus on your wellbeing while we handle the data tracking and clinical reporting.</p>
-              
+
               <ul className="space-y-4 mt-auto">
                 {[
                   'Mood & Symptom Diary with one-tap logging',
@@ -427,7 +428,7 @@ export default function Landing() {
               </div>
               <h3 className="text-2xl font-heading font-bold mb-4">Doctor Account</h3>
               <p className="text-white/60 mb-8 font-light">Optimise your clinical workflow with data-driven insights and AI-powered summaries.</p>
-              
+
               <ul className="space-y-4 mt-auto">
                 {[
                   'Real-time Clinical Monitoring & trend charts',
@@ -470,7 +471,7 @@ export default function Landing() {
               transition={{ delay: i * 0.1 }}
               className="bg-card rounded-[32px] border border-border overflow-hidden hover:shadow-2xl transition-all group"
             >
-              <div 
+              <div
                 className="aspect-video bg-muted relative overflow-hidden cursor-pointer group"
                 onClick={(e) => {
                   const video = e.currentTarget.querySelector('video');
@@ -482,15 +483,15 @@ export default function Landing() {
                   }
                 }}
               >
-                <video 
+                <video
                   src={`${import.meta.env.BASE_URL}${feature.video}`}
-                  autoPlay 
-                  loop 
-                  muted 
+                  autoPlay
+                  loop
+                  muted
                   playsInline
                   className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100"
                 />
-                
+
                 {/* Split Screen Labels */}
                 <div className="absolute inset-x-0 top-4 px-6 flex justify-between pointer-events-none">
                   <span className="text-[8px] uppercase tracking-[0.2em] font-bold bg-black/40 backdrop-blur-md px-2 py-1 rounded-md text-white/90 border border-white/10">Patient</span>
@@ -498,7 +499,7 @@ export default function Landing() {
                 </div>
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-                
+
                 {/* Fullscreen indicator on hover */}
                 <div className="absolute inset-x-0 bottom-4 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   <span className="text-[10px] uppercase tracking-widest font-bold bg-primary/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-white shadow-lg">Click to Fullscreen</span>
@@ -513,7 +514,7 @@ export default function Landing() {
       </section>
 
       {/* Testimonial */}
-      <motion.section 
+      <motion.section
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true, margin: '-100px' }}
@@ -530,7 +531,7 @@ export default function Landing() {
           >
             "Something like this has been needed in the medical space for a long time"
           </motion.blockquote>
-          <motion.cite 
+          <motion.cite
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
@@ -543,7 +544,7 @@ export default function Landing() {
 
       {/* Founding Team */}
       <section className="px-8 py-32 max-w-7xl mx-auto">
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 0.4 }}
           viewport={{ once: true }}
@@ -551,7 +552,7 @@ export default function Landing() {
         >
           Founding Team
         </motion.p>
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -559,8 +560,8 @@ export default function Landing() {
           className="grid grid-cols-2 md:grid-cols-4 gap-4"
         >
           {TEAM.map((member, i) => (
-            <motion.div 
-              key={i} 
+            <motion.div
+              key={i}
               variants={itemVariants}
               whileHover={{ y: -5 }}
               className="p-6 bg-card rounded-2xl border border-border text-center relative group overflow-hidden"
@@ -570,7 +571,7 @@ export default function Landing() {
               </div>
               <div className="font-heading font-bold text-sm">{member.name}</div>
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1 mb-4">{member.role}</div>
-              
+
               <div className="flex justify-center gap-3 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 {member.linkedin && (
                   <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
@@ -651,11 +652,10 @@ export default function Landing() {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={reviewSent}
-                className={`w-full py-5 rounded-2xl font-heading font-bold text-lg shadow-xl transition-all ${
-                  reviewSent 
-                    ? 'bg-green-500 text-white shadow-green-500/20' 
+                className={`w-full py-5 rounded-2xl font-heading font-bold text-lg shadow-xl transition-all ${reviewSent
+                    ? 'bg-green-500 text-white shadow-green-500/20'
                     : 'bg-primary text-primary-foreground shadow-primary/20 hover:opacity-95'
-                }`}
+                  }`}
               >
                 {reviewSent ? 'Review Sent! Thanks.' : 'Send'}
               </motion.button>
@@ -663,12 +663,12 @@ export default function Landing() {
           </motion.div>
         </div>
       </section>
-          
+
 
       {/* Documentation & Transparency Section */}
       <section className="px-8 py-32 max-w-7xl mx-auto border-t border-border mt-32">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <motion.div 
+          <motion.div
             whileHover={{ y: -5 }}
             onClick={() => setActiveModal('how')}
             className="p-8 bg-card rounded-[32px] border border-border cursor-pointer hover:shadow-xl transition-all group"
@@ -677,22 +677,22 @@ export default function Landing() {
               <Info className="w-6 h-6" />
             </div>
             <h3 className="text-xl font-heading font-bold mb-3">How to Use</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">A simple guide to baseline tracking and clinical reports.</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">A simple guide to baseline tracking and clinical reports connected for both parties.</p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             whileHover={{ y: -5 }}
-            onClick={() => setActiveModal('calc')}
+            onClick={() => setActiveModal('ai_evaluation')}
             className="p-8 bg-card rounded-[32px] border border-border cursor-pointer hover:shadow-xl transition-all group"
           >
             <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <Shield className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-heading font-bold mb-3">Calculations</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">Understand the HRV and energy algorithms behind your data.</p>
+            <h3 className="text-xl font-heading font-bold mb-3">Ai Evaluation</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">Learn which metrics Ai takes in consideration when generating a report.</p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             whileHover={{ y: -5 }}
             onClick={() => setActiveModal('data')}
             className="p-8 bg-card rounded-[32px] border border-border cursor-pointer hover:shadow-xl transition-all group"
@@ -704,7 +704,7 @@ export default function Landing() {
             <p className="text-sm text-muted-foreground leading-relaxed">How we collect and secure your sensitive health information.</p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             whileHover={{ y: -5 }}
             onClick={() => setActiveModal('terms')}
             className="p-8 bg-card rounded-[32px] border border-border cursor-pointer hover:shadow-xl transition-all group"
@@ -733,12 +733,12 @@ export default function Landing() {
                 Empowering patients with invisible illnesses to prove their symptoms and optimize their care through deep clinical insights.
               </p>
             </div>
-            
+
             <div>
               <h4 className="font-heading font-bold text-xs uppercase tracking-widest text-foreground/40 mb-6">Product</h4>
               <ul className="space-y-4">
                 <li><button onClick={() => setActiveModal('how')} className="text-muted-foreground hover:text-primary text-sm transition-colors">How it works</button></li>
-                <li><button onClick={() => setActiveModal('calc')} className="text-muted-foreground hover:text-primary text-sm transition-colors">Calculations</button></li>
+                <li><button onClick={() => setActiveModal('ai_evaluation')} className="text-muted-foreground hover:text-primary text-sm transition-colors">Ai Evaluation</button></li>
               </ul>
             </div>
 
@@ -762,7 +762,7 @@ export default function Landing() {
               </div>
             </div>
           </div>
-          
+
           <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-muted-foreground uppercase tracking-widest pt-12">
             <div>© 2026 HealthTrace • Australian MedTech Innovation</div>
             <div className="flex gap-6">
@@ -777,14 +777,14 @@ export default function Landing() {
       {/* Info Modals */}
       <AnimatePresence>
         {activeModal && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
             onClick={() => setActiveModal(null)}
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
@@ -802,17 +802,17 @@ export default function Landing() {
                     </div>
                     <h2 className="text-3xl font-heading font-bold tracking-tight">{FOOTER_CONTENT[activeModal].title}</h2>
                   </div>
-                  <button 
-                    onClick={() => setActiveModal(null)} 
+                  <button
+                    onClick={() => setActiveModal(null)}
                     className="absolute top-8 right-8 p-3 hover:bg-muted rounded-full transition-all text-muted-foreground hover:rotate-90"
                   >
                     <X className="w-6 h-6" />
                   </button>
                 </div>
-                
+
                 <div className="space-y-8">
                   {FOOTER_CONTENT[activeModal].sections.map((section, i) => (
-                    <motion.div 
+                    <motion.div
                       key={i}
                       initial={{ x: -20, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
@@ -829,8 +829,8 @@ export default function Landing() {
                     </motion.div>
                   ))}
                 </div>
-                
-                <motion.button 
+
+                <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setActiveModal(null)}
