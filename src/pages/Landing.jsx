@@ -166,7 +166,7 @@ export default function Landing() {
     
     try {
       // Use FormSubmit.co for direct email delivery without backend SMTP config.
-      await fetch('https://formsubmit.co/ajax/0dc615d475c9bb4377bc1572ec4af891', {
+      await fetch('https://formsubmit.co/ajax/suvinbusiness@gmail.com', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

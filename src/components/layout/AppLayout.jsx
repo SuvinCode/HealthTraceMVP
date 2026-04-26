@@ -227,7 +227,7 @@ function SettingsMenu() {
   const handleSubmitReport = async (subject) => {
     setLoading(true);
     try {
-      await fetch('https://formsubmit.co/ajax/0dc615d475c9bb4377bc1572ec4af891', {
+      await fetch('https://formsubmit.co/ajax/suvinbusiness@gmail.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ name, message: content, _subject: subject, email: user?.email })
