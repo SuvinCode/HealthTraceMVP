@@ -1,6 +1,6 @@
 # HealthTrace MVP
 
-HealthTrace is a role-based healthcare tracking app for patients and doctors.
+This project was made for the UQIES x Emmanuel College Hackathon, we are now bringing this app live into the public domain and this is a playground of the features to expect from both accounts if you are unaware of. HealthTrace is a role-based healthcare tracking app for patients and doctors.
 
 ## Local Startup
 
