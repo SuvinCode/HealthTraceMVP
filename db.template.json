@@ -2,295 +2,327 @@
   "users": [
     {
       "id": 1,
+      "full_name": "Dr. Sarah Smith",
+      "email": "dr.smith@example.com",
+      "password": "smith123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Cardiology & ME/CFS Specialist",
+      "medical_license": "MED-77889"
+    },
+    {
+      "id": 2,
+      "full_name": "Dr. James Jones",
+      "email": "dr.jones@example.com",
+      "password": "jones123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "General Practitioner",
+      "medical_license": "GP-44556"
+    },
+    {
+      "id": 10,
+      "full_name": "Alice Cooper (Patient)",
+      "email": "alice@example.com",
+      "password": "alice123",
+      "role": "user",
+      "onboarding_complete": true,
+      "age": 28,
+      "weight": 65,
+      "height": 168,
+      "apple_health_connected": true
+    },
+    {
+      "id": 11,
+      "full_name": "Bob Marley (Patient)",
+      "email": "bob@example.com",
+      "password": "bob123",
+      "role": "user",
+      "onboarding_complete": true,
+      "age": 45,
+      "weight": 82,
+      "height": 180
+    },
+    {
+      "id": 12,
+      "full_name": "Charlie Chaplin (Patient)",
+      "email": "charlie@example.com",
+      "password": "charlie123",
+      "role": "user",
+      "onboarding_complete": false
+    },
+    {
+      "id": 13,
       "full_name": "Patient",
       "email": "patient@gmail.com",
       "password": "patient1234",
       "role": "user",
-      "onboarding_complete": true,
-      "age": 30,
-      "weight": 70,
-      "height": 175
+      "onboarding_complete": true
     },
     {
-      "id": 2,
+      "id": 14,
       "full_name": "Doctor",
       "email": "doctor@gmail.com",
       "password": "doctor1234",
       "role": "doctor",
-      "onboarding_complete": true,
-      "age": 30,
-      "medical_license": "12345",
-      "specialisation": "Psychiatry"
-    },
-    {
-      "id": 10,
-      "full_name": "Ryan Gosling",
-      "email": "ryan@example.com",
-      "role": "user"
-    },
-    {
-      "id": 11,
-      "full_name": "Rebecca Black",
-      "email": "rebecca@example.com",
-      "role": "user"
-    },
-    {
-      "id": 12,
-      "full_name": "Robert Downey",
-      "email": "robert@example.com",
-      "role": "user"
-    },
-    {
-      "id": 13,
-      "full_name": "John Doe",
-      "email": "john@example.com",
-      "role": "user"
-    },
-    {
-      "id": 14,
-      "full_name": "Jane Smith",
-      "email": "jane@example.com",
-      "role": "user"
-    },
-    {
-      "id": 15,
-      "full_name": "Alice Cooper",
-      "email": "alice@example.com",
-      "role": "user"
-    },
-    {
-      "id": 16,
-      "full_name": "Bob Marley",
-      "email": "bob@example.com",
-      "role": "user"
-    },
-    {
-      "id": 17,
-      "full_name": "Charlie Chaplin",
-      "email": "charlie@example.com",
-      "role": "user"
-    },
-    {
-      "id": 18,
-      "full_name": "David Bowie",
-      "email": "david@example.com",
-      "role": "user"
-    },
-    {
-      "id": 19,
-      "full_name": "Prince",
-      "email": "prince@example.com",
-      "role": "user"
-    },
-    {
-      "full_name": "Suvin",
-      "email": "suvinbusiness@gmail.com",
-      "password": "suvin7894",
-      "role": "user",
-      "id": 20,
-      "onboarding_complete": true,
-      "age": 40,
-      "weight": 70,
-      "height": 180
-    },
-    {
-      "full_name": "Alex Test",
-      "email": "wingstopfiregiantguy@gmail.com",
-      "password": "wingstop",
-      "role": "user",
-      "id": "2irpckewt"
+      "onboarding_complete": true
     }
   ],
   "patients": [
     {
-      "id": 1,
-      "full_name": "Patient",
-      "email": "patient@gmail.com",
-      "role": "user"
-    },
-    {
       "id": 10,
-      "full_name": "Ryan Gosling",
-      "email": "ryan@example.com",
-      "role": "user"
-    },
-    {
-      "id": 11,
-      "full_name": "Rebecca Black",
-      "email": "rebecca@example.com",
-      "role": "user"
-    },
-    {
-      "id": 12,
-      "full_name": "Robert Downey",
-      "email": "robert@example.com",
-      "role": "user"
-    },
-    {
-      "id": 13,
-      "full_name": "John Doe",
-      "email": "john@example.com",
-      "role": "user"
-    },
-    {
-      "id": 14,
-      "full_name": "Jane Smith",
-      "email": "jane@example.com",
-      "role": "user"
-    },
-    {
-      "id": 15,
-      "full_name": "Alice Cooper",
+      "full_name": "Alice Cooper (Patient)",
       "email": "alice@example.com",
       "role": "user"
     },
     {
-      "id": 16,
-      "full_name": "Bob Marley",
+      "id": 11,
+      "full_name": "Bob Marley (Patient)",
       "email": "bob@example.com",
       "role": "user"
     },
     {
-      "id": 17,
-      "full_name": "Charlie Chaplin",
+      "id": 12,
+      "full_name": "Charlie Chaplin (Patient)",
       "email": "charlie@example.com",
       "role": "user"
     },
     {
-      "id": 18,
-      "full_name": "David Bowie",
-      "email": "david@example.com",
-      "role": "user"
-    },
-    {
-      "id": 19,
-      "full_name": "Prince",
-      "email": "prince@example.com",
+      "id": 13,
+      "full_name": "Patient",
+      "email": "patient@gmail.com",
       "role": "user"
     }
   ],
   "entities": {
     "ConnectionRequest": [
       {
-        "doctor_email": "doctor@gmail.com",
-        "doctor_name": "Doctor",
-        "patient_email": "patient@gmail.com",
-        "patient_name": "Patient",
+        "id": "conn_1",
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "patient_email": "alice@example.com",
+        "patient_name": "Alice Cooper (Patient)",
+        "status": "accepted"
+      },
+      {
+        "id": "conn_2",
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "patient_email": "bob@example.com",
+        "patient_name": "Bob Marley (Patient)",
+        "status": "accepted"
+      },
+      {
+        "id": "conn_3",
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "patient_email": "charlie@example.com",
+        "patient_name": "Charlie Chaplin (Patient)",
+        "status": "pending"
+      },
+      {
+        "id": "conn_4",
+        "doctor_email": "dr.jones@example.com",
+        "doctor_name": "Dr. James Jones",
+        "patient_email": "alice@example.com",
+        "patient_name": "Alice Cooper (Patient)",
+        "status": "pending"
+      },
+      {
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "patient_email": "charlie@example.com",
+        "patient_name": "Charlie Chaplin (Patient)",
         "status": "accepted",
-        "id": "o8135luwu"
+        "id": "435mx6hv7"
       }
     ],
     "MedicationTask": [
       {
-        "medication_name": "test medication",
-        "type": "tablet",
-        "dosage": "100 mg",
-        "start_date": "2026-04-24",
-        "end_date": "2026-04-30",
-        "frequency": "twice_daily",
-        "patient_email": "patient@gmail.com",
-        "patient_name": "Patient",
-        "doctor_email": "doctor@gmail.com",
-        "completed_dates": [],
-        "id": "tz4uq59el",
+        "id": "med_1",
+        "medication_name": "LDN (Low Dose Naltrexone)",
+        "type": "capsule",
+        "dosage": "4.5mg",
+        "start_date": "2026-04-01",
+        "end_date": "2026-12-31",
+        "frequency": "once_daily",
         "scheduled_times": [
-          "04:00",
-          "14:45"
-        ]
-      }
-    ],
-    "HealthForm": [
-      {
-        "title": "Test",
-        "questions": [
-          {
-            "label": "Test Question",
-            "type": "text",
-            "required": false,
-            "options": [],
-            "id": "q_1777044652986"
-          },
-          {
-            "label": "Test Question 2 (text)",
-            "type": "number",
-            "required": false,
-            "options": [],
-            "id": "q_1777044673363"
-          }
+          "21:00"
         ],
-        "doctor_email": "doctor@gmail.com",
-        "patient_email": "patient@gmail.com",
-        "active": true,
-        "id": "xn8v8ao9r"
+        "patient_email": "alice@example.com",
+        "doctor_email": "dr.smith@example.com",
+        "completed_dates": [
+          "2026-04-24",
+          "2026-04-25"
+        ]
+      },
+      {
+        "id": "med_2",
+        "medication_name": "Mestinon",
+        "type": "tablet",
+        "dosage": "60mg",
+        "start_date": "2026-04-01",
+        "end_date": "2026-12-31",
+        "frequency": "twice_daily",
+        "scheduled_times": [
+          "08:00",
+          "14:00"
+        ],
+        "patient_email": "alice@example.com",
+        "doctor_email": "dr.smith@example.com",
+        "completed_dates": [
+          "2026-04-25"
+        ]
       }
     ],
     "Appointment": [
       {
-        "title": "test appointment",
+        "id": "app_1",
+        "title": "Bi-Monthly Review",
+        "date": "2026-04-28",
+        "time_slot": "10:30",
+        "patient_email": "alice@example.com",
+        "patient_name": "Alice Cooper",
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "status": "upcoming"
+      },
+      {
+        "id": "app_2",
+        "title": "Initial Consultation",
+        "date": "2026-04-10",
+        "time_slot": "14:00",
+        "patient_email": "alice@example.com",
+        "patient_name": "Alice Cooper",
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "status": "completed"
+      }
+    ],
+    "biometrics": [
+      {
+        "id": "b1",
+        "patient_email": "alice@example.com",
+        "metric_name": "heart_rate",
+        "value": 72,
+        "date": "2026-04-26",
+        "source": "Apple Health"
+      },
+      {
+        "id": "b2",
+        "patient_email": "alice@example.com",
+        "metric_name": "step_count",
+        "value": 3400,
+        "date": "2026-04-26",
+        "source": "Apple Health"
+      },
+      {
+        "id": "b3",
+        "patient_email": "alice@example.com",
+        "metric_name": "sleep_analysis",
+        "value": 6.8,
+        "date": "2026-04-26",
+        "source": "Apple Health"
+      },
+      {
+        "id": "b4",
+        "patient_email": "alice@example.com",
+        "metric_name": "screen_time",
+        "value": 4.2,
+        "date": "2026-04-26",
+        "source": "Apple Health"
+      },
+      {
+        "id": "b5",
+        "patient_email": "alice@example.com",
+        "metric_name": "heart_rate",
+        "value": 75,
         "date": "2026-04-25",
-        "time_slot": "12:30",
-        "patient_email": "patient@gmail.com",
-        "patient_name": "Patient",
-        "doctor_email": "doctor@gmail.com",
-        "doctor_name": "Doctor",
-        "status": "upcoming",
-        "id": "4qzm5te7a"
+        "source": "Apple Health"
+      },
+      {
+        "id": "b6",
+        "patient_email": "alice@example.com",
+        "metric_name": "step_count",
+        "value": 5100,
+        "date": "2026-04-25",
+        "source": "Apple Health"
+      }
+    ],
+    "HealthForm": [
+      {
+        "id": "form_1",
+        "title": "Weekly Symptom Check",
+        "doctor_email": "dr.smith@example.com",
+        "patient_email": "alice@example.com",
+        "active": true,
+        "questions": [
+          {
+            "id": "q1",
+            "label": "Severity of Fatigue (0-10)",
+            "type": "number",
+            "required": true
+          },
+          {
+            "id": "q2",
+            "label": "Major Triggers this week",
+            "type": "text",
+            "required": false
+          }
+        ]
       }
     ],
     "HealthFormSubmission": [
       {
-        "form_id": "xn8v8ao9r",
-        "form_title": "Test",
-        "patient_email": "patient@gmail.com",
-        "patient_name": "Patient",
-        "doctor_email": "doctor@gmail.com",
+        "id": "sub_1",
+        "form_id": "form_1",
+        "patient_email": "alice@example.com",
+        "doctor_email": "dr.smith@example.com",
         "answers": [
           {
-            "question_id": "q_1777044652986",
-            "question_label": "Test Question",
-            "answer": "Helllo"
+            "question_label": "Severity of Fatigue (0-10)",
+            "answer": "7"
           },
           {
-            "question_id": "q_1777044673363",
-            "question_label": "Test Question 2 (text)",
-            "answer": "12"
+            "question_label": "Major Triggers this week",
+            "answer": "Long grocery shopping trip on Tuesday."
           }
         ],
-        "created_date": "2026-04-24T15:43:16.458Z",
-        "id": "kbmjbin38"
-      },
-      {
-        "form_id": "xn8v8ao9r",
-        "form_title": "Test",
-        "patient_email": "patient@gmail.com",
-        "patient_name": "Patient",
-        "doctor_email": "doctor@gmail.com",
-        "answers": [
-          {
-            "question_id": "q_1777044652986",
-            "question_label": "Test Question",
-            "answer": "Hey"
-          },
-          {
-            "question_id": "q_1777044673363",
-            "question_label": "Test Question 2 (text)",
-            "answer": "2"
-          }
-        ],
-        "created_date": "2026-04-24T15:47:19.315Z",
-        "id": "aox2wl32y"
+        "created_date": "2026-04-24T10:00:00Z"
       }
-    ],
-    "DiaryEntry": [
-      {
-        "patient_email": "patient@gmail.com",
-        "patient_name": "Patient",
-        "date": "2026-04-25",
-        "mood_score": 4,
-        "notes": "decent",
-        "id": "9hz5p7g0v"
-      }
-    ],
-    "HealthFormResponse": []
-  }
+    ]
+  },
+  "DiaryEntry": [
+    {
+      "id": "diary_1",
+      "patient_email": "alice@example.com",
+      "date": "2026-04-26",
+      "mood_score": 3,
+      "notes": "Slept poorly, felt a bit of orthostatic intolerance this morning. Taking it easy today."
+    },
+    {
+      "id": "diary_2",
+      "patient_email": "alice@example.com",
+      "date": "2026-04-25",
+      "mood_score": 4,
+      "notes": "Good day! Managed a short walk without a crash later."
+    },
+    {
+      "id": "diary_3",
+      "patient_email": "alice@example.com",
+      "date": "2026-04-24",
+      "mood_score": 2,
+      "notes": "Major brain fog. Struggled with work emails."
+    }
+  ],
+  "DoctorNote": [
+    {
+      "id": "note_1",
+      "doctor_email": "dr.smith@example.com",
+      "patient_email": "alice@example.com",
+      "content": "Patient reports high fatigue after physical exertion. Considering adjusting LDN dosage next month.",
+      "input_type": "written",
+      "created_at": "2026-04-25T15:00:00Z"
+    }
+  ]
 }
