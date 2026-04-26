@@ -490,11 +490,11 @@ export default function PatientProfile() {
 
       {/* Tabs */}
       <Tabs defaultValue="submissions">
-        <TabsList>
-          <TabsTrigger value="submissions"><FileText className="w-4 h-4 mr-1" /> Forms ({submissions.length})</TabsTrigger>
-          <TabsTrigger value="timeline"><Clock className="w-4 h-4 mr-1" /> Day Timeline</TabsTrigger>
-          <TabsTrigger value="appointments"><Calendar className="w-4 h-4 mr-1" /> Appointments ({appointments.length})</TabsTrigger>
-          <TabsTrigger value="diary"><BookOpen className="w-4 h-4 mr-1" /> Diary ({diaryEntries.length})</TabsTrigger>
+        <TabsList className="w-full h-auto flex-wrap justify-start sm:justify-center mb-4 sm:mb-0 gap-y-1">
+          <TabsTrigger value="submissions" className="flex-1 sm:flex-none"><FileText className="w-4 h-4 mr-1" /> Forms ({submissions.length})</TabsTrigger>
+          <TabsTrigger value="timeline" className="flex-1 sm:flex-none"><Clock className="w-4 h-4 mr-1" /> Day Timeline</TabsTrigger>
+          <TabsTrigger value="appointments" className="flex-1 sm:flex-none"><Calendar className="w-4 h-4 mr-1" /> Appointments ({appointments.length})</TabsTrigger>
+          <TabsTrigger value="diary" className="flex-1 sm:flex-none"><BookOpen className="w-4 h-4 mr-1" /> Diary ({diaryEntries.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="submissions" className="mt-4 space-y-6">
