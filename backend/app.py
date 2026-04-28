@@ -24,6 +24,7 @@ if os.path.exists(env_path):
 app = Flask(__name__)
 CORS(app, origins=[
     "https://healthtrace.me",
+    "https://suvincode.github.io",
     "http://localhost:3000",
     "http://127.0.0.1:3000"
 ], supports_credentials=True, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
