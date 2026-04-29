@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://suvincode.github.io/HealthTraceMVP/",
+  "homepage": "https://healthtrace.me/",
   "scripts": {
     "start": "vite --config vite.config.dev.js",
     "start:backend": ".\\.venv\\Scripts\\python.exe backend/app.py || ./.venv/bin/python backend/app.py",
