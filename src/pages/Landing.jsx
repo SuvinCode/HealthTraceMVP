@@ -16,7 +16,25 @@ const STEPS = [
   { step: '03', title: 'Generate GP Report', desc: 'One tap creates a structured clinical PDF ready for your specialist.' },
 ];
 
-const TEAM = [
+const CORE_TEAM = [
+  {
+    name: 'Suvin',
+    role: 'Founder & CEO',
+    image: 'pictures/suvinpfp.png',
+    education: 'Bachelors of Computer Science, Major In Machine Learning At University Of Queensland, Australia',
+    linkedin: 'https://www.linkedin.com/in/suvin-chin-90389b157/',
+    github: 'https://github.com/SuvinCode'
+  },
+  {
+    name: 'Kunga',
+    role: 'CFO & CLO',
+    image: 'pictures/kongapfp.png',
+    education: 'Bachelor of Laws(Honours) & Bachelor of Commerce(Finance) At University of Queensland, Australia & Bachelor of Math at Queensland University of Technology, Australia',
+    linkedin: 'https://www.linkedin.com/in/kunga-moenlam-261988245/'
+  },
+];
+
+const MVP_TEAM = [
   {
     name: 'Suvin',
     role: 'Founder & CEO',
@@ -542,24 +560,108 @@ export default function Landing() {
         </div>
       </motion.section>
 
-      {/* Founding Team */}
-      <section className="px-8 py-32 max-w-7xl mx-auto">
+      {/* Core Founding Team */}
+      <section className="px-8 py-32 max-w-7xl mx-auto pb-0">
         <motion.p
           initial={{ opacity: 0 }}
-          whileInView={{ opacity: 0.4 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-[10px] uppercase tracking-[0.2em] mb-12 text-center font-heading"
+          className="text-xs font-bold uppercase tracking-[0.3em] mb-12 text-center font-heading text-primary"
         >
-          Founding Team
+          Core Founding Team (The Main Founding Team)
         </motion.p>
         <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4"
+          className="grid grid-cols-1 gap-8 max-w-5xl mx-auto"
         >
-          {TEAM.map((member, i) => (
+          {CORE_TEAM.map((member, i) => (
+            <motion.div
+              key={i}
+              variants={itemVariants}
+              whileHover={{ y: -5 }}
+              className="p-8 md:p-10 bg-card rounded-[32px] border border-border flex flex-col md:flex-row items-center gap-8 md:gap-12 relative group overflow-hidden shadow-sm hover:shadow-xl transition-all"
+            >
+              {/* Profile Image */}
+              <div className="relative shrink-0">
+                <div className="w-32 h-32 md:w-48 md:h-48 rounded-2xl overflow-hidden shadow-2xl border-4 border-background group-hover:scale-105 transition-transform duration-500">
+                  <img 
+                    src={`${import.meta.env.BASE_URL}${member.image}`} 
+                    alt={member.name} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-heading font-bold shadow-lg">
+                  {member.name[0]}
+                </div>
+              </div>
+
+              {/* Info Content */}
+              <div className="flex-1 text-center md:text-left">
+                <div className="mb-2">
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Core Founder</span>
+                </div>
+                <h3 className="text-3xl font-heading font-bold mb-1">{member.name}</h3>
+                <p className="text-sm uppercase tracking-widest text-muted-foreground mb-4">{member.role}</p>
+                
+                <div className="max-w-xl">
+                  <p className="text-sm md:text-base text-foreground/80 leading-relaxed italic">
+                    <span className="font-bold not-italic text-foreground">Education:</span> {member.education}
+                  </p>
+                </div>
+
+                <div className="flex justify-center md:justify-start gap-4 mt-8 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
+                  {member.linkedin && (
+                    <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                      <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <Linkedin className="w-4 h-4" />
+                      </div>
+                      LinkedIn
+                    </a>
+                  )}
+                  {member.github && (
+                    <a href={member.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                      <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <Github className="w-4 h-4" />
+                      </div>
+                      GitHub
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* Decorative Background Element */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-10 group-hover:bg-primary/10 transition-colors" />
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* Separation Line */}
+      <div className="max-w-4xl mx-auto px-8">
+        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent opacity-50" />
+      </div>
+
+      {/* MVP Founding Team */}
+      <section className="px-8 py-32 max-w-7xl mx-auto pt-24">
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 0.4 }}
+          viewport={{ once: true }}
+          className="text-[10px] uppercase tracking-[0.2em] mb-12 text-center font-heading"
+        >
+          MVP Founding Team
+        </motion.p>
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto"
+        >
+          {MVP_TEAM.map((member, i) => (
             <motion.div
               key={i}
               variants={itemVariants}
@@ -653,8 +755,8 @@ export default function Landing() {
                 type="submit"
                 disabled={reviewSent}
                 className={`w-full py-5 rounded-2xl font-heading font-bold text-lg shadow-xl transition-all ${reviewSent
-                    ? 'bg-green-500 text-white shadow-green-500/20'
-                    : 'bg-primary text-primary-foreground shadow-primary/20 hover:opacity-95'
+                  ? 'bg-green-500 text-white shadow-green-500/20'
+                  : 'bg-primary text-primary-foreground shadow-primary/20 hover:opacity-95'
                   }`}
               >
                 {reviewSent ? 'Review Sent! Thanks.' : 'Send'}
@@ -753,10 +855,10 @@ export default function Landing() {
             <div>
               <h4 className="font-heading font-bold text-xs uppercase tracking-widest text-foreground/40 mb-6">Connect</h4>
               <div className="flex gap-4">
-                <a href={TEAM[0].linkedin} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-muted rounded-full flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all">
+                <a href={CORE_TEAM[0].linkedin} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-muted rounded-full flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all">
                   <Linkedin className="w-5 h-5" />
                 </a>
-                <a href={TEAM[0].github} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-muted rounded-full flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all">
+                <a href={CORE_TEAM[0].github} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-muted rounded-full flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all">
                   <Github className="w-5 h-5" />
                 </a>
               </div>
