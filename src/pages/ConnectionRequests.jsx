@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { apiClient } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -7,22 +7,39 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Check, X, User, Clock, UserPlus, Loader2, Plus, Search } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Check, X, User, Clock, Loader2, Plus, Search, Building2, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ConnectionRequests() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [searchName, setSearchName] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+  const [searchQueries, setSearchQueries] = useState({});
 
-  const { data: requests, isLoading } = useQuery({
+  // 1. Fetch Doctor's connections
+  const { data: requests = [] } = useQuery({
     queryKey: ['connection-requests', user?.email],
     queryFn: () => apiClient.entities.ConnectionRequest.filter({ doctor_email: user?.email }),
-    initialData: [],
   });
+
+  // 2. Fetch all hospitals
+  const { data: allHospitals = [] } = useQuery({
+    queryKey: ['hospitals'],
+    queryFn: () => apiClient.entities.hospitals.filter(),
+  });
+
+  // 3. Fetch all patients
+  const { data: allPatients = [] } = useQuery({
+    queryKey: ['all-patients'],
+    queryFn: () => apiClient.entities.patients.filter(),
+  });
+
+  const doctorHospitals = useMemo(() => {
+    const ids = user?.hospital_ids || [];
+    return allHospitals.filter(h => ids.includes(h.id));
+  }, [allHospitals, user]);
 
   const updateRequest = useMutation({
     mutationFn: ({ id, status }) => apiClient.entities.ConnectionRequest.update(id, { status }),
@@ -32,71 +49,10 @@ export default function ConnectionRequests() {
     },
   });
 
-  const handleSearch = async (e, isManual = false, isFocus = false) => {
-    if (e) e.preventDefault();
-    const query = searchName.trim().toLowerCase();
-    
-    // If focusing an empty field, we show all. If typing and clearing, we hide (behavior choice).
-    // User specifically asked to display all users when clicking the input tab.
-    if (!query && !isFocus && !isManual) {
-      setSearchResults([]);
-      return;
-    }
-    
-    setIsSearching(true);
-    try {
-      const response = await apiClient.entities.patients.filter();
-      
-      let usersList = [];
-      if (Array.isArray(response)) {
-        usersList = response;
-      } else if (response && typeof response === 'object') {
-        usersList = response.patients || response.users || response.data || [];
-      }
-      
-      const matched = query 
-        ? usersList.filter(p => {
-            const name = (p.full_name || p.name || "").toLowerCase();
-            return name.startsWith(query);
-          })
-        : usersList; // Show all if query is empty (as on focus)
-      
-      setSearchResults(matched);
-      
-      if (isManual) {
-        if (matched.length > 0) {
-          toast.success("Patient can be found");
-        } else {
-          toast.error("Patient cannot be found");
-        }
-      }
-    } catch (error) {
-      console.error('Search failed:', error);
-      if (isManual) {
-        if (error.status === 401) {
-          toast.error('Session expired. Please log in again.');
-        } else {
-          toast.error('Search unavailable at the moment');
-        }
-      }
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      handleSearch(null, false); // Quiet search for live typing
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchName]);
-
   const handleConnect = async (patient) => {
-    // Check if already connected
-    const existing = requests.find(r => r.patient_email === patient.email && r.status === 'accepted');
-    if (existing) {
-      toast.error('You are already connected with this patient.');
+    const isConnected = requests.some(r => r.patient_email === patient.email && r.status === 'accepted');
+    if (isConnected) {
+      toast.error('Already connected with this patient');
       return;
     }
 
@@ -109,162 +65,197 @@ export default function ConnectionRequests() {
         status: 'accepted',
       });
 
-      toast.success(`Successfully connected with ${patient.full_name}`);
+      toast.success(`Connected with ${patient.full_name}`);
       queryClient.invalidateQueries({ queryKey: ['connection-requests'] });
+      setOpenDropdownId(null);
     } catch (error) {
       toast.error('Failed to connect');
     }
   };
 
-  const handleDisconnect = async (patientEmail) => {
-    const conn = requests.find(r => r.patient_email === patientEmail && r.status === 'accepted');
-    if (!conn) return;
-
-    try {
-      await apiClient.entities.ConnectionRequest.delete(conn.id);
-      toast.success('Disconnected successfully');
-      queryClient.invalidateQueries({ queryKey: ['connection-requests'] });
-    } catch (error) {
-      toast.error('Failed to disconnect');
-    }
+  const handleSearchChange = (hospitalId, query) => {
+    setSearchQueries(prev => ({ ...prev, [hospitalId]: query }));
   };
 
   const pending = requests.filter(r => r.status === 'pending');
-  const handled = requests.filter(r => r.status !== 'pending');
 
   return (
     <motion.div 
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.6 }}
       className="max-w-4xl mx-auto"
     >
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="font-heading text-3xl font-bold text-foreground">Connect with Patients</h1>
-          <p className="text-muted-foreground mt-1.5">Manage your network and add new patients</p>
-        </div>
+      <div className="mb-10">
+        <h1 className="font-heading text-4xl font-bold text-slate-900">Connect with Patients</h1>
+        <p className="text-slate-500 mt-2 text-lg">Find and add new patients from your registered institutions</p>
       </div>
 
-      <div className="max-w-2xl mx-auto space-y-8">
-        {/* Search & Add */}
-        <div className="space-y-6">
-          <Card className="border-primary/20 shadow-sm overflow-hidden">
-            <CardHeader className="bg-primary/5 pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Search className="w-5 h-5 text-primary" />
-                Find New Patient
-              </CardTitle>
-              <CardDescription>Search by name to discover and connect with patients.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <form onSubmit={e => handleSearch(e, true)} className="flex gap-2">
-                <div className="flex-1 relative text-left">
-                  <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${isSearching ? 'text-primary animate-pulse' : 'text-muted-foreground'}`} />
-                  <Input
-                    placeholder="Search by patient name..."
-                    value={searchName}
-                    onChange={e => setSearchName(e.target.value)}
-                    onFocus={() => handleSearch(null, false, true)}
-                    className="pl-9 h-12 text-lg shadow-sm"
-                  />
-                </div>
-                <Button 
-                  type="submit" 
-                  disabled={isSearching} 
-                  className="h-12 w-12 p-0 shrink-0 shadow-lg hover:shadow-xl transition-all"
-                  variant="default"
-                >
-                  {isSearching ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Search className="w-5 h-5" />
-                  )}
-                </Button>
-              </form>
+      <div className="grid grid-cols-1 gap-8">
+        {doctorHospitals.map((hospital, idx) => {
+          const searchQuery = searchQueries[hospital.id] || '';
+          
+          const filteredPatients = allPatients.filter(p => {
+            const inHospital = (p.hospital_ids || []).includes(hospital.id);
+            const q = searchQuery.toLowerCase().trim();
+            const nameMatch = q ? (p.full_name || "").toLowerCase().includes(q) : true;
+            return inHospital && nameMatch;
+          });
 
-              {/* Search Results */}
-              <AnimatePresence>
-                {searchResults.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-6 pt-6 border-t space-y-3"
-                  >
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Patients</p>
-                    {searchResults.map((patient, i) => {
-                      const isConnected = requests.some(r => r.patient_email === patient.email && r.status === 'accepted');
-                      return (
-                        <motion.div 
-                          key={patient.email} 
-                          initial={{ opacity: 0, x: -10 }} 
-                          animate={{ opacity: 1, x: 0 }} 
-                          transition={{ delay: i * 0.05 }}
-                          className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors"
+          return (
+            <motion.div 
+              key={hospital.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+            >
+              <Card className="border-white/60 bg-white/70 backdrop-blur-xl shadow-xl shadow-slate-200/40 overflow-visible border-2 hover:border-primary/20 transition-all">
+                <CardHeader className="bg-slate-50/50 pb-6 border-b border-slate-100/50">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                      <Building2 className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold text-slate-800">{hospital.name}</CardTitle>
+                      <CardDescription className="flex items-center gap-1.5 mt-1">
+                        {hospital.location}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-8">
+                  <div className="max-w-md w-full space-y-4">
+                    <Label className="text-sm font-semibold text-slate-600 ml-1">Find patients</Label>
+                    <Popover 
+                      open={openDropdownId === hospital.id} 
+                      onOpenChange={(open) => setOpenDropdownId(open ? hospital.id : null)}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          role="combobox" 
+                          className="w-full justify-between h-14 text-lg font-normal bg-white border-slate-200 shadow-sm hover:border-primary/40 hover:bg-white"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <User className="w-5 h-5 text-primary" />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-sm">{patient.full_name}</p>
-                              <p className="text-xs text-muted-foreground">{patient.email}</p>
-                            </div>
+                          <div className="flex items-center gap-3 text-slate-400">
+                            <Search className="w-5 h-5 opacity-50" />
+                            <span>Find patients...</span>
                           </div>
-                          {isConnected ? (
-                            <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleDisconnect(patient.email)}>
-                              <X className="w-3.5 h-3.5 mr-1" /> Disconnect
-                            </Button>
+                          <ChevronDown className="ml-2 h-5 w-5 shrink-0 opacity-40" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 shadow-2xl border-slate-100 rounded-2xl overflow-hidden" align="start">
+                        <div className="p-3 border-b bg-slate-50/80">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <Input 
+                              placeholder={`Type a name...`} 
+                              className="pl-10 h-11 border-none focus-visible:ring-0 bg-transparent text-sm"
+                              value={searchQuery}
+                              onChange={(e) => handleSearchChange(hospital.id, e.target.value)}
+                              autoFocus
+                            />
+                          </div>
+                        </div>
+                        <div className="max-h-[320px] overflow-y-auto p-2 space-y-1">
+                          {filteredPatients.length === 0 ? (
+                            <div className="py-12 text-center space-y-3">
+                              <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
+                                <User className="w-6 h-6 text-slate-200" />
+                              </div>
+                              <p className="text-sm text-slate-400 font-medium">No results for "{searchQuery}"</p>
+                            </div>
                           ) : (
-                            <Button size="sm" variant="outline" onClick={() => handleConnect(patient)}>
-                              <Plus className="w-3.5 h-3.5 mr-1" /> Connect
-                            </Button>
+                            filteredPatients.map(patient => {
+                              const isConnected = requests.some(r => r.patient_email === patient.email && r.status === 'accepted');
+                              return (
+                                <div
+                                  key={patient.email}
+                                  className={`flex items-center justify-between w-full p-3.5 rounded-xl transition-all ${
+                                    isConnected ? 'bg-slate-50/50 border border-slate-100' : 'hover:bg-primary/5 group border border-transparent'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3.5">
+                                    <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
+                                      isConnected ? 'bg-slate-100' : 'bg-primary/10 group-hover:bg-primary/20'
+                                    }`}>
+                                      <span className={`text-sm font-bold ${isConnected ? 'text-slate-400' : 'text-primary'}`}>
+                                        {patient.full_name?.[0]?.toUpperCase()}
+                                      </span>
+                                    </div>
+                                    <div className="text-left">
+                                      <p className={`text-sm font-bold ${isConnected ? 'text-slate-500' : 'text-slate-900 group-hover:text-primary'}`}>
+                                        {patient.full_name}
+                                      </p>
+                                      <p className="text-[11px] text-slate-400 font-medium">{patient.email}</p>
+                                    </div>
+                                  </div>
+                                  {isConnected ? (
+                                    <Badge variant="secondary" className="bg-emerald-50 text-emerald-600 border-none flex items-center gap-1.5 py-1 px-2.5 text-[10px] font-bold">
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                      CONNECTED
+                                    </Badge>
+                                  ) : (
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <Button 
+                                        size="sm" 
+                                        variant="ghost" 
+                                        className="h-9 rounded-lg text-primary hover:bg-primary/10 hover:text-primary font-bold text-xs"
+                                        onClick={() => handleConnect(patient)}
+                                      >
+                                        <Plus className="w-4 h-4 mr-1.5" />
+                                        CONNECT
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })
                           )}
-                        </motion.div>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </CardContent>
-          </Card>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
 
-          {/* Pending Requests (mostly legacy now, but still useful to handle) */}
-          {pending.length > 0 && (
-            <div className="space-y-4">
-              <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2 px-1">
-                <Clock className="w-4 h-4" />
-                Pending Incoming Requests
-              </h2>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {pending.map((req, i) => (
-                  <motion.div key={req.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}>
-                    <Card className="hover:border-primary/40 transition-colors">
-                      <CardContent className="p-4 flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center shrink-0">
-                          <User className="w-5 h-5 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate">{req.patient_name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{req.patient_email}</p>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-primary hover:bg-primary/10" onClick={() => updateRequest.mutate({ id: req.id, status: 'accepted' })}>
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => updateRequest.mutate({ id: req.id, status: 'rejected' })}>
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
+        {/* Pending Requests Section */}
+        {pending.length > 0 && (
+          <div className="mt-12 space-y-5">
+            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] px-1 flex items-center gap-3">
+              <span className="w-8 h-[1px] bg-slate-200"></span>
+              Incoming Requests
+              <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none ml-1">{pending.length}</Badge>
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {pending.map((req) => (
+                <Card key={req.id} className="border-amber-200/50 bg-amber-50/40 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
+                  <CardContent className="p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-amber-200/50 flex items-center justify-center shrink-0">
+                        <User className="w-5 h-5 text-amber-700" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-sm text-slate-900 truncate">{req.patient_name}</p>
+                        <p className="text-[11px] text-slate-500 truncate">{req.patient_email}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      <Button size="icon" className="bg-amber-600 hover:bg-amber-700 h-9 w-9 rounded-lg shadow-sm" onClick={() => updateRequest.mutate({ id: req.id, status: 'accepted' })}>
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-9 w-9 rounded-lg text-slate-400 hover:bg-white" onClick={() => updateRequest.mutate({ id: req.id, status: 'rejected' })}>
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

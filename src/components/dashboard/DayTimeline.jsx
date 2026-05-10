@@ -1,11 +1,10 @@
 import { format, isSameDay, parseISO, startOfDay, isToday } from 'date-fns';
-import { User, CheckCircle2 } from 'lucide-react';
+import { User, CheckCircle2, Pill, Pencil, FileText, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { useRef, useImperativeHandle, forwardRef } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Pill, Pencil } from 'lucide-react';
 
 
 
@@ -20,10 +19,13 @@ const DayTimeline = forwardRef(function DayTimeline({
   selectedDate, 
   appointments, 
   medications = [], 
+  forms = [],
+  submissions = [],
   onComplete, 
   onCancel, 
   onToggleMed,
-  onEditMed
+  onEditMed,
+  onUpdateTime
 }, ref) {
   // Determine if the selected date is today and compute current minutes for time indicator
   const isTodaySelected = isToday(selectedDate);
@@ -51,32 +53,48 @@ const DayTimeline = forwardRef(function DayTimeline({
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
   
   medications.forEach(m => {
-    // Basic filter: is selectedDate within start/end?
-    const start = parseISO(m.start_date);
-    const end = parseISO(m.end_date);
-    const day = startOfDay(selectedDate);
+    // Robust date checking
+    const startDateStr = m.start_date || m.date;
+    const endDateStr = m.end_date || m.date;
     
-    if (day >= startOfDay(start) && day <= startOfDay(end)) {
+    if (!startDateStr || !endDateStr) return;
+
+    try {
+      const start = parseISO(startDateStr);
+      const end = parseISO(endDateStr);
+      const day = startOfDay(selectedDate);
+      
+      if (day >= startOfDay(start) && day <= startOfDay(end)) {
       const times = m.scheduled_times || (
         m.frequency === 'twice_daily' ? ['09:00', '21:00'] :
         m.frequency === 'three_times_daily' ? ['08:00', '14:00', '20:00'] : ['09:00']
       );
-      times.forEach(time => {
-        dayMeds.push({ 
-          id: `med-${m.id}-${time}`, 
-          type: 'medication', 
-          title: m.medication_name, 
-          time, 
-          data: m, 
-          completed: m.completed_dates?.includes(dateStr) 
+        times.forEach(time => {
+          dayMeds.push({ 
+            id: `med-${m.id}-${time}`, 
+            type: 'medication', 
+            title: m.medication_name, 
+            time, 
+            data: m, 
+            completed: m.completed_dates?.includes(dateStr) 
+          });
         });
-      });
+      }
+    } catch (e) {
+      console.error("DayTimeline date parsing failed:", m, e);
     }
   });
 
   const allEvents = [
     ...dayAppts.map(a => ({ ...a, type: 'appointment', time: a.time_slot })),
-    ...dayMeds
+    ...dayMeds,
+    ...forms.filter(f => !submissions.some(s => s.form_id === f.id)).map(f => ({
+      id: `form-${f.id}`,
+      type: 'form',
+      title: `Form: ${f.title}`,
+      time: '07:30',
+      data: f
+    }))
   ].sort((a, b) => a.time.localeCompare(b.time));
 
 
@@ -119,11 +137,25 @@ const DayTimeline = forwardRef(function DayTimeline({
                 <div className="w-12 shrink-0 text-right pr-3 pt-0.5">
                   <span className="text-[10px] text-muted-foreground">{format(new Date(2020, 0, 1, hour), 'h a')}</span>
                 </div>
-                <div className="flex-1 border-t border-border relative pt-1 pb-1 min-h-[52px]">
+                <div 
+                  className="flex-1 border-t border-border relative pt-1 pb-1 min-h-[52px] transition-colors hover:bg-primary/5"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const medId = e.dataTransfer.getData('medId');
+                    const oldTime = e.dataTransfer.getData('oldTime');
+                    if (medId && oldTime) {
+                      const med = dayMeds.find(m => m.data.id === medId || m.data.id === parseInt(medId));
+                      if (med) onUpdateTime?.(med.data, oldTime, hourStr);
+                    }
+                  }}
+                >
                   {eventsAtHour.map(evt => (
                     evt.type === 'appointment' ? 
                       <AppointmentBlock key={evt.id} apt={evt} onComplete={onComplete} onCancel={onCancel} /> :
-                      <MedicationBlock key={evt.id} med={evt} selectedDate={selectedDate} onToggle={onToggleMed} onEdit={onEditMed} />
+                    evt.type === 'medication' ?
+                      <MedicationBlock key={evt.id} med={evt} selectedDate={selectedDate} onToggle={onToggleMed} onEdit={onEditMed} /> :
+                      <FormBlock key={evt.id} form={evt} />
                   ))}
                 </div>
               </div>
@@ -132,11 +164,25 @@ const DayTimeline = forwardRef(function DayTimeline({
                 <div className="w-12 shrink-0 text-right pr-3 pt-0.5">
                   <span className="text-[10px] text-muted-foreground/50">{String(hour).padStart(2, '0')}:30</span>
                 </div>
-                <div className="flex-1 border-t border-dashed border-border/50 relative pt-1 pb-1 min-h-[52px]">
+                <div 
+                  className="flex-1 border-t border-dashed border-border/50 relative pt-1 pb-1 min-h-[52px] transition-colors hover:bg-primary/5"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const medId = e.dataTransfer.getData('medId');
+                    const oldTime = e.dataTransfer.getData('oldTime');
+                    if (medId && oldTime) {
+                      const med = dayMeds.find(m => m.data.id === medId || m.data.id === parseInt(medId));
+                      if (med) onUpdateTime?.(med.data, oldTime, halfStr);
+                    }
+                  }}
+                >
                   {eventsAtHalf.map(evt => (
                     evt.type === 'appointment' ? 
                       <AppointmentBlock key={evt.id} apt={evt} onComplete={onComplete} onCancel={onCancel} /> :
-                      <MedicationBlock key={evt.id} med={evt} selectedDate={selectedDate} onToggle={onToggleMed} onEdit={onEditMed} />
+                    evt.type === 'medication' ?
+                      <MedicationBlock key={evt.id} med={evt} selectedDate={selectedDate} onToggle={onToggleMed} onEdit={onEditMed} /> :
+                      <FormBlock key={evt.id} form={evt} />
                   ))}
                 </div>
               </div>
@@ -229,7 +275,18 @@ function MedicationBlock({ med, selectedDate, onToggle, onEdit }) {
     <motion.div
       initial={{ opacity: 0, x: -6 }}
       animate={{ opacity: 1, x: 0 }}
-      className={`mb-1 rounded-lg px-3 py-2 border flex items-center gap-3 text-sm transition-colors ${statusStyles}`}
+      draggable={!!onEdit} // Only draggable if edit is allowed (e.g. for doctor)
+      onDragStart={(e) => {
+        if (onEdit) {
+          e.dataTransfer.setData('medId', med.data.id);
+          e.dataTransfer.setData('oldTime', med.time);
+          e.currentTarget.style.opacity = '0.5';
+        }
+      }}
+      onDragEnd={(e) => {
+        e.currentTarget.style.opacity = '1';
+      }}
+      className={`mb-1 rounded-lg px-3 py-2 border flex items-center gap-3 text-sm transition-all ${statusStyles} ${onEdit ? 'cursor-grab active:cursor-grabbing' : ''}`}
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {onToggle ? (
@@ -266,6 +323,27 @@ function MedicationBlock({ med, selectedDate, onToggle, onEdit }) {
           <Pencil className="w-3 h-3" />
         </Button>
       )}
+    </motion.div>
+  );
+}
+
+function FormBlock({ form }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -6 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="mb-1 rounded-lg px-3 py-2 border flex items-center gap-3 text-sm bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 transition-colors"
+    >
+      <div className="shrink-0">
+        <FileText className="w-4 h-4" />
+      </div>
+      <div className="shrink-0">
+        <span className="text-xs font-bold opacity-80">{form.time}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold truncate">{form.title}</p>
+        <p className="text-[10px] opacity-70">Awaiting submission</p>
+      </div>
     </motion.div>
   );
 }

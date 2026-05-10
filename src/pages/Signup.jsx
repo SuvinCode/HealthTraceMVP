@@ -1,30 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
+import { apiClient } from '@/api/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Mail, Lock, User, UserCircle, Stethoscope, Loader2, Chrome } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Mail, Lock, User, UserCircle, Stethoscope, Loader2, 
+  Building2, CheckCircle2, Search, ChevronDown, X 
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
 export default function Signup() {
-  const { register, googleLogin } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState('user'); // default to patient
+  const [hospitals, setHospitals] = useState([]);
+  const [selectedHospitals, setSelectedHospitals] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
     password: '',
   });
 
+  useEffect(() => {
+    const fetchHospitals = async () => {
+      try {
+        const data = await apiClient.entities.hospitals.filter();
+        setHospitals(data || []);
+      } catch (err) {
+        console.error('Failed to fetch hospitals:', err);
+      }
+    };
+    fetchHospitals();
+  }, []);
+
+  const filteredHospitals = useMemo(() => {
+    if (!searchQuery.trim()) return hospitals;
+    const q = searchQuery.toLowerCase();
+    return hospitals.filter(h => 
+      h.name.toLowerCase().includes(q) || 
+      h.location.toLowerCase().includes(q)
+    );
+  }, [hospitals, searchQuery]);
+
+  const toggleHospital = (id) => {
+    setSelectedHospitals(prev => 
+      prev.includes(id) ? prev.filter(hId => hId !== id) : [...prev, id]
+    );
+  };
+
+  const removeHospital = (id) => {
+    setSelectedHospitals(prev => prev.filter(hId => hId !== id));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (selectedHospitals.length === 0) {
+      toast.error('Please select at least one hospital');
+      return;
+    }
     setLoading(true);
     try {
-      await register({ ...formData, role });
+      await register({ ...formData, role, hospital_ids: selectedHospitals });
       toast.success('Account created successfully!');
       navigate('/onboarding');
     } catch (error) {
@@ -58,10 +104,10 @@ export default function Signup() {
           <p className="text-slate-500 mt-1">Start your health tracking journey today</p>
         </div>
 
-        <Card className="border-white/40 bg-white/80 backdrop-blur-xl shadow-2xl shadow-slate-200/50">
+        <Card className="border-white/40 bg-white/80 backdrop-blur-xl shadow-2xl shadow-slate-200/50 overflow-visible">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl font-heading font-semibold">Create Account</CardTitle>
-            <CardDescription>Select your role and enter your details</CardDescription>
+            <CardDescription>Select your role, details and hospitals</CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
@@ -133,11 +179,100 @@ export default function Signup() {
                 </div>
               </div>
 
+              <div className="space-y-3">
+                <Label className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-slate-400" />
+                  Register in Hospitals
+                </Label>
+                
+                <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      role="combobox" 
+                      aria-expanded={isDropdownOpen}
+                      className="w-full justify-between bg-white/50 hover:bg-white transition-colors font-normal text-slate-600 h-11"
+                    >
+                      <span className="truncate">
+                        {selectedHospitals.length > 0 
+                          ? `${selectedHospitals.length} hospital${selectedHospitals.length > 1 ? 's' : ''} selected`
+                          : "Select hospitals..."}
+                      </span>
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                    <div className="p-2 border-b">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input 
+                          placeholder="Search Brisbane hospitals..." 
+                          className="pl-8 h-9 border-none focus-visible:ring-0"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto p-1">
+                      {filteredHospitals.length === 0 ? (
+                        <p className="text-center py-4 text-sm text-slate-400">No hospitals found.</p>
+                      ) : (
+                        filteredHospitals.map(hospital => (
+                          <button
+                            key={hospital.id}
+                            type="button"
+                            onClick={() => toggleHospital(hospital.id)}
+                            className="flex items-center justify-between w-full p-2.5 rounded-lg text-left hover:bg-slate-50 transition-colors group"
+                          >
+                            <div className="flex flex-col">
+                              <span className={`text-sm font-medium ${selectedHospitals.includes(hospital.id) ? 'text-primary' : 'text-slate-700'}`}>
+                                {hospital.name}
+                              </span>
+                              <span className="text-[10px] text-slate-400">{hospital.location}</span>
+                            </div>
+                            {selectedHospitals.includes(hospital.id) && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                <div className="flex flex-wrap gap-1.5 min-h-[32px]">
+                  <AnimatePresence>
+                    {selectedHospitals.map(id => {
+                      const h = hospitals.find(h => h.id === id);
+                      if (!h) return null;
+                      return (
+                        <motion.div
+                          key={id}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                        >
+                          <Badge 
+                            variant="secondary" 
+                            className="bg-primary/10 text-primary hover:bg-primary/20 border-none flex items-center gap-1 py-1 px-2"
+                          >
+                            <span className="max-w-[150px] truncate text-[11px]">{h.name}</span>
+                            <button 
+                              type="button" 
+                              onClick={() => removeHospital(id)}
+                              className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              </div>
+
               <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 mt-2 shadow-lg shadow-primary/20" disabled={loading}>
                 {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Create Account'}
               </Button>
-
-
             </CardContent>
             <CardFooter className="pt-2">
               <p className="text-sm text-center w-full text-slate-500">
@@ -153,3 +288,5 @@ export default function Signup() {
     </div>
   );
 }
+
+

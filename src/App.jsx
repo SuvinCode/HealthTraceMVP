@@ -22,6 +22,7 @@ import ConnectionRequests from './pages/ConnectionRequests';
 import Notes from './pages/Notes';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Hospitals from './pages/Hospitals';
 
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -94,6 +95,7 @@ const AuthenticatedApp = () => {
           <Route path="/patient/:patientEmail" element={<PatientProfile />} />
           <Route path="/connection-requests" element={<ConnectionRequests />} />
           <Route path="/notes" element={<Notes />} />
+          <Route path="/hospitals" element={<Hospitals />} />
       </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>

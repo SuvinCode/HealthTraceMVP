@@ -6,7 +6,7 @@
   "homepage": "https://healthtrace.me/",
   "scripts": {
     "start": "vite --config vite.config.dev.js",
-    "start:backend": ".\\.venv\\Scripts\\python.exe backend/app.py || ./.venv/bin/python backend/app.py",
+    "start:backend": "python3 backend/app.py || python backend/app.py || ./.venv/bin/python backend/app.py",
     "dev": "concurrently \"npm:start\" \"npm:start:backend\"",
     "build": "vite build",
     "lint": "eslint . --quiet",

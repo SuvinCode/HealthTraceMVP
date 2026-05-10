@@ -97,6 +97,25 @@ export const apiClient = {
         throw new Error('User already exists');
       }
       const newUser = await http('/users', { method: 'POST', body: data });
+      
+      // If the user is a patient (role 'user'), also add them to the patients collection
+      if (data.role === 'user') {
+        try {
+          await http('/patients', { 
+            method: 'POST', 
+            body: {
+              id: newUser.id,
+              full_name: newUser.full_name,
+              email: newUser.email,
+              role: 'user',
+              hospital_ids: newUser.hospital_ids
+            } 
+          });
+        } catch (err) {
+          console.error('Failed to create patient record:', err);
+        }
+      }
+
       newUser.email = cleanEmail(newUser.email);
       const token = btoa(`${newUser.email}:${newUser.password}`);
       localStorage.setItem('auth_token', token);

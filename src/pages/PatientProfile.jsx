@@ -320,21 +320,30 @@ export default function PatientProfile() {
     let missed = 0;
     
     tasks.forEach(m => {
-      const start = parseISO(m.start_date);
-      const end = parseISO(m.end_date);
-      const day = startOfDay(selectedDate);
+      const startDateStr = m.start_date || m.date;
+      const endDateStr = m.end_date || m.date;
       
-      if (day >= startOfDay(start) && day <= startOfDay(end)) {
+      if (!startDateStr || !endDateStr) return;
+
+      try {
+        const start = parseISO(startDateStr);
+        const end = parseISO(endDateStr);
+        const day = startOfDay(selectedDate);
+        
+        if (day >= startOfDay(start) && day <= startOfDay(end)) {
         const times = m.scheduled_times || (
           m.frequency === 'twice_daily' ? ['09:00', '21:00'] :
           m.frequency === 'three_times_daily' ? ['08:00', '14:00', '20:00'] : ['09:00']
         );
-        times.forEach(() => {
-          const isTaken = m.completed_dates?.includes(dateStr);
-          if (isTaken) completed++;
-          else if (isPastDay) missed++;
-          else remaining++;
-        });
+          times.forEach(() => {
+            const isTaken = m.completed_dates?.includes(dateStr);
+            if (isTaken) completed++;
+            else if (isPastDay) missed++;
+            else remaining++;
+          });
+        }
+      } catch (e) {
+        console.error("PatientProfile date parsing failed:", m, e);
       }
     });
     return { completed, remaining, missed, total: completed + remaining + missed };
@@ -537,15 +546,22 @@ export default function PatientProfile() {
                       <CardContent className="p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <CheckCircle2 className="w-4 h-4 text-primary" />
-                          <span className="font-medium">{sub.form_title}</span>
-                          <Badge variant="secondary" className="ml-auto text-xs">{format(new Date(sub.created_date), 'MMM d, yyyy h:mm a')}</Badge>
+                          <span className="font-medium">{sub.form_title || 'Health Form Submission'}</span>
+                          <Badge variant="secondary" className="ml-auto text-xs">
+                            {sub.created_date || sub.date_submitted ? format(new Date(sub.created_date || sub.date_submitted), 'MMM d, yyyy h:mm a') : 'Recently submitted'}
+                          </Badge>
                         </div>
-                        {sub.answers?.map((a, i) => (
+                        {sub.answers ? sub.answers.map((a, i) => (
                           <div key={i} className="text-sm mt-1">
-                            <span className="text-muted-foreground">{a.question_label}: </span>
+                            <span className="text-muted-foreground">{a.question_label || 'Answer'}: </span>
                             <span className="font-medium">{a.answer || '—'}</span>
                           </div>
-                        ))}
+                        )) : sub.responses ? Object.entries(sub.responses).map(([key, val], i) => (
+                          <div key={i} className="text-sm mt-1">
+                            <span className="text-muted-foreground">{key.replace(/_/g, ' ')}: </span>
+                            <span className="font-medium">{val || '—'}</span>
+                          </div>
+                        )) : <p className="text-xs text-muted-foreground italic">No response data available</p>}
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -618,6 +634,19 @@ export default function PatientProfile() {
                            selectedDate={selectedDate}
                            appointments={appointments}
                            medications={tasks}
+                           forms={allForms}
+                           submissions={submissions}
+                           onUpdateTime={(medData, oldTime, newTime) => {
+                             const currentTimes = medData.scheduled_times || (
+                               medData.frequency === 'twice_daily' ? ['09:00', '21:00'] :
+                               medData.frequency === 'three_times_daily' ? ['08:00', '14:00', '20:00'] : ['09:00']
+                             );
+                             const newTimes = currentTimes.map(t => t === oldTime ? newTime : t);
+                             updateMedication.mutate({ 
+                               id: medData.id, 
+                               updates: { scheduled_times: newTimes } 
+                             });
+                           }}
                            onEditMed={(m) => {
                              setEditingMed(m);
                              setEditMedForm({
@@ -689,6 +718,17 @@ export default function PatientProfile() {
                       selectedDate={selectedDate}
                       appointments={appointments}
                       medications={tasks}
+                      onUpdateTime={(medData, oldTime, newTime) => {
+                        const currentTimes = medData.scheduled_times || (
+                          medData.frequency === 'twice_daily' ? ['09:00', '21:00'] :
+                          medData.frequency === 'three_times_daily' ? ['08:00', '14:00', '20:00'] : ['09:00']
+                        );
+                        const newTimes = currentTimes.map(t => t === oldTime ? newTime : t);
+                        updateMedication.mutate({ 
+                          id: medData.id, 
+                          updates: { scheduled_times: newTimes } 
+                        });
+                      }}
                       onEditMed={(m) => {
                         setEditingMed(m);
                         setEditMedForm({

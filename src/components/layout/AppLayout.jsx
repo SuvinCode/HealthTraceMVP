@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Calendar, ClipboardList, Plus, Users, LayoutDashboard,
   LogOut, Bell, Menu, X, FileText, UserPlus, Sun, BookOpen, NotebookPen,
-  Settings, Smartphone, MessageSquare, Bug, Check, Copy, Loader2
+  Settings, Smartphone, MessageSquare, Bug, Check, Copy, Loader2, Building2
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiClient, API_BASE_URL } from '@/api/client';
@@ -19,6 +19,7 @@ const patientLinks = [
   { to: '/health-form', icon: FileText, label: 'Health Form' },
   { to: '/myday', icon: Sun, label: 'My Day' },
   { to: '/diary', icon: BookOpen, label: 'Diary' },
+  { to: '/hospitals', icon: Building2, label: 'Hospitals' },
   { to: '/appointments', icon: ClipboardList, label: 'Appointments' },
   { to: '/create-appointment', icon: Plus, label: 'Book Appointment' },
 ];

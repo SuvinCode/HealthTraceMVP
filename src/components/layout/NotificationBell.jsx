@@ -5,7 +5,7 @@ import { apiClient } from '@/api/client';
 import { useQuery } from '@tanstack/react-query';
 import { 
   format, isTomorrow, parseISO, isWithinInterval, addMinutes, subMinutes, 
-  isPast, startOfDay, addDays 
+  isPast, startOfDay, addDays, parse 
 } from 'date-fns';
 import {
   Popover,
@@ -79,41 +79,81 @@ export default function NotificationBell() {
 
     // Medication alerts (30 mins before)
     medications.forEach(m => {
-      const isActiveToday = isWithinInterval(now, { start: parseISO(m.start_date), end: parseISO(m.end_date) });
-      if (!isActiveToday) return;
+      // Robust date checking
+      const startDate = m.start_date || m.date;
+      const endDate = m.end_date || m.date;
+      
+      if (!startDate || !endDate) return;
 
-      const times = m.scheduled_times || (m.frequency === 'twice_daily' ? ['09:00', '21:00'] : ['09:00']);
-      times.forEach(tStr => {
-        const [h, min] = tStr.split(':').map(Number);
-        const taskTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, min);
-        
-        // If task is within 30 mins from now and NOT past
-        const diff = (taskTime.getTime() - now.getTime()) / (1000 * 60);
-        if (diff > 0 && diff <= 30) {
-          list.push({
-            id: `med-${m.id}-${tStr}`,
-            type: 'task',
-            title: 'Medication Due Soon',
-            message: `It's almost time for your ${m.medication_name} (${tStr}).`,
-            icon: Clock,
-            color: 'text-blue-500 bg-blue-50'
-          });
+      try {
+        const isActiveToday = isWithinInterval(now, { 
+          start: startOfDay(parseISO(startDate)), 
+          end: addDays(startOfDay(parseISO(endDate)), 1) 
+        });
+        if (!isActiveToday) return;
+
+        // Support both scheduled_times array and single time string
+        let times = m.scheduled_times;
+        if (!times) {
+          const singleTime = m.time || m.time_slot;
+          if (singleTime) {
+            times = [singleTime];
+          } else {
+            times = m.frequency === 'twice_daily' ? ['09:00', '21:00'] : ['09:00'];
+          }
         }
-      });
+
+        times.forEach(tStr => {
+          if (!tStr || typeof tStr !== 'string') return;
+          let h, min;
+          if (tStr.toLowerCase().includes('am') || tStr.toLowerCase().includes('pm')) {
+            const dt = parse(tStr, 'hh:mm a', new Date());
+            h = dt.getHours();
+            min = dt.getMinutes();
+          } else {
+            const parts = tStr.split(':');
+            if (parts.length < 2) return;
+            [h, min] = parts.map(Number);
+          }
+
+          if (isNaN(h) || isNaN(min)) return;
+
+          const taskTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, min);
+          
+          // If task is within 30 mins from now and NOT past
+          const diff = (taskTime.getTime() - now.getTime()) / (1000 * 60);
+          if (diff > 0 && diff <= 30) {
+            list.push({
+              id: `med-${m.id}-${tStr}`,
+              type: 'task',
+              title: 'Medication Due Soon',
+              message: `It's almost time for your ${m.medication_name} (${tStr}).`,
+              icon: Clock,
+              color: 'text-blue-500 bg-blue-50'
+            });
+          }
+        });
+      } catch (e) {
+        console.error("Failed to process medication notification:", m, e);
+      }
     });
 
     // Appointment alerts (1 day before)
     appointments.forEach(a => {
-      const aptDate = parseISO(a.date);
-      if (isTomorrow(aptDate)) {
-        list.push({
-          id: `appt-${a.id}`,
-          type: 'appointment',
-          title: 'Appointment Tomorrow',
-          message: `Reminder: You have "${a.title}" with Dr. ${a.doctor_name} tomorrow at ${a.time_slot}.`,
-          icon: Calendar,
-          color: 'text-emerald-500 bg-emerald-50'
-        });
+      try {
+        const aptDate = parseISO(a.date);
+        if (isTomorrow(aptDate)) {
+          list.push({
+            id: `appt-${a.id}`,
+            type: 'appointment',
+            title: 'Appointment Tomorrow',
+            message: `Reminder: You have "${a.title}" with Dr. ${a.doctor_name} tomorrow at ${a.time_slot}.`,
+            icon: Calendar,
+            color: 'text-emerald-500 bg-emerald-50'
+          });
+        }
+      } catch (e) {
+        console.error("Failed to parse appointment date for notification:", a, e);
       }
     });
 

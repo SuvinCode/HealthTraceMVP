@@ -46,7 +46,6 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(true);
     }
     try {
-      
       // Handle Google sync if needed
       const params = new URLSearchParams(window.location.search);
       const token = params.get('token');
@@ -56,11 +55,23 @@ export const AuthProvider = ({ children }) => {
         await apiClient.auth.googleSync(token, role || 'user');
       }
 
-      const currentUser = apiClient.auth.me();
-      setUser(currentUser);
-      setIsAuthenticated(!!currentUser);
+      const cachedUser = apiClient.auth.me();
+      if (cachedUser?.id) {
+        // Fetch fresh data from server
+        const freshUser = await apiClient.entities.users.get(cachedUser.id);
+        if (freshUser) {
+          localStorage.setItem('user_info', JSON.stringify(freshUser));
+          setUser(freshUser);
+        }
+      } else {
+        const currentUser = apiClient.auth.me();
+        setUser(currentUser);
+      }
+      setIsAuthenticated(true);
     } catch (error) {
-      console.error("Auth check failed:", error);
+      console.error("Auth sync failed:", error);
+      const currentUser = apiClient.auth.me();
+      if (currentUser) setUser(currentUser);
     } finally {
       setIsLoadingAuth(false);
       setAuthChecked(true);

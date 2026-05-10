@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { User, Stethoscope, ArrowRight, Loader2, Smartphone, Check, Copy } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { User, Stethoscope, ArrowRight, Loader2, Smartphone, Check, Copy, Building2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Onboarding() {
@@ -76,7 +77,8 @@ export default function Onboarding() {
         id: updatedUser.id,
         full_name: updatedUser.full_name,
         email: updatedUser.email,
-        role: 'user'
+        role: 'user',
+        hospital_ids: updatedUser.hospital_ids
       });
     }
 
@@ -147,14 +149,32 @@ export default function Onboarding() {
         )}
 
         {step === 2 && (
-          <Card className="border-border shadow-lg">
+          <Card className="border-border shadow-lg overflow-visible">
             <CardHeader>
-              <CardTitle className="font-heading text-lg">
-                {role === 'user' ? 'Your Health Profile' : 'Doctor Profile'}
-              </CardTitle>
-              <CardDescription>
-                {role === 'user' ? 'We need a few details for your health tracking' : 'Your professional details'}
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="font-heading text-lg">
+                    {role === 'user' ? 'Your Health Profile' : 'Doctor Profile'}
+                  </CardTitle>
+                  <CardDescription>
+                    {role === 'user' ? 'We need a few details for your health tracking' : 'Your professional details'}
+                  </CardDescription>
+                </div>
+                {role === 'doctor' && (
+                  <div className="flex flex-wrap gap-1 justify-end max-w-[200px]">
+                    {(user?.hospital_ids || []).slice(0, 2).map(id => (
+                      <Badge key={id} variant="secondary" className="text-[9px] px-1.5 py-0 bg-primary/5 text-primary border-primary/10">
+                        Hospital {id}
+                      </Badge>
+                    ))}
+                    {(user?.hospital_ids || []).length > 2 && (
+                      <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
+                        +{(user?.hospital_ids || []).length - 2} more
+                      </Badge>
+                    )}
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>

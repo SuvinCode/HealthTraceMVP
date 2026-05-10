@@ -26,8 +26,10 @@ CORS(app, origins=[
     "https://healthtrace.me",
     "https://suvincode.github.io",
     "http://localhost:3000",
-    "http://127.0.0.1:3000"
-], supports_credentials=True, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+], supports_credentials=True, allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials"], methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.path.join(BASE_DIR, '..', 'db.json')

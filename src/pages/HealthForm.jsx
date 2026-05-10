@@ -73,18 +73,17 @@ export default function HealthForm() {
 
 
   const { data: forms, isLoading } = useQuery({
-    queryKey: ['health-forms', doctorEmails, submissions],
+    queryKey: ['health-forms', submissions],
     queryFn: async () => {
-      if (doctorEmails.length === 0) return [];
-      const allForms = [];
-      for (const email of doctorEmails) {
-        const f = await apiClient.entities.HealthForm.filter({ doctor_email: email, active: true });
-        allForms.push(...f);
-      }
+      const allForms = await apiClient.entities.HealthForm.filter({ active: true });
       const existingSubIds = submissions.map(s => s.form_id);
-      return allForms.filter(f => (!f.patient_email || cleanEmail(f.patient_email) === cleanEmail(user.email)) && !existingSubIds.includes(f.id));
+      return allForms.filter(f => {
+        const isAssigned = !f.patient_email || cleanEmail(f.patient_email) === cleanEmail(user?.email);
+        const isNotSubmitted = !existingSubIds.includes(f.id);
+        return isAssigned && isNotSubmitted;
+      });
     },
-    enabled: doctorEmails.length > 0,
+    enabled: !!user?.email,
     initialData: [],
   });
 
@@ -224,19 +223,24 @@ export default function HealthForm() {
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <CheckCircle2 className="w-4 h-4 text-primary" />
-                      <span className="font-medium">{sub.form_title}</span>
+                      <span className="font-medium">{sub.form_title || 'Health Form Submission'}</span>
                       <Badge variant="secondary" className="ml-auto text-xs">
-                        {sub.created_date ? format(new Date(sub.created_date), 'MMM d, yyyy h:mm a') : 'Recently submitted'}
+                        {sub.created_date || sub.date_submitted ? format(new Date(sub.created_date || sub.date_submitted), 'MMM d, yyyy h:mm a') : 'Recently submitted'}
                       </Badge>
                     </div>
                     <div className="space-y-1.5">
-                      {sub.answers?.slice(0, 2).map((a, i) => (
+                      {sub.answers ? sub.answers.slice(0, 2).map((a, i) => (
                         <div key={i} className="text-sm truncate">
-                          <span className="text-muted-foreground">{a.question_label}: </span>
+                          <span className="text-muted-foreground">{a.question_label || 'Answer'}: </span>
                           <span className="text-foreground font-medium">{a.answer || '—'}</span>
                         </div>
-                      ))}
-                      {sub.answers?.length > 2 && <p className="text-[10px] text-muted-foreground italic">Click to see {sub.answers.length - 2} more...</p>}
+                      )) : sub.responses ? Object.entries(sub.responses).slice(0, 2).map(([key, val], i) => (
+                        <div key={i} className="text-sm truncate">
+                          <span className="text-muted-foreground">{key.replace(/_/g, ' ')}: </span>
+                          <span className="text-foreground font-medium">{val || '—'}</span>
+                        </div>
+                      )) : <p className="text-xs text-muted-foreground italic">No response data available</p>}
+                      {(sub.answers?.length > 2 || Object.keys(sub.responses || {}).length > 2) && <p className="text-[10px] text-muted-foreground italic">Click to see more...</p>}
                     </div>
                   </CardContent>
                 </Card>

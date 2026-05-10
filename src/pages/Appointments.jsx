@@ -48,22 +48,43 @@ export default function Appointments() {
   const now = new Date();
   const todayStart = startOfDay(now);
 
-  const getDateOnly = (apt) => startOfDay(parseISO(apt.date));
-  const getDateTime = (apt) => parse(`${apt.date} ${apt.time_slot}`, 'yyyy-MM-dd HH:mm', new Date());
+  const getDateOnly = (apt) => {
+    try {
+      return startOfDay(parseISO(apt.date));
+    } catch {
+      return todayStart;
+    }
+  };
 
-  // Appointment datetime has passed OR was manually marked complete
-  const isDone = (a) => isBefore(getDateTime(a), now) || a.status === 'completed';
+  const getDateTime = (apt) => {
+    try {
+      const dateStr = apt.date;
+      const timeStr = apt.time_slot || apt.time || '09:00';
+      
+      if (!dateStr) return now;
+
+      // Handle AM/PM format vs 24h format
+      if (timeStr.toLowerCase().includes('am') || timeStr.toLowerCase().includes('pm')) {
+        return parse(`${dateStr} ${timeStr}`, 'yyyy-MM-dd hh:mm a', new Date());
+      }
+      return parse(`${dateStr} ${timeStr}`, 'yyyy-MM-dd HH:mm', new Date());
+    } catch (e) {
+      console.error("Date parsing failed for:", apt, e);
+      return parseISO(apt.date) || now;
+    }
+  };
+
+  const isDone = (a) => {
+    const dt = getDateTime(a);
+    return isBefore(dt, now) || a.status === 'completed';
+  };
 
   const upcoming = appointments
-    .filter(a => a.status !== 'cancelled' && isToday(parseISO(a.date)) && !isDone(a))
-    .sort((a, b) => getDateTime(a) - getDateTime(b));
-
-  const later = appointments
-    .filter(a => a.status !== 'cancelled' && isAfter(getDateOnly(a), todayStart) && !isDone(a))
+    .filter(a => a.status === 'upcoming' && !isDone(a))
     .sort((a, b) => getDateTime(a) - getDateTime(b));
 
   const completed = appointments
-    .filter(a => a.status !== 'cancelled' && isDone(a))
+    .filter(a => a.status === 'completed' || (a.status !== 'cancelled' && isDone(a)))
     .sort((a, b) => getDateTime(b) - getDateTime(a));
 
   const AppointmentCard = ({ apt, showCancel = false, showComplete = false }) => {
@@ -81,10 +102,10 @@ export default function Appointments() {
               isCompleted || isPastDate ? 'bg-muted' : 'bg-primary/10'
             }`}>
               <span className={`text-xs font-bold ${isCompleted || isPastDate ? 'text-muted-foreground' : 'text-primary'}`}>
-                {format(aptDateTime, 'MMM')}
+                {aptDateTime instanceof Date && !isNaN(aptDateTime) ? format(aptDateTime, 'MMM') : '???'}
               </span>
               <span className={`text-sm font-bold leading-none ${isCompleted || isPastDate ? 'text-muted-foreground' : 'text-primary'}`}>
-                {format(aptDateTime, 'd')}
+                {aptDateTime instanceof Date && !isNaN(aptDateTime) ? format(aptDateTime, 'd') : '--'}
               </span>
             </div>
 
@@ -94,7 +115,7 @@ export default function Appointments() {
               </p>
               <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
                 <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" /> {apt.time_slot}
+                  <Clock className="w-3.5 h-3.5" /> {apt.time_slot || apt.time}
                 </span>
                 <span className="flex items-center gap-1">
                   {isDoctor ? <User className="w-3.5 h-3.5" /> : <Stethoscope className="w-3.5 h-3.5" />}
@@ -184,7 +205,6 @@ export default function Appointments() {
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="later">Later ({later.length})</TabsTrigger>
           <TabsTrigger value="completed">Completed ({completed.length})</TabsTrigger>
         </TabsList>
 
@@ -193,18 +213,6 @@ export default function Appointments() {
             <EmptyState label="upcoming" />
           ) : (
             upcoming.map((apt, i) => (
-              <motion.div key={apt.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                <AppointmentCard apt={apt} showComplete={true} />
-              </motion.div>
-            ))
-          )}
-        </TabsContent>
-
-        <TabsContent value="later" className="mt-4 space-y-3">
-          {later.length === 0 ? (
-            <EmptyState label="later" />
-          ) : (
-            later.map((apt, i) => (
               <motion.div key={apt.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
                 <AppointmentCard apt={apt} showCancel={true} showComplete={true} />
               </motion.div>

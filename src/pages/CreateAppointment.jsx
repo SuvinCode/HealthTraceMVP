@@ -72,16 +72,16 @@ export default function CreateAppointment() {
       return;
     }
     setSaving(true);
-    const conn = connections.find(c => cleanEmail(c.doctor_email) === cleanEmail(doctorEmail));
+    const conn = connections?.find(c => cleanEmail(c.doctor_email) === cleanEmail(doctorEmail));
     await apiClient.entities.Appointment.create({
       title,
       description,
       date: format(date, 'yyyy-MM-dd'),
       time_slot: timeSlot,
       patient_email: cleanEmail(user.email),
-      patient_name: user.full_name,
+      patient_name: user.full_name || 'Patient',
       doctor_email: cleanEmail(doctorEmail),
-      doctor_name: conn?.doctor_name || '',
+      doctor_name: conn?.doctor_name || 'Unknown Doctor',
       status: 'upcoming',
     });
     toast.success('Appointment booked!');

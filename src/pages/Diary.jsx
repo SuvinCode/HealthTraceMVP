@@ -159,7 +159,14 @@ function EntryCard({ entry, onEdit }) {
           <span className="text-2xl">{mood.emoji}</span>
           <div>
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              {isToday(parseISO(entry.date)) ? 'Today' : format(parseISO(entry.date), 'EEEE, MMM d')}
+              {(() => {
+                try {
+                  const d = parseISO(entry.date);
+                  return isToday(d) ? 'Today' : format(d, 'EEEE, MMM d');
+                } catch {
+                  return entry.date || 'Unknown Date';
+                }
+              })()}
             </p>
             <p className={`text-sm font-bold ${mood.text}`}>{mood.label}</p>
           </div>
@@ -766,7 +773,13 @@ Provide exactly 2 very short, clinical, and empathetic sentences. One summarizin
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle>
-              Edit Entry — {editingEntry ? format(parseISO(editingEntry.date), 'EEEE, MMMM d') : ''}
+              Edit Entry — {(() => {
+                try {
+                  return editingEntry ? format(parseISO(editingEntry.date), 'EEEE, MMMM d') : '';
+                } catch {
+                  return editingEntry?.date || '';
+                }
+              })()}
             </DialogTitle>
           </DialogHeader>
           <div className="py-2 space-y-5">
