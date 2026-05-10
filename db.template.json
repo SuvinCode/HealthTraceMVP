@@ -1,4 +1,41 @@
 {
+  "hospitals": [
+    {
+      "id": 1,
+      "name": "Royal Brisbane and Women's Hospital",
+      "location": "Herston, Brisbane"
+    },
+    {
+      "id": 2,
+      "name": "Princess Alexandra Hospital",
+      "location": "Woolloongabba, Brisbane"
+    },
+    {
+      "id": 3,
+      "name": "The Prince Charles Hospital",
+      "location": "Chermside, Brisbane"
+    },
+    {
+      "id": 4,
+      "name": "Mater Hospital Brisbane",
+      "location": "South Brisbane"
+    },
+    {
+      "id": 5,
+      "name": "Queensland Children's Hospital",
+      "location": "South Brisbane"
+    },
+    {
+      "id": 6,
+      "name": "Greenslopes Private Hospital",
+      "location": "Greenslopes, Brisbane"
+    },
+    {
+      "id": 7,
+      "name": "St Andrew's War Memorial Hospital",
+      "location": "Spring Hill, Brisbane"
+    }
+  ],
   "users": [
     {
       "id": 1,
@@ -8,17 +45,12 @@
       "role": "doctor",
       "onboarding_complete": true,
       "specialisation": "Cardiology & ME/CFS Specialist",
-      "medical_license": "MED-77889"
-    },
-    {
-      "id": 2,
-      "full_name": "Dr. James Jones",
-      "email": "dr.jones@example.com",
-      "password": "jones123",
-      "role": "doctor",
-      "onboarding_complete": true,
-      "specialisation": "General Practitioner",
-      "medical_license": "GP-44556"
+      "medical_license": "MED-77889",
+      "hospital_ids": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": 10,
@@ -30,7 +62,12 @@
       "age": 28,
       "weight": 65,
       "height": 168,
-      "apple_health_connected": true
+      "apple_health_connected": true,
+      "hospital_ids": [
+        1,
+        3,
+        2
+      ]
     },
     {
       "id": 11,
@@ -41,7 +78,10 @@
       "onboarding_complete": true,
       "age": 45,
       "weight": 82,
-      "height": 180
+      "height": 180,
+      "hospital_ids": [
+        2
+      ]
     },
     {
       "id": 12,
@@ -49,23 +89,577 @@
       "email": "charlie@example.com",
       "password": "charlie123",
       "role": "user",
-      "onboarding_complete": false
+      "onboarding_complete": true,
+      "age": 72,
+      "weight": 70,
+      "height": 165,
+      "hospital_ids": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": 13,
-      "full_name": "Patient",
+      "full_name": "Patient One",
       "email": "patient@gmail.com",
       "password": "patient1234",
       "role": "user",
-      "onboarding_complete": true
+      "onboarding_complete": true,
+      "hospital_ids": [
+        3
+      ]
     },
     {
-      "id": 14,
-      "full_name": "Doctor",
-      "email": "doctor@gmail.com",
-      "password": "doctor1234",
+      "id": 16,
+      "full_name": "Diana Ross",
+      "email": "diana@example.com",
+      "password": "diana123",
+      "role": "user",
+      "onboarding_complete": true,
+      "hospital_ids": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": 17,
+      "full_name": "Elvis Presley",
+      "email": "elvis@example.com",
+      "password": "elvis123",
+      "role": "user",
+      "onboarding_complete": true,
+      "hospital_ids": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": 18,
+      "full_name": "Freddie Mercury",
+      "email": "freddie@example.com",
+      "password": "freddie123",
+      "role": "user",
+      "onboarding_complete": true,
+      "hospital_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "id": 19,
+      "full_name": "Mick Jagger",
+      "email": "mick@example.com",
+      "password": "mick123",
+      "role": "user",
+      "onboarding_complete": true,
+      "hospital_ids": [
+        1
+      ]
+    },
+    {
+      "id": 20,
+      "full_name": "John Lennon",
+      "email": "john@example.com",
+      "password": "john123",
+      "role": "user",
+      "onboarding_complete": true,
+      "hospital_ids": [
+        2
+      ]
+    },
+    {
+      "id": 21,
+      "full_name": "Paul McCartney",
+      "email": "paul@example.com",
+      "password": "paul123",
+      "role": "user",
+      "onboarding_complete": true,
+      "hospital_ids": [
+        3
+      ]
+    },
+    {
+      "id": 22,
+      "full_name": "Stevie Nicks",
+      "email": "stevie@example.com",
+      "password": "password123",
+      "role": "user",
+      "onboarding_complete": true,
+      "hospital_ids": [
+        1
+      ]
+    },
+    {
+      "id": 23,
+      "full_name": "Lindsay Buckingham",
+      "email": "lindsay@example.com",
+      "password": "password123",
+      "role": "user",
+      "onboarding_complete": true,
+      "hospital_ids": [
+        1
+      ]
+    },
+    {
+      "id": 24,
+      "full_name": "Ozzy Osbourne",
+      "email": "ozzy@example.com",
+      "password": "password123",
+      "role": "user",
+      "onboarding_complete": true,
+      "hospital_ids": [
+        2
+      ]
+    },
+    {
+      "id": 25,
+      "full_name": "Tony Iommi",
+      "email": "tony@example.com",
+      "password": "password123",
+      "role": "user",
+      "onboarding_complete": true,
+      "hospital_ids": [
+        2
+      ]
+    },
+    {
+      "id": 26,
+      "full_name": "Jimi Hendrix",
+      "email": "jimi@example.com",
+      "password": "password123",
+      "role": "user",
+      "onboarding_complete": true,
+      "hospital_ids": [
+        3
+      ]
+    },
+    {
+      "id": 27,
+      "full_name": "Janis Joplin",
+      "email": "janis@example.com",
+      "password": "password123",
+      "role": "user",
+      "onboarding_complete": true,
+      "hospital_ids": [
+        3
+      ]
+    },
+    {
+      "id": 100,
+      "full_name": "Dr. Michael Jordan",
+      "email": "michael.jordan@example.com",
+      "password": "password123",
       "role": "doctor",
-      "onboarding_complete": true
+      "onboarding_complete": true,
+      "specialisation": "Cardiology",
+      "medical_license": "MED-10099",
+      "hospital_ids": [
+        1
+      ]
+    },
+    {
+      "id": 101,
+      "full_name": "Dr. Serena Williams",
+      "email": "serena.williams@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Neurology",
+      "medical_license": "MED-10199",
+      "hospital_ids": [
+        1
+      ]
+    },
+    {
+      "id": 102,
+      "full_name": "Dr. Roger Federer",
+      "email": "roger.federer@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Oncology",
+      "medical_license": "MED-10299",
+      "hospital_ids": [
+        1
+      ]
+    },
+    {
+      "id": 103,
+      "full_name": "Dr. Tiger Woods",
+      "email": "tiger.woods@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Pediatrics",
+      "medical_license": "MED-10399",
+      "hospital_ids": [
+        1
+      ]
+    },
+    {
+      "id": 104,
+      "full_name": "Dr. Tom Brady",
+      "email": "tom.brady@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "ME/CFS Specialist",
+      "medical_license": "MED-10499",
+      "hospital_ids": [
+        2
+      ]
+    },
+    {
+      "id": 105,
+      "full_name": "Dr. LeBron James",
+      "email": "lebron.james@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Psychiatry",
+      "medical_license": "MED-10599",
+      "hospital_ids": [
+        2
+      ]
+    },
+    {
+      "id": 106,
+      "full_name": "Dr. Lionel Messi",
+      "email": "lionel.messi@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Orthopedics",
+      "medical_license": "MED-10699",
+      "hospital_ids": [
+        2
+      ]
+    },
+    {
+      "id": 107,
+      "full_name": "Dr. Cristiano Ronaldo",
+      "email": "cristiano.ronaldo@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Dermatology",
+      "medical_license": "MED-10799",
+      "hospital_ids": [
+        2
+      ]
+    },
+    {
+      "id": 108,
+      "full_name": "Dr. Usain Bolt",
+      "email": "usain.bolt@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Endocrinology",
+      "medical_license": "MED-10899",
+      "hospital_ids": [
+        3
+      ]
+    },
+    {
+      "id": 109,
+      "full_name": "Dr. Simone Biles",
+      "email": "simone.biles@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Gastroenterology",
+      "medical_license": "MED-10999",
+      "hospital_ids": [
+        3
+      ]
+    },
+    {
+      "id": 110,
+      "full_name": "Dr. Maria Sharapova",
+      "email": "maria.sharapova@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Cardiology",
+      "medical_license": "MED-11099",
+      "hospital_ids": [
+        3
+      ]
+    },
+    {
+      "id": 111,
+      "full_name": "Dr. David Beckham",
+      "email": "david.beckham@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Neurology",
+      "medical_license": "MED-11199",
+      "hospital_ids": [
+        3
+      ]
+    },
+    {
+      "id": 112,
+      "full_name": "Dr. Lewis Hamilton",
+      "email": "lewis.hamilton@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Oncology",
+      "medical_license": "MED-11299",
+      "hospital_ids": [
+        4
+      ]
+    },
+    {
+      "id": 113,
+      "full_name": "Dr. Rafael Nadal",
+      "email": "rafael.nadal@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Pediatrics",
+      "medical_license": "MED-11399",
+      "hospital_ids": [
+        4
+      ]
+    },
+    {
+      "id": 114,
+      "full_name": "Dr. Novak Djokovic",
+      "email": "novak.djokovic@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "ME/CFS Specialist",
+      "medical_license": "MED-11499",
+      "hospital_ids": [
+        4
+      ]
+    },
+    {
+      "id": 115,
+      "full_name": "Dr. Steph Curry",
+      "email": "steph.curry@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Psychiatry",
+      "medical_license": "MED-11599",
+      "hospital_ids": [
+        4
+      ]
+    },
+    {
+      "id": 116,
+      "full_name": "Dr. Kevin Durant",
+      "email": "kevin.durant@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Orthopedics",
+      "medical_license": "MED-11699",
+      "hospital_ids": [
+        4
+      ]
+    },
+    {
+      "id": 117,
+      "full_name": "Dr. Shaquille O'Neal",
+      "email": "shaquille.o'neal@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Dermatology",
+      "medical_license": "MED-11799",
+      "hospital_ids": [
+        5
+      ]
+    },
+    {
+      "id": 118,
+      "full_name": "Dr. Kobe Bryant",
+      "email": "kobe.bryant@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Endocrinology",
+      "medical_license": "MED-11899",
+      "hospital_ids": [
+        5
+      ]
+    },
+    {
+      "id": 119,
+      "full_name": "Dr. Michael Phelps",
+      "email": "michael.phelps@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Gastroenterology",
+      "medical_license": "MED-11999",
+      "hospital_ids": [
+        5
+      ]
+    },
+    {
+      "id": 120,
+      "full_name": "Dr. Venus Williams",
+      "email": "venus.williams@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Cardiology",
+      "medical_license": "MED-12099",
+      "hospital_ids": [
+        5
+      ]
+    },
+    {
+      "id": 121,
+      "full_name": "Dr. Andre Agassi",
+      "email": "andre.agassi@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Neurology",
+      "medical_license": "MED-12199",
+      "hospital_ids": [
+        5
+      ]
+    },
+    {
+      "id": 122,
+      "full_name": "Dr. Zinedine Zidane",
+      "email": "zinedine.zidane@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Oncology",
+      "medical_license": "MED-12299",
+      "hospital_ids": [
+        6
+      ]
+    },
+    {
+      "id": 123,
+      "full_name": "Dr. Pele",
+      "email": "pele@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Pediatrics",
+      "medical_license": "MED-12399",
+      "hospital_ids": [
+        6
+      ]
+    },
+    {
+      "id": 124,
+      "full_name": "Dr. Diego Maradona",
+      "email": "diego.maradona@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "ME/CFS Specialist",
+      "medical_license": "MED-12499",
+      "hospital_ids": [
+        6
+      ]
+    },
+    {
+      "id": 125,
+      "full_name": "Dr. Wayne Gretzky",
+      "email": "wayne.gretzky@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Psychiatry",
+      "medical_license": "MED-12599",
+      "hospital_ids": [
+        6
+      ]
+    },
+    {
+      "id": 126,
+      "full_name": "Dr. Tom Cruise",
+      "email": "tom.cruise@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Orthopedics",
+      "medical_license": "MED-12699",
+      "hospital_ids": [
+        6
+      ]
+    },
+    {
+      "id": 127,
+      "full_name": "Dr. Brad Pitt",
+      "email": "brad.pitt@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Dermatology",
+      "medical_license": "MED-12799",
+      "hospital_ids": [
+        7
+      ]
+    },
+    {
+      "id": 128,
+      "full_name": "Dr. Angelina Jolie",
+      "email": "angelina.jolie@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Endocrinology",
+      "medical_license": "MED-12899",
+      "hospital_ids": [
+        7
+      ]
+    },
+    {
+      "id": 129,
+      "full_name": "Dr. Leonardo DiCaprio",
+      "email": "leonardo.dicaprio@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Gastroenterology",
+      "medical_license": "MED-12999",
+      "hospital_ids": [
+        7
+      ]
+    },
+    {
+      "id": 130,
+      "full_name": "Dr. Meryl Streep",
+      "email": "meryl.streep@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Cardiology",
+      "medical_license": "MED-13099",
+      "hospital_ids": [
+        7
+      ]
+    },
+    {
+      "id": 131,
+      "full_name": "Dr. Denzel Washington",
+      "email": "denzel.washington@example.com",
+      "password": "password123",
+      "role": "doctor",
+      "onboarding_complete": true,
+      "specialisation": "Neurology",
+      "medical_license": "MED-13199",
+      "hospital_ids": [
+        7
+      ]
     }
   ],
   "patients": [
@@ -73,201 +667,381 @@
       "id": 10,
       "full_name": "Alice Cooper (Patient)",
       "email": "alice@example.com",
-      "role": "user"
+      "role": "user",
+      "hospital_ids": [
+        1,
+        3
+      ]
     },
     {
       "id": 11,
       "full_name": "Bob Marley (Patient)",
       "email": "bob@example.com",
-      "role": "user"
+      "role": "user",
+      "hospital_ids": [
+        2
+      ]
     },
     {
       "id": 12,
       "full_name": "Charlie Chaplin (Patient)",
       "email": "charlie@example.com",
-      "role": "user"
+      "role": "user",
+      "hospital_ids": [
+        1,
+        2,
+        3
+      ]
     },
     {
       "id": 13,
-      "full_name": "Patient",
+      "full_name": "Patient One",
       "email": "patient@gmail.com",
-      "role": "user"
+      "role": "user",
+      "hospital_ids": [
+        3
+      ]
+    },
+    {
+      "id": 15,
+      "full_name": "David Bowie",
+      "email": "david@example.com",
+      "role": "user",
+      "hospital_ids": [
+        1,
+        4
+      ]
+    },
+    {
+      "id": 16,
+      "full_name": "Diana Ross",
+      "email": "diana@example.com",
+      "role": "user",
+      "hospital_ids": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": 17,
+      "full_name": "Elvis Presley",
+      "email": "elvis@example.com",
+      "role": "user",
+      "hospital_ids": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": 18,
+      "full_name": "Freddie Mercury",
+      "email": "freddie@example.com",
+      "role": "user",
+      "hospital_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "id": 19,
+      "full_name": "Mick Jagger",
+      "email": "mick@example.com",
+      "role": "user",
+      "hospital_ids": [
+        1
+      ]
+    },
+    {
+      "id": 20,
+      "full_name": "John Lennon",
+      "email": "john@example.com",
+      "role": "user",
+      "hospital_ids": [
+        2
+      ]
+    },
+    {
+      "id": 21,
+      "full_name": "Paul McCartney",
+      "email": "paul@example.com",
+      "role": "user",
+      "hospital_ids": [
+        3
+      ]
+    },
+    {
+      "id": 22,
+      "full_name": "Stevie Nicks",
+      "email": "stevie@example.com",
+      "role": "user",
+      "hospital_ids": [
+        1
+      ]
+    },
+    {
+      "id": 23,
+      "full_name": "Lindsay Buckingham",
+      "email": "lindsay@example.com",
+      "role": "user",
+      "hospital_ids": [
+        1
+      ]
+    },
+    {
+      "id": 24,
+      "full_name": "Ozzy Osbourne",
+      "email": "ozzy@example.com",
+      "role": "user",
+      "hospital_ids": [
+        2
+      ]
+    },
+    {
+      "id": 25,
+      "full_name": "Tony Iommi",
+      "email": "tony@example.com",
+      "role": "user",
+      "hospital_ids": [
+        2
+      ]
+    },
+    {
+      "id": 26,
+      "full_name": "Jimi Hendrix",
+      "email": "jimi@example.com",
+      "role": "user",
+      "hospital_ids": [
+        3
+      ]
+    },
+    {
+      "id": 27,
+      "full_name": "Janis Joplin",
+      "email": "janis@example.com",
+      "role": "user",
+      "hospital_ids": [
+        3
+      ]
     }
   ],
   "entities": {
     "ConnectionRequest": [
       {
-        "id": "conn_1",
-        "doctor_email": "dr.smith@example.com",
-        "doctor_name": "Dr. Sarah Smith",
-        "patient_email": "alice@example.com",
-        "patient_name": "Alice Cooper (Patient)",
-        "status": "accepted"
-      },
-      {
-        "id": "conn_2",
-        "doctor_email": "dr.smith@example.com",
-        "doctor_name": "Dr. Sarah Smith",
-        "patient_email": "bob@example.com",
-        "patient_name": "Bob Marley (Patient)",
-        "status": "accepted"
-      },
-      {
-        "id": "conn_3",
-        "doctor_email": "dr.smith@example.com",
-        "doctor_name": "Dr. Sarah Smith",
-        "patient_email": "charlie@example.com",
-        "patient_name": "Charlie Chaplin (Patient)",
-        "status": "pending"
-      },
-      {
         "id": "conn_4",
-        "doctor_email": "dr.jones@example.com",
-        "doctor_name": "Dr. James Jones",
-        "patient_email": "alice@example.com",
-        "patient_name": "Alice Cooper (Patient)",
-        "status": "pending"
-      },
-      {
         "doctor_email": "dr.smith@example.com",
         "doctor_name": "Dr. Sarah Smith",
-        "patient_email": "charlie@example.com",
-        "patient_name": "Charlie Chaplin (Patient)",
-        "status": "accepted",
-        "id": "435mx6hv7"
-      }
-    ],
-    "MedicationTask": [
-      {
-        "id": "med_1",
-        "medication_name": "LDN (Low Dose Naltrexone)",
-        "type": "capsule",
-        "dosage": "4.5mg",
-        "start_date": "2026-04-01",
-        "end_date": "2026-12-31",
-        "frequency": "once_daily",
-        "scheduled_times": [
-          "21:00"
-        ],
-        "patient_email": "alice@example.com",
-        "doctor_email": "dr.smith@example.com",
-        "completed_dates": [
-          "2026-04-24",
-          "2026-04-25"
-        ]
+        "patient_email": "patient@gmail.com",
+        "patient_name": "Patient One",
+        "status": "accepted"
       },
       {
-        "id": "med_2",
-        "medication_name": "Mestinon",
-        "type": "tablet",
-        "dosage": "60mg",
-        "start_date": "2026-04-01",
-        "end_date": "2026-12-31",
-        "frequency": "twice_daily",
-        "scheduled_times": [
-          "08:00",
-          "14:00"
-        ],
-        "patient_email": "alice@example.com",
+        "id": "rlxgc7fne",
         "doctor_email": "dr.smith@example.com",
-        "completed_dates": [
-          "2026-04-25"
-        ]
+        "doctor_name": "Dr. Sarah Smith",
+        "patient_email": "david@example.com",
+        "patient_name": "David Bowie",
+        "status": "accepted"
+      },
+      {
+        "id": "4ukegf9nr",
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "patient_email": "alice@example.com",
+        "patient_name": "Alice Cooper (Patient)",
+        "status": "accepted"
+      },
+      {
+        "id": "conn_diana",
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "patient_email": "diana@example.com",
+        "patient_name": "Diana Ross",
+        "status": "accepted"
+      },
+      {
+        "id": "conn_elvis",
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "patient_email": "elvis@example.com",
+        "patient_name": "Elvis Presley",
+        "status": "accepted"
+      },
+      {
+        "id": "conn_freddie",
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "patient_email": "freddie@example.com",
+        "patient_name": "Freddie Mercury",
+        "status": "accepted"
+      },
+      {
+        "id": "conn_mick",
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "patient_email": "mick@example.com",
+        "patient_name": "Mick Jagger",
+        "status": "pending",
+        "timestamp": "2024-03-23T09:00:00Z"
+      },
+      {
+        "id": "conn_john",
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "patient_email": "john@example.com",
+        "patient_name": "John Lennon",
+        "status": "pending",
+        "timestamp": "2024-03-23T10:00:00Z"
+      },
+      {
+        "id": "conn_paul",
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "patient_email": "paul@example.com",
+        "patient_name": "Paul McCartney",
+        "status": "pending",
+        "timestamp": "2024-03-23T11:00:00Z"
       }
     ],
     "Appointment": [
       {
         "id": "app_1",
-        "title": "Bi-Monthly Review",
-        "date": "2026-04-28",
-        "time_slot": "10:30",
         "patient_email": "alice@example.com",
         "patient_name": "Alice Cooper",
         "doctor_email": "dr.smith@example.com",
         "doctor_name": "Dr. Sarah Smith",
-        "status": "upcoming"
+        "date": "2026-05-20",
+        "time_slot": "10:30",
+        "location": "Royal Brisbane Hospital - Cardiology Suite 4",
+        "title": "Cardiology Follow-up",
+        "status": "upcoming",
+        "description": "Discuss latest heart rate variability data."
       },
       {
         "id": "app_2",
-        "title": "Initial Consultation",
-        "date": "2026-04-10",
-        "time_slot": "14:00",
         "patient_email": "alice@example.com",
         "patient_name": "Alice Cooper",
         "doctor_email": "dr.smith@example.com",
         "doctor_name": "Dr. Sarah Smith",
-        "status": "completed"
+        "date": "2026-04-15",
+        "time_slot": "14:00",
+        "location": "Virtual Clinic",
+        "title": "Initial Consultation",
+        "status": "completed",
+        "description": "Patient reports significant fatigue after minimal exertion."
+      },
+      {
+        "id": "app_3",
+        "patient_email": "charlie@example.com",
+        "patient_name": "Charlie Chaplin",
+        "doctor_email": "dr.smith@example.com",
+        "doctor_name": "Dr. Sarah Smith",
+        "date": "2026-05-22",
+        "time_slot": "11:15",
+        "location": "Princess Alexandra Hospital",
+        "title": "Specialist Review",
+        "status": "upcoming"
       }
     ],
-    "biometrics": [
+    "DiaryEntry": [
       {
-        "id": "b1",
+        "id": "diary_1",
         "patient_email": "alice@example.com",
-        "metric_name": "heart_rate",
-        "value": 72,
-        "date": "2026-04-26",
-        "source": "Apple Health"
+        "date": "2026-05-11",
+        "mood_score": 4,
+        "notes": "Woke up feeling refreshed. Heart rate stayed stable during walk."
       },
       {
-        "id": "b2",
+        "id": "diary_2",
         "patient_email": "alice@example.com",
-        "metric_name": "step_count",
-        "value": 3400,
-        "date": "2026-04-26",
-        "source": "Apple Health"
+        "date": "2026-05-10",
+        "mood_score": 2,
+        "notes": "Major crash after grocery shopping yesterday. Need to pace better."
       },
       {
-        "id": "b3",
-        "patient_email": "alice@example.com",
-        "metric_name": "sleep_analysis",
-        "value": 6.8,
-        "date": "2026-04-26",
-        "source": "Apple Health"
-      },
-      {
-        "id": "b4",
-        "patient_email": "alice@example.com",
-        "metric_name": "screen_time",
-        "value": 4.2,
-        "date": "2026-04-26",
-        "source": "Apple Health"
-      },
-      {
-        "id": "b5",
-        "patient_email": "alice@example.com",
-        "metric_name": "heart_rate",
-        "value": 75,
-        "date": "2026-04-25",
-        "source": "Apple Health"
-      },
-      {
-        "id": "b6",
-        "patient_email": "alice@example.com",
-        "metric_name": "step_count",
-        "value": 5100,
-        "date": "2026-04-25",
-        "source": "Apple Health"
+        "id": "diary_3",
+        "patient_email": "charlie@example.com",
+        "date": "2026-05-11",
+        "mood_score": 3,
+        "notes": "Legs felt a bit heavy this morning."
       }
     ],
     "HealthForm": [
       {
         "id": "form_1",
-        "title": "Weekly Symptom Check",
+        "title": "Cardiology Symptom Tracker",
         "doctor_email": "dr.smith@example.com",
-        "patient_email": "alice@example.com",
         "active": true,
         "questions": [
           {
             "id": "q1",
-            "label": "Severity of Fatigue (0-10)",
+            "label": "Average Heart Rate",
             "type": "number",
             "required": true
           },
           {
             "id": "q2",
-            "label": "Major Triggers this week",
-            "type": "text",
+            "label": "Chest Pain (Scale 1-10)",
+            "type": "number",
             "required": false
+          },
+          {
+            "id": "q3",
+            "label": "Notes on Shortness of Breath",
+            "type": "textarea",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "form_2",
+        "title": "ME/CFS Pacing Assessment",
+        "doctor_email": "dr.smith@example.com",
+        "active": true,
+        "questions": [
+          {
+            "id": "q4",
+            "label": "Daily Step Count",
+            "type": "number",
+            "required": true
+          },
+          {
+            "id": "q5",
+            "label": "Hours of Rest",
+            "type": "number",
+            "required": true
+          },
+          {
+            "id": "q6",
+            "label": "Did you experience a crash?",
+            "type": "boolean",
+            "required": true
+          }
+        ]
+      },
+      {
+        "id": "form_3",
+        "title": "Daily Energy Audit",
+        "doctor_email": "dr.smith@example.com",
+        "patient_email": "alice@example.com",
+        "active": true,
+        "questions": [
+          {
+            "id": "q7",
+            "label": "Energy Level (Morning)",
+            "type": "number",
+            "required": true
+          },
+          {
+            "id": "q8",
+            "label": "Energy Level (Evening)",
+            "type": "number",
+            "required": true
+          },
+          {
+            "id": "q9",
+            "label": "Main activity that drained energy",
+            "type": "textarea",
+            "required": true
           }
         ]
       }
@@ -276,53 +1050,212 @@
       {
         "id": "sub_1",
         "form_id": "form_1",
+        "form_title": "Cardiology Symptom Tracker",
         "patient_email": "alice@example.com",
+        "patient_name": "Alice Cooper (Patient)",
         "doctor_email": "dr.smith@example.com",
+        "created_date": "2026-05-08T10:00:00.000Z",
         "answers": [
           {
-            "question_label": "Severity of Fatigue (0-10)",
-            "answer": "7"
+            "question_id": "q1",
+            "question_label": "Average Heart Rate",
+            "answer": "72"
           },
           {
-            "question_label": "Major Triggers this week",
-            "answer": "Long grocery shopping trip on Tuesday."
+            "question_id": "q2",
+            "question_label": "Chest Pain (Scale 1-10)",
+            "answer": "2"
+          },
+          {
+            "question_id": "q3",
+            "question_label": "Notes on Shortness of Breath",
+            "answer": "None today."
           }
+        ]
+      },
+      {
+        "id": "sub_2",
+        "form_id": "form_2",
+        "form_title": "ME/CFS Pacing Assessment",
+        "patient_email": "alice@example.com",
+        "patient_name": "Alice Cooper (Patient)",
+        "doctor_email": "dr.smith@example.com",
+        "created_date": "2026-05-10T14:30:00.000Z",
+        "answers": [
+          {
+            "question_id": "q4",
+            "question_label": "Daily Step Count",
+            "answer": "1500"
+          },
+          {
+            "question_id": "q5",
+            "question_label": "Hours of Rest",
+            "answer": "6"
+          },
+          {
+            "question_id": "q6",
+            "question_label": "Did you experience a crash?",
+            "answer": "false"
+          }
+        ]
+      }
+    ],
+    "MedicationTask": [
+      {
+        "id": "med_1",
+        "patient_email": "alice@example.com",
+        "patient_name": "Alice Cooper (Patient)",
+        "doctor_email": "dr.smith@example.com",
+        "medication_name": "Propranolol",
+        "dosage": "10mg",
+        "frequency": "twice_daily",
+        "start_date": "2026-05-01",
+        "end_date": "2026-06-01",
+        "scheduled_times": [
+          "08:00",
+          "20:00"
         ],
-        "created_date": "2026-04-24T10:00:00Z"
+        "completed_dates": [
+          "2026-05-11"
+        ]
+      },
+      {
+        "id": "med_2",
+        "patient_email": "alice@example.com",
+        "patient_name": "Alice Cooper (Patient)",
+        "doctor_email": "dr.smith@example.com",
+        "medication_name": "CoQ10 Supplement",
+        "dosage": "200mg",
+        "frequency": "once_daily",
+        "start_date": "2026-05-01",
+        "end_date": "2026-08-01",
+        "scheduled_times": [
+          "09:00"
+        ],
+        "completed_dates": []
+      },
+      {
+        "id": "med_4",
+        "patient_email": "alice@example.com",
+        "patient_name": "Alice Cooper (Patient)",
+        "doctor_email": "dr.smith@example.com",
+        "medication_name": "Vitamin D3",
+        "dosage": "2000 IU",
+        "frequency": "once_daily",
+        "start_date": "2026-05-10",
+        "end_date": "2026-12-31",
+        "scheduled_times": [
+          "08:30"
+        ],
+        "completed_dates": []
+      },
+      {
+        "id": "med_5",
+        "patient_email": "alice@example.com",
+        "patient_name": "Alice Cooper (Patient)",
+        "doctor_email": "dr.smith@example.com",
+        "medication_name": "Magnesium Glycinate",
+        "dosage": "400mg",
+        "frequency": "once_daily",
+        "start_date": "2026-05-01",
+        "end_date": "2026-06-01",
+        "scheduled_times": [
+          "07:00"
+        ],
+        "completed_dates": [
+          "2026-05-11"
+        ]
+      },
+      {
+        "id": "med_3",
+        "patient_email": "charlie@example.com",
+        "patient_name": "Charlie Chaplin (Patient)",
+        "doctor_email": "dr.smith@example.com",
+        "medication_name": "Amlodipine",
+        "dosage": "5mg",
+        "frequency": "once_daily",
+        "start_date": "2026-05-01",
+        "end_date": "2026-06-01",
+        "scheduled_times": [
+          "09:00"
+        ],
+        "completed_dates": []
+      },
+      {
+        "medication_name": "Panadol",
+        "type": "tablet",
+        "dosage": "400",
+        "start_date": "2026-05-11",
+        "end_date": "2026-05-14",
+        "frequency": "once_daily",
+        "patient_email": "alice@example.com",
+        "patient_name": "Alice Cooper (Patient)",
+        "doctor_email": "dr.smith@example.com",
+        "completed_dates": [],
+        "id": "onwd3u1mk",
+        "scheduled_times": [
+          "10:00"
+        ]
+      },
+      {
+        "medication_name": "Advil",
+        "type": "tablet",
+        "dosage": "200mg",
+        "start_date": "2026-05-11",
+        "end_date": "2026-05-11",
+        "frequency": "once_daily",
+        "patient_email": "alice@example.com",
+        "patient_name": "",
+        "doctor_email": "dr.smith@example.com",
+        "completed_dates": [],
+        "id": "7ng89sq1w"
+      }
+    ],
+    "biometrics": [
+      {
+        "id": "bio_1",
+        "patient_email": "alice@example.com",
+        "date": "2026-05-11",
+        "metric_name": "step_count",
+        "value": 1250,
+        "unit": "steps"
+      },
+      {
+        "id": "bio_2",
+        "patient_email": "alice@example.com",
+        "date": "2026-05-11",
+        "metric_name": "sleep_analysis",
+        "value": 7.5,
+        "unit": "hours"
+      },
+      {
+        "id": "bio_3",
+        "patient_email": "alice@example.com",
+        "date": "2026-05-11",
+        "metric_name": "screen_time",
+        "value": 3.2,
+        "unit": "hours"
       }
     ]
   },
-  "DiaryEntry": [
-    {
-      "id": "diary_1",
-      "patient_email": "alice@example.com",
-      "date": "2026-04-26",
-      "mood_score": 3,
-      "notes": "Slept poorly, felt a bit of orthostatic intolerance this morning. Taking it easy today."
-    },
-    {
-      "id": "diary_2",
-      "patient_email": "alice@example.com",
-      "date": "2026-04-25",
-      "mood_score": 4,
-      "notes": "Good day! Managed a short walk without a crash later."
-    },
-    {
-      "id": "diary_3",
-      "patient_email": "alice@example.com",
-      "date": "2026-04-24",
-      "mood_score": 2,
-      "notes": "Major brain fog. Struggled with work emails."
-    }
-  ],
   "DoctorNote": [
     {
-      "id": "note_1",
+      "doctor_email": "dr.smith@example.com",
+      "patient_email": null,
+      "patient_name": null,
+      "content": "The patients so far are monitored correspondingly",
+      "input_type": "written",
+      "created_at": "2026-05-10T22:50:39.119Z",
+      "id": "3vr7btzwo"
+    },
+    {
       "doctor_email": "dr.smith@example.com",
       "patient_email": "alice@example.com",
-      "content": "Patient reports high fatigue after physical exertion. Considering adjusting LDN dosage next month.",
+      "patient_name": "Alice Cooper (Patient)",
+      "content": "Alice seems to be doing just fine along the days, not a lot of crashes",
       "input_type": "written",
-      "created_at": "2026-04-25T15:00:00Z"
+      "created_at": "2026-05-10T23:11:35.651Z",
+      "id": "k45ncg4ao"
     }
   ]
 }
