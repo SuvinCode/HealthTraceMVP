@@ -19,29 +19,45 @@ function buildUrl(path, query) {
   return url.toString();
 }
 
+const inflightRequests = new Map();
+
 async function http(path, { method = 'GET', body, query } = {}) {
-  const token = localStorage.getItem('auth_token');
-  const response = await fetch(buildUrl(path, query), {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  const url = buildUrl(path, query);
+  const cacheKey = `${method}:${url}:${JSON.stringify(body || {})}`;
 
-  if (!response.ok) {
-    const text = await response.text();
-    const error = new Error(text || `Request failed with ${response.status}`);
-    error.status = response.status;
-    throw error;
+  if (method === 'GET' && inflightRequests.has(cacheKey)) {
+    return inflightRequests.get(cacheKey);
   }
 
-  if (response.status === 204) {
-    return null;
+  const requestPromise = (async () => {
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      const error = new Error(text || `Request failed with ${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
+
+    return response.status === 204 ? null : response.json();
+  })();
+
+  if (method === 'GET') {
+    inflightRequests.set(cacheKey, requestPromise);
+    requestPromise.finally(() => {
+      setTimeout(() => inflightRequests.delete(cacheKey), 500);
+    });
   }
 
-  return response.json();
+  return requestPromise;
 }
 
 function entityApi(entityName) {

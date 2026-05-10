@@ -4,10 +4,13 @@ import { apiClient } from '@/api/client';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
+  const [user, setUser] = useState(() => {
+    const raw = localStorage.getItem('user_info');
+    return raw ? JSON.parse(raw) : null;
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('auth_token'));
+  const [isLoadingAuth, setIsLoadingAuth] = useState(false);
+  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(false);
   const [authError, setAuthError] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [appPublicSettings, setAppPublicSettings] = useState(null);
@@ -38,8 +41,11 @@ export const AuthProvider = ({ children }) => {
   const checkUserAuth = async () => {
     setIsLoadingPublicSettings(false);
     setAuthError(null);
-    try {
+    // Only show loading if we don't have a cached user yet
+    if (!user) {
       setIsLoadingAuth(true);
+    }
+    try {
       
       // Handle Google sync if needed
       const params = new URLSearchParams(window.location.search);
@@ -54,12 +60,7 @@ export const AuthProvider = ({ children }) => {
       setUser(currentUser);
       setIsAuthenticated(!!currentUser);
     } catch (error) {
-      setUser(null);
-      setIsAuthenticated(false);
-      setAuthError({
-        type: 'auth_error',
-        message: 'An error occurred during authentication'
-      });
+      console.error("Auth check failed:", error);
     } finally {
       setIsLoadingAuth(false);
       setAuthChecked(true);
